@@ -2,10 +2,14 @@
   "name": "solana-step-debugger",
   "displayName": "Solana Step Debugger",
   "description": "Solana Step Debugger for VS Code.",
-  "publisher": "LimeChain",
+  "publisher": "limechain",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.94.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LimeChain/solana-step-debugger.git"
   },
   "categories": [
     "Other"
