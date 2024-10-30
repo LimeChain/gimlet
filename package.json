@@ -1,15 +1,11 @@
 {
   "name": "solana-step-debugger",
   "displayName": "Solana Step Debugger",
-  "description": "Solana Step Debugger for VS Code.",
-  "publisher": "limechain",
-  "version": "0.0.1",
+  "description": "Solana Step Debugger for VS Code. It wraps your local agave-ledger-tool and solana-lldb into one easy to use debugger.",
+  "publisher": "wyzax",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.94.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/LimeChain/solana-step-debugger.git"
   },
   "categories": [
     "Other"
@@ -19,12 +15,20 @@
   "contributes": {
     "commands": [
       {
-        "command": "solana-step-debugger.helloWorld",
-        "title": "Hello World"
+        "command": "extension.runAgaveLedgerTool",
+        "title": "Run Agave Ledger Tool"
+      },
+      {
+        "command": "extension.runSolanaLLDB",
+        "title": "Run Solana LLDB"
       }
     ]
   },
   "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "echo 'No compilation needed for JavaScript'",
+    "watch": "echo 'No watch needed for JavaScript'",
+    "postinstall": "node ./node_modules/vscode/bin/install",
     "lint": "eslint .",
     "pretest": "npm run lint",
     "test": "vscode-test"
