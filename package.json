@@ -5,7 +5,7 @@
   "publisher": "wyzax",
   "version": "1.0.0",
   "engines": {
-    "vscode": "^1.80.0"
+    "vscode": "^1.50.0"
   },
   "categories": [
     "Other"
@@ -33,7 +33,7 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.80.0",
+    "@types/vscode": "^1.50.0",
     "@types/mocha": "^10.0.9",
     "@types/node": "20.x",
     "eslint": "^9.13.0",
