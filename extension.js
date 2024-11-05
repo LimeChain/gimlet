@@ -1,8 +1,10 @@
 const vscode = require("vscode");
-const { spawn, exec } = require("child_process");
+const { exec } = require("child_process");
 const os = require("os");
 const path = require("path");
 const fs = require("fs");
+
+let breakpointMap = new Map();
 
 function getCommandPath(command) {
   const homeDir = os.homedir();
@@ -55,87 +57,122 @@ function runCommand(command, args = "") {
   const terminal = vscode.window.createTerminal(`Run ${command}`);
   terminal.show();
   terminal.sendText(`${commandPath} ${args}`);
-
-  // const child = spawn(commandPath, args ? args.split(" ") : [], {
-  //   shell: true,
-  // });
-
-  // child.stdout.on("data", (data) => {
-  //   vscode.window.showInformationMessage(`Output: ${data}`);
-  // });
-
-  // child.stderr.on("data", (data) => {
-  //   vscode.window.showErrorMessage(`Error: ${data}`);
-  // });
-
-  // child.on("close", (code) => {
-  //   if (code !== 0) {
-  //     vscode.window.showErrorMessage(`Command failed with code ${code}`);
-  //   }
-  // });
 }
 
 function startSolanaDebugger() {
-  const editor = vscode.window.activeTextEditor;
-  if (!editor) {
-    vscode.window.showErrorMessage("No active editor found.");
-    return;
-  }
+  // const editor = vscode.window.activeTextEditor;
+  // if (!editor) {
+  //   vscode.window.showErrorMessage(
+  //     "No active editor found. Please open your lib.rs file."
+  //   );
+  //   return;
+  // }
 
   const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
+  const projectFolderName = path.basename(workspaceFolder);
+  const depsPath = `${workspaceFolder}/target/debug/deps`;
 
-  // Read the Cargo.toml to get the package name
-  const cargoTomlPath = path.join(workspaceFolder, "Cargo.toml");
-  const cargoTomlContent = fs.readFileSync(cargoTomlPath, "utf8");
-  const packageNameMatch = cargoTomlContent.match(/name\s*=\s*"([^"]+)"/);
-  if (!packageNameMatch) {
-    vscode.window.showErrorMessage(
-      "Could not determine package name from Cargo.toml."
-    );
-    return;
-  }
-
-  const packageName = packageNameMatch[1];
-  const programPath = path.join(
-    workspaceFolder,
-    "target",
-    "debug",
-    packageName
-  );
-
-  exec("cargo build", { cwd: workspaceFolder }, (err, stdout, stderr) => {
-    if (err) {
-      vscode.window.showErrorMessage(`Build error: ${stderr}`);
-      return;
-    }
-
-    if (!fs.existsSync(programPath)) {
-      vscode.window.showErrorMessage(`Executable not found: ${programPath}`);
-      return;
-    }
-
-    const debugConfiguration = {
-      type: "lldb",
-      request: "launch",
-      name: "Debug Solana Program",
-      program: programPath,
-      args: [],
-      cwd: workspaceFolder,
-      stopOnEntry: false,
-      runInTerminal: true,
-    };
-
-    vscode.debug.startDebugging(undefined, debugConfiguration).then(
-      (success) => {
-        if (!success) {
-          vscode.window.showErrorMessage("Failed to start the debugger.");
-        }
-      },
-      (error) => {
-        vscode.window.showErrorMessage(`Error: ${error.message}`);
+  exec(
+    `cargo test --no-run --lib --package=${projectFolderName}`,
+    { cwd: workspaceFolder },
+    (err, stdout, stderr) => {
+      if (err) {
+        vscode.window.showErrorMessage(`Build error: ${stderr}`);
+        return;
       }
-    );
-  });
+
+      try {
+        if (!fs.existsSync(depsPath)) {
+          vscode.window.showErrorMessage(`Executable not found: ${depsPath}`);
+          return;
+        }
+
+        fs.readdir(depsPath, (readDirErr, files) => {
+          if (readDirErr) {
+            vscode.window.showErrorMessage(
+              `Error reading directory: ${readDirErr}`
+            );
+            return;
+          }
+
+          const executableFile = files.find(
+            (file) =>
+              file.startsWith(`${projectFolderName}-`) && !file.includes(".")
+          );
+
+          const executablePath = `${depsPath}/${executableFile}`;
+
+          const terminal = vscode.window.createTerminal("Solana Debugger");
+          terminal.show();
+          terminal.sendText("solana-lldb");
+          terminal.sendText(`target create ${executablePath}`);
+          terminal.sendText("process launch -- --nocapture");
+
+          vscode.window.showInformationMessage(
+            "Debugger launched successfully with executable:",
+            executablePath
+          );
+
+          vscode.debug.onDidChangeBreakpoints((event) => {
+            if (event.added.length > 0) {
+              event.added.forEach((bp) => {
+                const line = bp.location.range.start.line + 1;
+                terminal.sendText(
+                  `breakpoint set --file ${bp.location.uri.fsPath} --line ${line}`
+                );
+
+                setTimeout(() => {
+                  terminal.sendText("breakpoint list");
+                }, 500);
+
+                // terminal.sendText("breakpoint list", (output) => {
+                //   const match = output.match(/^\d+: /);
+                //   console.log(match);
+                //   if (match) {
+                //     const bpId = match[1];
+                //     console.log(match);
+                //     breakpointMap.set(bp, bpId);
+                //   }
+                // });
+              });
+            }
+            if (event.removed.length > 0) {
+              event.removed.forEach((bp) => {
+                const bpId = breakpointMap.get(bp);
+                console.log(bpId);
+                console.log("removing bp");
+                if (bpId) {
+                  terminal.sendText(`breakpoint delete ${bpId}`);
+                  breakpointMap.delete(bp);
+                }
+              });
+            }
+          });
+
+          vscode.window.onDidWriteTerminalData((event) => {
+            console.log("event", event);
+            if (event.terminal === terminal) {
+              const output = event.data;
+              console.log("output", output);
+              const match = output.match(/^\d+: /);
+              if (match) {
+                const bpId = match[1];
+                // console.log(match);
+                vscode.debug.breakpoints.forEach((bp) => {
+                  if (!breakpointMap.has(bp)) {
+                    breakpointMap.set(bp, bpId);
+                  }
+                });
+              }
+            }
+          });
+        });
+      } catch (e) {
+        vscode.window.showErrorMessage(`Error: ${e}`);
+        vscode.window.showErrorMessage(`Stderr Stack: ${stderr}`);
+      }
+    }
+  );
 }
 
 /**
@@ -170,20 +207,6 @@ function activate(context) {
   );
 
   context.subscriptions.push(disposable2);
-
-  context.subscriptions.push(
-    vscode.debug.registerDebugConfigurationProvider("solana-debugger", {
-      provideDebugConfigurations(folder, token) {
-        return [
-          {
-            type: "solana-step-debugger",
-            request: "launch",
-            name: "Launch Solana Debugger",
-          },
-        ];
-      },
-    })
-  );
 }
 
 function deactivate() {}

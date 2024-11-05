@@ -12,11 +12,6 @@
       "runtimeExecutable": "${execPath}",
       "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
       "outFiles": ["${workspaceFolder}/out/**/*.js"]
-    },
-    {
-      "name": "Launch Solana Debugger",
-      "type": "solana-step-debugger",
-      "request": "launch"
     }
   ]
 }
