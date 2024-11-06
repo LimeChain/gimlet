@@ -6,6 +6,9 @@ const fs = require("fs");
 
 let breakpointMap = new Map();
 
+// This starts from 1 because in lldb breakpoints start from index 1.
+let bpCounter = 1;
+
 function getCommandPath(command) {
   const homeDir = os.homedir();
   const agaveLedgerToolPath = path.join(
@@ -60,17 +63,15 @@ function runCommand(command, args = "") {
 }
 
 function startSolanaDebugger() {
-  // const editor = vscode.window.activeTextEditor;
-  // if (!editor) {
-  //   vscode.window.showErrorMessage(
-  //     "No active editor found. Please open your lib.rs file."
-  //   );
-  //   return;
-  // }
-
   const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
   const projectFolderName = path.basename(workspaceFolder);
   const depsPath = `${workspaceFolder}/target/debug/deps`;
+
+  vscode.window.terminals.forEach((terminal) => {
+    if (terminal.name === "Solana Debugger") {
+      terminal.dispose();
+    }
+  });
 
   exec(
     `cargo test --no-run --lib --package=${projectFolderName}`,
@@ -102,16 +103,14 @@ function startSolanaDebugger() {
 
           const executablePath = `${depsPath}/${executableFile}`;
 
+          bpCounter = 1;
+
           const terminal = vscode.window.createTerminal("Solana Debugger");
           terminal.show();
           terminal.sendText("solana-lldb");
+          PerformanceEntry;
           terminal.sendText(`target create ${executablePath}`);
           terminal.sendText("process launch -- --nocapture");
-
-          vscode.window.showInformationMessage(
-            "Debugger launched successfully with executable:",
-            executablePath
-          );
 
           vscode.debug.onDidChangeBreakpoints((event) => {
             if (event.added.length > 0) {
@@ -121,49 +120,20 @@ function startSolanaDebugger() {
                   `breakpoint set --file ${bp.location.uri.fsPath} --line ${line}`
                 );
 
-                setTimeout(() => {
-                  terminal.sendText("breakpoint list");
-                }, 500);
-
-                // terminal.sendText("breakpoint list", (output) => {
-                //   const match = output.match(/^\d+: /);
-                //   console.log(match);
-                //   if (match) {
-                //     const bpId = match[1];
-                //     console.log(match);
-                //     breakpointMap.set(bp, bpId);
-                //   }
-                // });
+                breakpointMap.set(bp.id, bpCounter);
+                bpCounter++;
               });
             }
+
             if (event.removed.length > 0) {
               event.removed.forEach((bp) => {
-                const bpId = breakpointMap.get(bp);
-                console.log(bpId);
-                console.log("removing bp");
-                if (bpId) {
-                  terminal.sendText(`breakpoint delete ${bpId}`);
-                  breakpointMap.delete(bp);
+                const breakpoint = breakpointMap.get(bp.id);
+
+                if (breakpoint) {
+                  terminal.sendText(`breakpoint delete ${breakpoint}`);
+                  breakpointMap.delete(bp.id);
                 }
               });
-            }
-          });
-
-          vscode.window.onDidWriteTerminalData((event) => {
-            console.log("event", event);
-            if (event.terminal === terminal) {
-              const output = event.data;
-              console.log("output", output);
-              const match = output.match(/^\d+: /);
-              if (match) {
-                const bpId = match[1];
-                // console.log(match);
-                vscode.debug.breakpoints.forEach((bp) => {
-                  if (!breakpointMap.has(bp)) {
-                    breakpointMap.set(bp, bpId);
-                  }
-                });
-              }
             }
           });
         });
