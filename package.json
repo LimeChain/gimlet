@@ -3,7 +3,7 @@
   "displayName": "Solana Step Debugger",
   "description": "Solana Step Debugger for VS Code. It wraps your local agave-ledger-tool and solana-lldb into one easy to use debugger.",
   "publisher": "wyzax",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "engines": {
     "vscode": "^1.50.0"
   },
