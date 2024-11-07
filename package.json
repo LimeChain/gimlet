@@ -1,9 +1,9 @@
 {
   "name": "solana-step-debugger",
-  "displayName": "Solana Step Debugger",
-  "description": "Solana Step Debugger for VS Code. It wraps your local agave-ledger-tool and solana-lldb into one easy to use debugger.",
+  "displayName": "Testing my L1Network Program Debugger",
+  "description": "Testing my L1Network Program Debugger",
   "publisher": "wyzax",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "engines": {
     "vscode": "^1.50.0"
   },
