@@ -96,18 +96,33 @@ function startSolanaDebugger() {
             return;
           }
 
+          const transformedProjectFolderName = projectFolderName.replace(
+            /-/g,
+            "_"
+          );
+
           const executableFile = files.find(
             (file) =>
-              file.startsWith(`${projectFolderName}-`) && !file.includes(".")
+              file.startsWith(`${transformedProjectFolderName}-`) &&
+              !file.includes(".")
           );
 
           const executablePath = `${depsPath}/${executableFile}`;
 
+          console.log(projectFolderName);
+          console.log(`Executable path: ${executablePath}`);
+          console.log(`Executable file: ${executableFile}`);
+
           bpCounter = 1;
+
+          const isWSL =
+            os.platform() === "linux" && os.release().includes("microsoft");
+
+          const debuggerCommand = isWSL ? "lldb" : "solana-lldb";
 
           const terminal = vscode.window.createTerminal("Solana Debugger");
           terminal.show();
-          terminal.sendText("solana-lldb");
+          terminal.sendText(debuggerCommand);
 
           setTimeout(() => {
             terminal.sendText(`target create ${executablePath}`);

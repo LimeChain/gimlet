@@ -42,6 +42,8 @@ export PATH="/$PATH:/Users/user/.local/share/solana/install/active_release/bin/s
 ### PATHS for solana-cli .bashrc
 
 ```sh
+. "$HOME/.cargo/env"
+
 export PATH="/usr/bin:$PATH"
 export PATH="/usr/local/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
