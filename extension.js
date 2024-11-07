@@ -145,6 +145,18 @@ function startSolanaDebugger() {
   );
 }
 
+function reRunProcessLaunch() {
+  const terminal = vscode.window.terminals.find(
+    (t) => t.name === "Solana Debugger"
+  );
+
+  if (terminal) {
+    terminal.sendText("process launch -- --nocapture");
+  } else {
+    vscode.window.showErrorMessage("Solana Debugger terminal not found.");
+  }
+}
+
 /**
  * @param {vscode.ExtensionContext} context
  */
@@ -177,6 +189,15 @@ function activate(context) {
   );
 
   context.subscriptions.push(disposable2);
+
+  const disposable3 = vscode.commands.registerCommand(
+    "extension.reRunProcessLaunch",
+    () => {
+      reRunProcessLaunch();
+    }
+  );
+
+  context.subscriptions.push(disposable3);
 }
 
 function deactivate() {}

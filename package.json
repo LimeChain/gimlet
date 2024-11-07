@@ -21,6 +21,10 @@
       {
         "command": "extension.runSolanaLLDB",
         "title": "Run Solana LLDB"
+      },
+      {
+        "command": "extension.reRunProcessLaunch",
+        "title": "Re-run process launch"
       }
     ]
   },

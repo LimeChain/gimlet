@@ -17,6 +17,18 @@
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 ```
 
+### If solana-lldb is not found on system you might need to run this command inside a rust project
+
+```sh
+cargo-build-sbf --force-tools-install
+```
+
+#### Path for solana-lldb
+
+```sh
+export PATH="/$PATH:/Users/user/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
+```
+
 #### Optional
 
 `anchor avm` -> `cargo install --git https://github.com/coral-xyz/anchor avm --force`
@@ -48,6 +60,13 @@ The output will be displayed in the integrated terminal.
 1. Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`).
 2. Select `Run Solana LLDB`.
 3. The extension will build and start debugging your Solana program using solana-lldb.
+4. Once everything is completed you can set and remove breakpoints in the IDE and commands will automatically run inside the terminal. (If you run it again you should remove current breakpoints and redo them).
+
+#### Re-run process launch command
+
+- It re-runs the currently mounted executable in the same terminal.
+
+TIP: You can run the command again to restart the whole thing.
 
 ## Troubleshooting
 
