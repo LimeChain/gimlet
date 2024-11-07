@@ -4,14 +4,14 @@
 
 ## Prerequisites
 
-### macOS
+## macOS
 
-#### You need to have installed
+### You need to have installed
 
 - `agave-ledger-tool` -> `cargo install agave-ledger-tool`
 - `solana-cli` -> `sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"`
 
-#### Path for solana CLI
+### Path for solana CLI
 
 ```sh
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
@@ -32,6 +32,24 @@ export PATH="/$PATH:/Users/user/.local/share/solana/install/active_release/bin/s
 #### Optional
 
 `anchor avm` -> `cargo install --git https://github.com/coral-xyz/anchor avm --force`
+
+## Windows you need (WSL)
+
+Follow the [Solana Guide for WSL](https://solana.com/docs/intro/installation)
+
+### PATH for solana-cli .bashrc
+
+```sh
+export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+```
+
+- in a solana project run `cargo-build-sbf --force-tools-install` to install all off the necesarry tools
+
+### PATH for solana-lldb (change user)
+
+```sh
+export PATH="/$PATH:/{username or root}/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
+```
 
 ## Installation
 
@@ -70,14 +88,14 @@ TIP: You can run the command again to restart the whole thing.
 
 ## Troubleshooting
 
-### macOS
+## macOS
 
 if you have troubles with the extension, check if you have the following things installed:
 
 - `protobuf` -> `brew install protobuf`
 - `llvm` -> `brew install llvm`
 
-#### PATH for llvm
+### PATH for llvm
 
 ```sh
 export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
@@ -104,3 +122,15 @@ On some machines, the step below could also fix the issue:
 ### Permission Denied When Trying to Debug a Program
 
 Refer to this [Apple Developer Forum thread](https://forums.developer.apple.com/forums/thread/17452) to disable debugging protection for macOS systems.
+
+## Windows (WSL)
+
+### libpython 3.8.so.1.0 not found or executable not found
+
+```sh
+sudo apt update
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.8 python3.8-dev
+python 3.8 --version
+```
