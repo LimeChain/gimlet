@@ -35,12 +35,19 @@ export PATH="/$PATH:/Users/user/.local/share/solana/install/active_release/bin/s
 
 ## Windows you need (WSL)
 
-Follow the [Solana Guide for WSL](https://solana.com/docs/intro/installation)
+- Follow the [Solana Guide for WSL](https://solana.com/docs/intro/installation)
 
-### PATH for solana-cli .bashrc
+- Additionally install lldb -> `sudo apt install lldb`
+
+### PATHS for solana-cli .bashrc
 
 ```sh
-export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+export PATH="/usr/bin:$PATH"
+export PATH="/usr/local/bin:$PATH"
+export PATH="$HOME/.cargo/bin:$PATH"
+export PATH="/root/.avm/bin:$PATH"
+export PATH="/root/.local/share/solana/install/active_release/bin:$PATH"
+export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
 ```
 
 - in a solana project run `cargo-build-sbf --force-tools-install` to install all off the necesarry tools

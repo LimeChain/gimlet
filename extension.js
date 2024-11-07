@@ -108,9 +108,11 @@ function startSolanaDebugger() {
           const terminal = vscode.window.createTerminal("Solana Debugger");
           terminal.show();
           terminal.sendText("solana-lldb");
-          PerformanceEntry;
-          terminal.sendText(`target create ${executablePath}`);
-          terminal.sendText("process launch -- --nocapture");
+
+          setTimeout(() => {
+            terminal.sendText(`target create ${executablePath}`);
+            terminal.sendText("process launch -- --nocapture");
+          }, 500);
 
           vscode.debug.onDidChangeBreakpoints((event) => {
             if (event.added.length > 0) {
