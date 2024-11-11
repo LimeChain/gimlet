@@ -39,6 +39,13 @@ function getCommandPath(command) {
     "solana-lldb"
   );
 
+  const customSolanalldbPath = vscode.workspace
+    .getConfiguration("solanaDebugger")
+    .get("solanaLldbPath");
+  if (customSolanalldbPath) {
+    solanalldbPath = customSolanalldbPath;
+  }
+
   if (command.includes("agave-ledger-tool")) {
     return agaveLedgerToolPath;
   } else if (command.includes("solana-lldb")) {
@@ -72,6 +79,12 @@ function startSolanaDebugger() {
       terminal.dispose();
     }
   });
+
+  if (!fs.existsSync(depsPath)) {
+    vscode.window.showInformationMessage(
+      "Target folder not found. Cargo is installing necessary tools."
+    );
+  }
 
   exec(
     `cargo test --no-run --lib --package=${projectFolderName}`,
@@ -118,7 +131,7 @@ function startSolanaDebugger() {
           const isWSL =
             os.platform() === "linux" && os.release().includes("microsoft");
 
-          const debuggerCommand = isWSL ? "lldb" : "solana-lldb";
+          const debuggerCommand = isWSL ? "rust-lldb" : "solana-lldb";
 
           const terminal = vscode.window.createTerminal("Solana Debugger");
           terminal.show();

@@ -13,6 +13,17 @@
   "activationEvents": [],
   "main": "./extension.js",
   "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "Solana LLDB Debugger Path",
+      "properties": {
+        "solanaDebugger.solanaLldbPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the solana-lldb executable"
+        }
+      }
+    },
     "commands": [
       {
         "command": "extension.runAgaveLedgerTool",
