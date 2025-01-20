@@ -39,7 +39,7 @@ export PATH="/$PATH:/Users/user/.local/share/solana/install/active_release/bin/s
 
 - Additionally install lldb -> `sudo apt install lldb`
 
-### PATHS for solana-cli .bashrc
+### PATHS for solana-cli .bashrc IMPORTANT
 
 ```sh
 . "$HOME/.cargo/env"
@@ -50,6 +50,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 export PATH="/root/.avm/bin:$PATH"
 export PATH="/root/.local/share/solana/install/active_release/bin:$PATH"
 export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
+export LLDB_DEBUGSERVER_PATH="/usr/bin/lldb-server"
 ```
 
 - in a solana project run `cargo-build-sbf --force-tools-install` to install all off the necesarry tools

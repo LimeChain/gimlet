@@ -128,10 +128,10 @@ function startSolanaDebugger() {
 
           bpCounter = 1;
 
-          const isWSL =
-            os.platform() === "linux" && os.release().includes("microsoft");
+          // const isWSL =
+          //   os.platform() === "linux" && os.release().includes("microsoft");
 
-          const debuggerCommand = isWSL ? "rust-lldb" : "solana-lldb";
+          const debuggerCommand = "solana-lldb";
 
           const terminal = vscode.window.createTerminal("Solana Debugger");
           terminal.show();
