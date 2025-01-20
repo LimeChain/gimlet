@@ -9,7 +9,7 @@
 ### You need to have installed
 
 - `agave-ledger-tool` -> `cargo install agave-ledger-tool`
-- `solana-cli` -> `sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"`
+- `solana-cli` -> `sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"` NOTE: Use latest version (2.0.23 at time of writing)
 
 ### Path for solana CLI
 
