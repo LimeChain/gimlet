@@ -21,7 +21,7 @@ jobs:
 
       - name: Create namespace
         run: |
-          npx ovsx list-namesapces | grep -q wyzax || npx ovsx create-namespace wyzax -p ${{ secrets.OPEN_VSX_TOKEN }}
+          npx ovsx list-namespaces | grep -q wyzax || npx ovsx create-namespace wyzax -p ${{ secrets.OPEN_VSX_TOKEN }}
 
       - name: Publish to Open VSX Registry
         uses: HaaLeo/publish-vscode-extension@v1
