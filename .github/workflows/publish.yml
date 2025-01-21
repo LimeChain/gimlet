@@ -1,9 +1,8 @@
 name: Deploy VS Code Extension
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [published]
 
 jobs:
   publish:
