@@ -3,7 +3,7 @@
   "displayName": "Testing my L1Network Program Debugger",
   "description": "Testing my L1Network Program Debugger",
   "publisher": "wyzax",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "engines": {
     "vscode": "^1.50.0"
   },
