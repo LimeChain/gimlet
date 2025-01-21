@@ -11,29 +11,24 @@
 - `agave-ledger-tool` -> `cargo install agave-ledger-tool`
 - `solana-cli` -> `sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"` NOTE: Use latest version (2.0.23 at time of writing)
 
-### Path for solana CLI
+### PATHS for solana-cli .zshrc IMPORTANT
 
 ```sh
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+export PATH="/$PATH:/Users/user/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
 ```
 
-### If solana-lldb is not found on system you might need to run this command inside a rust project
+If solana-lldb is not found on system you might need to run this command inside a rust project
 
 ```sh
 cargo-build-sbf --force-tools-install
 ```
 
-#### Path for solana-lldb
-
-```sh
-export PATH="/$PATH:/Users/user/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
-```
-
-#### Optional
+Optional
 
 `anchor avm` -> `cargo install --git https://github.com/coral-xyz/anchor avm --force`
 
-## Windows you need (WSL)
+## Windows (WSL)
 
 - Follow the [Solana Guide for WSL](https://solana.com/docs/intro/installation)
 
@@ -43,7 +38,6 @@ export PATH="/$PATH:/Users/user/.local/share/solana/install/active_release/bin/s
 
 ```sh
 . "$HOME/.cargo/env"
-
 export PATH="/usr/bin:$PATH"
 export PATH="/usr/local/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
@@ -53,13 +47,7 @@ export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf
 export LLDB_DEBUGSERVER_PATH="/usr/bin/lldb-server"
 ```
 
-- in a solana project run `cargo-build-sbf --force-tools-install` to install all off the necesarry tools
-
-### PATH for solana-lldb (change user)
-
-```sh
-export PATH="/$PATH:/{username or root}/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
-```
+#### in a solana project run `cargo-build-sbf --force-tools-install` to install all off the necesarry tools
 
 ## Installation
 
@@ -143,4 +131,12 @@ sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt update
 sudo apt install python3.8 python3.8-dev
 python 3.8 --version
+```
+
+### error: lldb-server not found
+
+This might be caused if PATH for the lldb server is not set correctly. In .bashrc
+
+```sh
+export LLDB_DEBUGSERVER_PATH="/usr/bin/lldb-server"
 ```
