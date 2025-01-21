@@ -6,28 +6,21 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-
       - name: Install dependencies
         run: npm install
-
-      - name: Verify can publish
-        run: npx ovsx -p ${{ secrets.OPEN_VSX_TOKEN }}
-
       - name: Publish to Open VSX Registry
         uses: HaaLeo/publish-vscode-extension@v1
-        id: publishToOpenVSX
         with:
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
-      - name: Publish Extension in VS Code marketplace
+      - name: Publish to Visual Studio Marketplace
         uses: HaaLeo/publish-vscode-extension@v1
         with:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
+          registryUrl: https://marketplace.visualstudio.com
