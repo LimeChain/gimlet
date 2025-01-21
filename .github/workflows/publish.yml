@@ -19,8 +19,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Create namespace
-        run: npx ovsx 
+      - name: Verify can publish
+        run: npx ovsx verify-pat wyzax
 
       - name: Publish to Open VSX Registry
         uses: HaaLeo/publish-vscode-extension@v1
