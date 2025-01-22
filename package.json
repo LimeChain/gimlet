@@ -1,9 +1,9 @@
 {
   "name": "solana-step-debugger",
-  "displayName": "Testing my L1Network Program Debugger",
-  "description": "Testing my L1Network Program Debugger",
-  "publisher": "wyzax",
-  "version": "1.0.10",
+  "displayName": "Solana Step Debugger",
+  "description": "Debug Solana programs easily",
+  "publisher": "limechain",
+  "version": "0.0.1-alpha",
   "engines": {
     "vscode": "^1.50.0"
   },
@@ -55,5 +55,9 @@
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
     "ovsx": "^0.10.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/limechain/solana-step-debugger.git"
   }
 }
