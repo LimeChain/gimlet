@@ -1,0 +1,17 @@
+[package]
+name = "solana_test_extension"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+solana-program = "1.9.0"
+
+# [profile.dev]
+# panic = "abort"
+# lto = true
+# # codegen-units set to 1 to avoid performance regressions when combined with LTO
+# # See https://github.com/rust-lang/rust/issues/47745
+# # https://doc.rust-lang.org/rustc/codegen-options/index.html#codegen-units
+# codegen-units = 1
+# incremental = false
+# strip = "symbols"
