@@ -84,6 +84,10 @@ The output will be displayed in the integrated terminal.
 
 TIP: You can run the command again to restart the whole thing.
 
+## Example project
+
+For detailed steps on how to run the example project, refer to the [installation and run guide](docs/install-run.md).
+
 ## Troubleshooting
 
 ## macOS
