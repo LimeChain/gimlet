@@ -4,6 +4,8 @@
 
 ## Prerequisites
 
+- `rust-analyzer` -> [Rust Analyzer Extension](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+
 ## macOS
 
 ### You need to have installed
