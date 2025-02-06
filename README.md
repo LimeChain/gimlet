@@ -58,7 +58,7 @@ export LLDB_DEBUGSERVER_PATH="/usr/bin/lldb-server"
 
 ## Usage
 
-1. Open your Solana project in VS Code.
+1. Open your VS Code inside the Solana project folder.
 2. Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) to run `Run Agave Ledger Tool` or `Run Solana LLDB`.
 
 ### Running Agave Ledger Tool
@@ -68,7 +68,13 @@ export LLDB_DEBUGSERVER_PATH="/usr/bin/lldb-server"
 3. Enter a valid subcommand when prompted, for example:
 
 ```sh
-   validate --path /path/to/ledger
+   accounts
+```
+
+NOTE: Keep in mind that you need to have setup a ledger locally and you need to config the path to the ledger using
+
+```sh
+-l /path/to/your/ledger
 ```
 
 The output will be displayed in the integrated terminal.
