@@ -17,7 +17,13 @@
 
 ```sh
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
+# for this path below there could be 2 possibilities
 export PATH="/$PATH:/Users/user/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
+
+# or
+
+export PATH="$PATH:$HOME/.local/share/solana/install/active_release/bin/sdk/sbf
 ```
 
 If solana-lldb is not found on system you might need to run this command inside a rust project
@@ -45,8 +51,14 @@ export PATH="/usr/local/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
 export PATH="/root/.avm/bin:$PATH"
 export PATH="/root/.local/share/solana/install/active_release/bin:$PATH"
-export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
 export LLDB_DEBUGSERVER_PATH="/usr/bin/lldb-server"
+
+# for this path below there could be 2 possibilities
+export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
+
+# or
+
+export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf
 ```
 
 #### in a solana project run `cargo-build-sbf --force-tools-install` to install all off the necesarry tools
@@ -58,7 +70,7 @@ export LLDB_DEBUGSERVER_PATH="/usr/bin/lldb-server"
 
 ## Usage
 
-1. Open your Solana project in VS Code.
+1. Open your VS Code inside the Solana project folder.
 2. Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) to run `Run Agave Ledger Tool` or `Run Solana LLDB`.
 
 ### Running Agave Ledger Tool
@@ -68,7 +80,13 @@ export LLDB_DEBUGSERVER_PATH="/usr/bin/lldb-server"
 3. Enter a valid subcommand when prompted, for example:
 
 ```sh
-   validate --path /path/to/ledger
+   accounts
+```
+
+NOTE: Keep in mind that you need to have setup a ledger locally and you need to config the path to the ledger using
+
+```sh
+-l /path/to/your/ledger
 ```
 
 The output will be displayed in the integrated terminal.
@@ -79,6 +97,7 @@ The output will be displayed in the integrated terminal.
 2. Select `Run Solana LLDB`.
 3. The extension will build and start debugging your Solana program using solana-lldb.
 4. Once everything is completed you can set and remove breakpoints in the IDE and commands will automatically run inside the terminal. (If you run it again you should remove current breakpoints and redo them).
+5. After you've set breakpoint you need to run the command `Re-run process launch` to launch the program again and stop at the set breakpoints.
 
 #### Re-run process launch command
 
