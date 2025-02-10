@@ -3,7 +3,7 @@
   "displayName": "Solana Step Debugger",
   "description": "Debug Solana programs easily",
   "publisher": "limechain",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.50.0"
   },
