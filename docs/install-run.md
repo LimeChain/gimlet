@@ -41,3 +41,7 @@ To run the example project, follow these steps:
 5. A popup will appear in the right corner with the message "Target folder not found. Cargo is installing necessary tools." Wait while Cargo installs the necessary tools.
 6. Once the installation is complete, the debugger will automatically start and execute the program.
 7. After the program finishes executing, you can set breakpoints and run it again using the Command Pallette and selecting `Re-run process launch`
+
+## Additional LLDB Commands
+
+Refer to this site [LLDB Commands](https://lldb.llvm.org/use/map.html)

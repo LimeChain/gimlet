@@ -99,6 +99,10 @@ The output will be displayed in the integrated terminal.
 4. Once everything is completed you can set and remove breakpoints in the IDE and commands will automatically run inside the terminal. (If you run it again you should remove current breakpoints and redo them).
 5. After you've set breakpoint you need to run the command `Re-run process launch` to launch the program again and stop at the set breakpoints.
 
+### Additional LLDB Commands
+
+Refer to this site [LLDB Commands](https://lldb.llvm.org/use/map.html)
+
 #### Re-run process launch command
 
 - It re-runs the currently mounted executable in the same terminal.
