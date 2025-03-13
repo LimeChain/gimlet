@@ -1,7 +1,7 @@
-## Install solana-step-debugger
+## Install Gimlet
 
 - Open VS Marketplace
-- Search Solana step debugger or click this [link](https://marketplace.visualstudio.com/items?itemName=limechain.solana-step-debugger)
+- Search Gimlet or click this [link](https://marketplace.visualstudio.com/items?itemName=limechain.gimlet)
 - Install
 - Restart VS Code if necessary
 
