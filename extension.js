@@ -130,7 +130,7 @@ function startSolanaDebugger() {
 
           const debuggerCommand = "solana-lldb";
 
-          const terminal = vscode.window.createTerminal("Solana Debugger");
+          const terminal = vscode.window.createTerminal("Solana LLDB Debugger");
           terminal.show();
           terminal.sendText(debuggerCommand);
 
@@ -189,7 +189,7 @@ function reRunProcessLaunch() {
  */
 function activate(context) {
   // This line of code will only be executed once when your extension is activated
-  console.log("Solana Step Debugger is now active!");
+  console.log("Gimlet is now active!");
 
   const disposable = vscode.commands.registerCommand(
     "extension.runAgaveLedgerTool",

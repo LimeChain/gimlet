@@ -59,6 +59,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/limechain/solana-step-debugger.git"
+    "url": "https://github.com/limechain/gimlet.git"
   }
 }
