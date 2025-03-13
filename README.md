@@ -1,4 +1,4 @@
-# Solana Debugger Extension
+# Gimlet
 
 > **Note:** This is a wrapper for the locally installed tools `agave-ledger-tool` and `solana-lldb`.
 
