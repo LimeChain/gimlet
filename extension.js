@@ -174,13 +174,13 @@ function startSolanaDebugger() {
 
 function reRunProcessLaunch() {
   const terminal = vscode.window.terminals.find(
-    (t) => t.name === "Solana Debugger"
+    (t) => t.name === "Solana LLDB Debugger"
   );
 
   if (terminal) {
     terminal.sendText("process launch -- --nocapture");
   } else {
-    vscode.window.showErrorMessage("Solana Debugger terminal not found.");
+    vscode.window.showErrorMessage("Solana LLDB Debugger terminal not found.");
   }
 }
 
