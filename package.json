@@ -38,6 +38,16 @@
         "command": "extension.reRunProcessLaunch",
         "title": "Re-run process launch"
       }
+    ],
+    "keybindings": [
+      {
+        "command": "extension.runSolanaLLDB",
+        "key": "f6"
+      },
+      {
+        "command": "extension.reRunProcessLaunch",
+        "key": "f7"
+      }
     ]
   },
   "scripts": {
