@@ -9,32 +9,31 @@ Gimlet is a VSCode Extension for debugging Solana programs. It is a wrapper for 
 - `solana-cli` -> `sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"` NOTE: Use latest version (2.0.23 at time of writing)
 - `solana-lldb` -> [setup](#if-solana-lldb-is-not-found)
 
-## OS Setup
+## Setup
 
 Depending on your operating system, follow the relevant setup instructions below:
 
-- [macOS Setup](#macos)
-- [Windows (WSL) Setup](#windows-wsl)
+- [macOS](#macos)
+- [Windows (WSL)](#windows-wsl)
 
 ### macOS
 
 #### Configuring PATH Variables (macOS)
 
 ```sh
-Add the following lines to your `.zshrc` or `.bashrc`:
+# Add the following lines to your `.zshrc` or `.bashrc`:
 
 # Solana CLI path
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
-# Solana LLDB tools path (choose the one matching your installation)
+# Solana LLDB tools path
+# Note: Choose only one of the two options based on your Solana installation structure.
 # Option 1
 export PATH="/$PATH:/Users/user/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
 
 # Option 2
 export PATH="$PATH:$HOME/.local/share/solana/install/active_release/bin/sdk/sbf
 ```
-
-Note: Choose only one of the two options based on your Solana installation structure.
 
 ### If solana-lldb is not found:
 
@@ -87,11 +86,7 @@ export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf
 
 1. Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`).
 2. Select `Run Agave Ledger Tool`.
-3. Enter a valid subcommand when prompted, for example:
-
-```sh
-   accounts
-```
+3. Enter a valid subcommand when prompted, for example: `accounts`
 
 The output will be displayed in the integrated terminal.
 
