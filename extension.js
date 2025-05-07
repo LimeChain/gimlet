@@ -8,6 +8,8 @@ let breakpointMap = new Map();
 
 // This starts from 1 because in lldb breakpoints start from index 1.
 let bpCounter = 1;
+let breakpointListenerDisposable = null;
+let activeTerminal = null;
 
 function getCommandPath(command) {
   const homeDir = os.homedir();
@@ -22,7 +24,7 @@ function getCommandPath(command) {
     "agave-ledger-tool"
   );
 
-  const solanalldbPath = path.join(
+  let solanalldbPath = path.join(
     homeDir,
     ".local",
     "share",
@@ -74,8 +76,16 @@ function startSolanaDebugger() {
   const projectFolderName = path.basename(workspaceFolder);
   const depsPath = `${workspaceFolder}/target/debug/deps`;
 
+  if (breakpointListenerDisposable) {
+    breakpointListenerDisposable.dispose();
+    breakpointListenerDisposable = null;
+  }
+
+  bpCounter = 1;
+  breakpointMap.clear();
+
   vscode.window.terminals.forEach((terminal) => {
-    if (terminal.name === "Solana Debugger") {
+    if (terminal.name === "Solana LLDB Debugger") {
       terminal.dispose();
     }
   });
@@ -126,41 +136,64 @@ function startSolanaDebugger() {
           console.log(`Executable path: ${executablePath}`);
           console.log(`Executable file: ${executableFile}`);
 
-          bpCounter = 1;
-
           const debuggerCommand = "solana-lldb";
 
           const terminal = vscode.window.createTerminal("Solana LLDB Debugger");
+          activeTerminal = terminal;
           terminal.show();
           terminal.sendText(debuggerCommand);
 
           setTimeout(() => {
             terminal.sendText(`target create ${executablePath}`);
             terminal.sendText("process launch -- --nocapture");
-          }, 500);
 
-          vscode.debug.onDidChangeBreakpoints((event) => {
-            if (event.added.length > 0) {
-              event.added.forEach((bp) => {
-                const line = bp.location.range.start.line + 1;
-                terminal.sendText(
-                  `breakpoint set --file ${bp.location.uri.fsPath} --line ${line}`
-                );
-
-                breakpointMap.set(bp.id, bpCounter);
-                bpCounter++;
-              });
-            }
-
-            if (event.removed.length > 0) {
-              event.removed.forEach((bp) => {
-                const breakpoint = breakpointMap.get(bp.id);
-
-                if (breakpoint) {
-                  terminal.sendText(`breakpoint delete ${breakpoint}`);
-                  breakpointMap.delete(bp.id);
+            const allBreakpoints = vscode.debug.breakpoints;
+            if (allBreakpoints && allBreakpoints.length > 0) {
+              allBreakpoints.forEach((bp) => {
+                if (bp.location) {
+                  const line = bp.location.range.start.line + 1;
+                  terminal.sendText(
+                    `breakpoint set --file ${bp.location.uri.fsPath} --line ${line}`
+                  );
+                  breakpointMap.set(bp.id, bpCounter);
+                  bpCounter++;
                 }
               });
+            }
+          }, 500);
+
+          breakpointListenerDisposable = vscode.debug.onDidChangeBreakpoints(
+            (event) => {
+              if (!activeTerminal) return;
+
+              if (event.added.length > 0) {
+                event.added.forEach((bp) => {
+                  const line = bp.location.range.start.line + 1;
+                  activeTerminal.sendText(
+                    `breakpoint set --file ${bp.location.uri.fsPath} --line ${line}`
+                  );
+
+                  breakpointMap.set(bp.id, bpCounter);
+                  bpCounter++;
+                });
+              }
+
+              if (event.removed.length > 0) {
+                event.removed.forEach((bp) => {
+                  const breakpoint = breakpointMap.get(bp.id);
+
+                  if (breakpoint) {
+                    activeTerminal.sendText(`breakpoint delete ${breakpoint}`);
+                    breakpointMap.delete(bp.id);
+                  }
+                });
+              }
+            }
+          );
+
+          terminal.onDidClose(() => {
+            if (activeTerminal === terminal) {
+              activeTerminal = null;
             }
           });
         });
@@ -178,9 +211,11 @@ function reRunProcessLaunch() {
   );
 
   if (terminal) {
+    activeTerminal = terminal;
     terminal.sendText("process launch -- --nocapture");
   } else {
     vscode.window.showErrorMessage("Solana LLDB Debugger terminal not found.");
+    startSolanaDebugger();
   }
 }
 
@@ -227,7 +262,13 @@ function activate(context) {
   context.subscriptions.push(disposable3);
 }
 
-function deactivate() {}
+function deactivate() {
+  if (breakpointListenerDisposable) {
+    breakpointListenerDisposable.dispose();
+    breakpointListenerDisposable = null;
+  }
+  activeTerminal = null;
+}
 
 module.exports = {
   activate,
