@@ -96,8 +96,88 @@ function startSolanaDebugger() {
     );
   }
 
+  // Find the Cargo.toml based on common Solana framework structures
+  let cargoTomlPath = null;
+  let packageName = null;
+
+  // Try paths for the three common frameworks
+  const potentialPaths = [
+    path.join(workspaceFolder, "program", "src", "Cargo.toml"), // Steel & Native
+    path.join(workspaceFolder, "program", "Cargo.toml"), // Alternative structure
+    path.join(workspaceFolder, "Cargo.toml"), // Root level
+  ];
+  // Find first available Cargo.toml from common locations
+  for (const potentialPath of potentialPaths) {
+    if (fs.existsSync(potentialPath)) {
+      try {
+        const cargoToml = fs.readFileSync(potentialPath, "utf8");
+        const packageNameMatch = cargoToml.match(/^\s*name\s*=\s*"([^"]+)"/m);
+        if (packageNameMatch) {
+          packageName = packageNameMatch[1];
+          break;
+        }
+      } catch (error) {
+        // Properly handle errors reading Cargo.toml
+        console.error(`Failed to read or parse ${potentialPath}: ${error.message}`);
+        vscode.window.showWarningMessage(
+          `Error processing ${path.basename(potentialPath)}: ${error.message}`
+        );
+        // Continue checking other paths
+      }
+    }
+  }
+
+  // Check Anchor structure (programs/[package-name]/Cargo.toml)
+  if (!packageName) {
+    const programsDir = path.join(workspaceFolder, "programs");
+    if (fs.existsSync(programsDir)) {
+      try {
+        const programDirs = fs.readdirSync(programsDir).filter((item) => {
+          try {
+            return fs.statSync(path.join(programsDir, item)).isDirectory();
+          } catch (statError) {
+            console.error(
+              `Failed to check if ${item} is directory: ${statError.message}`
+            );
+            return false;
+          }
+        });
+
+        for (const dir of programDirs) {
+          const anchorCargoPath = path.join(programsDir, dir, "Cargo.toml");
+          if (fs.existsSync(anchorCargoPath)) {
+            try {
+              const cargoToml = fs.readFileSync(anchorCargoPath, "utf8");
+              const packageNameMatch = cargoToml.match(/^\s*name\s*=\s*"([^"]+)"/m);
+              if (packageNameMatch) {
+                packageName = packageNameMatch[1];
+                break;
+              }
+            } catch (readError) {
+              console.error(`Failed to read ${anchorCargoPath}: ${readError.message}`);
+              vscode.window.showWarningMessage(
+                `Error reading program ${dir} Cargo.toml: ${readError.message}`
+              );
+              // Continue checking other directories
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to scan programs directory: ${error.message}`);
+        vscode.window.showWarningMessage(
+          `Error scanning program directories: ${error.message}`
+        );
+      }
+    }
+  }
+
+  if (!packageName) {
+    vscode.window.showErrorMessage("Could not find package name in any Cargo.toml");
+    return;
+  }
+
   exec(
-    `cargo test --no-run --lib --package=${projectFolderName}`,
+    `cargo test --no-run --lib --package=${packageName}`,
     { cwd: workspaceFolder },
     (err, stdout, stderr) => {
       if (err) {
@@ -113,21 +193,16 @@ function startSolanaDebugger() {
 
         fs.readdir(depsPath, (readDirErr, files) => {
           if (readDirErr) {
-            vscode.window.showErrorMessage(
-              `Error reading directory: ${readDirErr}`
-            );
+            vscode.window.showErrorMessage(`Error reading directory: ${readDirErr}`);
             return;
           }
 
-          const transformedProjectFolderName = projectFolderName.replace(
-            /-/g,
-            "_"
-          );
+          const transformedProjectFolderName = packageName.replace(/-/g, "_");
+          console.log("Transformed Project Folder", transformedProjectFolderName);
 
           const executableFile = files.find(
             (file) =>
-              file.startsWith(`${transformedProjectFolderName}-`) &&
-              !file.includes(".")
+              file.startsWith(`${transformedProjectFolderName}-`) && !file.includes(".")
           );
 
           const executablePath = `${depsPath}/${executableFile}`;
@@ -206,9 +281,7 @@ function startSolanaDebugger() {
 }
 
 function reRunProcessLaunch() {
-  const terminal = vscode.window.terminals.find(
-    (t) => t.name === "Solana LLDB Debugger"
-  );
+  const terminal = vscode.window.terminals.find((t) => t.name === "Solana LLDB Debugger");
 
   if (terminal) {
     activeTerminal = terminal;
@@ -243,12 +316,9 @@ function activate(context) {
 
   context.subscriptions.push(disposable);
 
-  const disposable2 = vscode.commands.registerCommand(
-    "extension.runSolanaLLDB",
-    () => {
-      startSolanaDebugger();
-    }
-  );
+  const disposable2 = vscode.commands.registerCommand("extension.runSolanaLLDB", () => {
+    startSolanaDebugger();
+  });
 
   context.subscriptions.push(disposable2);
 
