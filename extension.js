@@ -12,7 +12,7 @@ let breakpointListenerDisposable = null;
 let activeTerminal = null;
 
 function getCommandPath(command) {
-  const homeDir = os.homedir();
+  const homeDir = os.homedir(); // get the home dir /Users/emilroydev in my case
   const agaveLedgerToolPath = path.join(
     homeDir,
     ".local",
@@ -41,6 +41,8 @@ function getCommandPath(command) {
     "solana-lldb"
   );
 
+  // The idea of this is to get the `solanaLldbPath` from the settings and set this value of `customSolanalldbPath`
+  // If u are interested go in settings and search for `solanaLldbPath` to see it. It is just a input field
   const customSolanalldbPath = vscode.workspace
     .getConfiguration("solanaDebugger")
     .get("solanaLldbPath");
@@ -48,6 +50,7 @@ function getCommandPath(command) {
     solanalldbPath = customSolanalldbPath;
   }
 
+  // So when i run command it retunrs the approriate path based on the command passed
   if (command.includes("agave-ledger-tool")) {
     return agaveLedgerToolPath;
   } else if (command.includes("solana-lldb")) {
@@ -66,15 +69,16 @@ function runCommand(command, args = "") {
     return;
   }
 
+  // Creates a new terminal with the commandPath and args
   const terminal = vscode.window.createTerminal(`Run ${command}`);
   terminal.show();
   terminal.sendText(`${commandPath} ${args}`);
 }
 
 function startSolanaDebugger() {
-  const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
-  const projectFolderName = path.basename(workspaceFolder);
-  const depsPath = `${workspaceFolder}/target/debug/deps`;
+  const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath; // extract my workspace folder path (e.g. /Users/emilroydev/Projects/solana-demo) for example
+  const projectFolderName = path.basename(workspaceFolder); // this set the project folder name (e.g. solana-demo) for logs 
+  const depsPath = `${workspaceFolder}/target/debug/deps`; // Path to compiled dependency files (.rlib, .d, .rmeta, etc.) -> created on `cargo build` or `cargo test`
 
   if (breakpointListenerDisposable) {
     breakpointListenerDisposable.dispose();
@@ -176,109 +180,159 @@ function startSolanaDebugger() {
     return;
   }
 
-  exec(
-    `cargo test --no-run --lib --package=${packageName}`,
-    { cwd: workspaceFolder },
-    (err, stdout, stderr) => {
-      if (err) {
-        vscode.window.showErrorMessage(`Build error: ${stderr}`);
-        return;
-      }
+  const anchorTomlPath = path.join(workspaceFolder, "Anchor.toml");
+  const isAnchorProject = fs.existsSync(anchorTomlPath);
 
-      try {
+  if (isAnchorProject) {
+    // use anchor-lldb generate
+    exec(
+      // This use to compile the Anchor instructions to generate binary executable for debugging
+      `anchor-lldb generate --package ${packageName}`,
+      { cwd: workspaceFolder },
+      (err, stdout, stderr) => {
+        if (err) {
+          vscode.window.showErrorMessage(`Build error: ${stderr}`);
+          return;
+        }
+        
+        // Extract the binary path from the output of the anchor-lldb
+        const binOutLine = stdout
+          .split("\n")
+          .find(line => line.startsWith("::BIN_OUT::"));
+  
+        // Check if its empty
+        if (!binOutLine) {
+          vscode.window.showErrorMessage("No binary output found in anchor-lldb generate output.");
+          return;
+        }
+  
+        const executablePath =  binOutLine.replace("::BIN_OUT::", "").trim();
+        console.log("Binary path: ", executablePath);
+        continueWithDebugger(executablePath);
+      }
+    );
+  } else {
+    // Fallback to native cargo build
+    exec(
+      `cargo test --no-run --lib --package=${packageName}`,
+      { cwd: workspaceFolder },
+      (err, stdout, stderr) => {
+        if (err) {
+          vscode.window.showErrorMessage(`Build error: ${stderr}`);
+          return;
+        }
+
         if (!fs.existsSync(depsPath)) {
-          vscode.window.showErrorMessage(`Executable not found: ${depsPath}`);
+          vscode.window.showErrorMessage(
+            "Target folder not found. Please run `cargo build` or `cargo test` first."
+          );
           return;
         }
 
         fs.readdir(depsPath, (readDirErr, files) => {
           if (readDirErr) {
-            vscode.window.showErrorMessage(`Error reading directory: ${readDirErr}`);
-            return;
+              vscode.window.showErrorMessage(`Error reading directory: ${readDirErr}`);
+              return;
           }
 
           const transformedProjectFolderName = packageName.replace(/-/g, "_");
-          console.log("Transformed Project Folder", transformedProjectFolderName);
-
           const executableFile = files.find(
             (file) =>
               file.startsWith(`${transformedProjectFolderName}-`) && !file.includes(".")
           );
 
+          if (!executableFile) {
+            vscode.window.showErrorMessage(`Executable not found for ${transformedProjectFolderName}`);
+            return;
+          }
+
           const executablePath = `${depsPath}/${executableFile}`;
+          continueWithDebugger(executablePath);
+        });
+      }
+    )
+  }z
+}
 
-          console.log(projectFolderName);
-          console.log(`Executable path: ${executablePath}`);
-          console.log(`Executable file: ${executableFile}`);
+// It checks if the executable path exists and then starts the terminal with gimlet-cli
+// and sets the breakpoints if any are set in the editor
+// It also listens for breakpoint changes and updates the terminal accordingly
+// It also handles the case when the terminal is closed and resets the activeTerminal variable
+function continueWithDebugger(executablePath) {
+  if (!fs.existsSync(executablePath)) {
+    vscode.window.showErrorMessage(`Executable not found: ${executablePath}`);
+    return;
+  }
 
-          const debuggerCommand = "solana-lldb";
+  fs.stat(executablePath, (err, stats) => {
+    if (err) {
+      vscode.window.showErrorMessage(`Error reading file: ${err}`);
+      return;
+    }
 
-          const terminal = vscode.window.createTerminal("Solana LLDB Debugger");
-          activeTerminal = terminal;
-          terminal.show();
-          terminal.sendText(debuggerCommand);
+    if (!stats.isFile()) {
+      vscode.window.showErrorMessage(`Path is not a file: ${executablePath}`);
+      return;
+    }
 
-          setTimeout(() => {
-            terminal.sendText(`target create ${executablePath}`);
-            terminal.sendText("process launch -- --nocapture");
+    const terminal = vscode.window.createTerminal("Solana LLDB Debugger");
+    activeTerminal = terminal;
+    terminal.show();
+    terminal.sendText("gimlet-cli");
 
-            const allBreakpoints = vscode.debug.breakpoints;
-            if (allBreakpoints && allBreakpoints.length > 0) {
-              allBreakpoints.forEach((bp) => {
-                if (bp.location) {
-                  const line = bp.location.range.start.line + 1;
-                  terminal.sendText(
-                    `breakpoint set --file ${bp.location.uri.fsPath} --line ${line}`
-                  );
-                  breakpointMap.set(bp.id, bpCounter);
-                  bpCounter++;
-                }
-              });
-            }
-          }, 500);
+    setTimeout(() => {
+      terminal.sendText(`target create ${executablePath}`);
+      terminal.sendText("process launch -- --nocapture");
 
-          breakpointListenerDisposable = vscode.debug.onDidChangeBreakpoints(
-            (event) => {
-              if (!activeTerminal) return;
+      const allBreakpoints = vscode.debug.breakpoints;
+      if (allBreakpoints && allBreakpoints.length > 0) {
+        allBreakpoints.forEach((bp) => {
+          if (bp.location) {
+            const line = bp.location.range.start.line + 1;
+            terminal.sendText(
+              `breakpoint set --file ${bp.location.uri.fsPath} --line ${line}`
+            );
+            breakpointMap.set(bp.id, bpCounter);
+            bpCounter++;
+          }
+        });
+      }
+    }, 500);
 
-              if (event.added.length > 0) {
-                event.added.forEach((bp) => {
-                  const line = bp.location.range.start.line + 1;
-                  activeTerminal.sendText(
-                    `breakpoint set --file ${bp.location.uri.fsPath} --line ${line}`
-                  );
+    breakpointListenerDisposable = vscode.debug.onDidChangeBreakpoints((event) => {
+      if (!activeTerminal) return;
 
-                  breakpointMap.set(bp.id, bpCounter);
-                  bpCounter++;
-                });
-              }
-
-              if (event.removed.length > 0) {
-                event.removed.forEach((bp) => {
-                  const breakpoint = breakpointMap.get(bp.id);
-
-                  if (breakpoint) {
-                    activeTerminal.sendText(`breakpoint delete ${breakpoint}`);
-                    breakpointMap.delete(bp.id);
-                  }
-                });
-              }
-            }
+      if (event.added.length > 0) {
+        event.added.forEach((bp) => {
+          const line = bp.location.range.start.line + 1;
+          activeTerminal.sendText(
+            `breakpoint set --file ${bp.location.uri.fsPath} --line ${line}`
           );
 
-          terminal.onDidClose(() => {
-            if (activeTerminal === terminal) {
-              activeTerminal = null;
-            }
-          });
+          breakpointMap.set(bp.id, bpCounter);
+          bpCounter++;
         });
-      } catch (e) {
-        vscode.window.showErrorMessage(`Error: ${e}`);
-        vscode.window.showErrorMessage(`Stderr Stack: ${stderr}`);
       }
-    }
-  );
+
+      if (event.removed.length > 0) {
+        event.removed.forEach((bp) => {
+          const breakpoint = breakpointMap.get(bp.id);
+          if (breakpoint) {
+            activeTerminal.sendText(`breakpoint delete ${breakpoint}`);
+            breakpointMap.delete(bp.id);
+          }
+        });
+      }
+    });
+
+    terminal.onDidClose(() => {
+      if (activeTerminal === terminal) {
+        activeTerminal = null;
+      }
+    });
+  });
 }
+
 
 function reRunProcessLaunch() {
   const terminal = vscode.window.terminals.find((t) => t.name === "Solana LLDB Debugger");
