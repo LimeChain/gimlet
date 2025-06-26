@@ -6,8 +6,9 @@ Gimlet is a VSCode Extension for debugging Solana programs. It is a wrapper for 
 
 - `rust-analyzer` -> [Rust Analyzer Extension](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
 - `agave-ledger-tool` -> `cargo install agave-ledger-tool`
+- `anchor-lldb` -> `cargo install anchor-lldb`
+- `gimlet-cli` -> `cargo install gimlet-cli`
 - `solana-cli` -> `sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"` NOTE: Use latest version (2.0.23 at time of writing)
-- `solana-lldb` -> [setup](#if-solana-lldb-is-not-found)
 
 ## Setup
 
@@ -26,16 +27,11 @@ Depending on your operating system, follow the relevant setup instructions below
 # Solana CLI path
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
-# Solana LLDB tools path
-# Note: Choose only one of the two options based on your Solana installation structure.
-# Option 1
-export PATH="/$PATH:/Users/user/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
-
-# Option 2
-export PATH="$PATH:$HOME/.local/share/solana/install/active_release/bin/sdk/sbf
+# Add our CLI paths works for both (anchor-lldb, gimlet-cli)
+export PATH="$HOME/.cargo/bin:$PATH"
 ```
 
-### If solana-lldb is not found:
+### If any issue are found:
 
 Run this command inside a Solana Rust project
 
@@ -64,12 +60,8 @@ export PATH="/root/.avm/bin:$PATH"
 export PATH="/root/.local/share/solana/install/active_release/bin:$PATH"
 export LLDB_DEBUGSERVER_PATH="/usr/bin/lldb-server"
 
-# Solana LLDB tools path (choose the one matching your installation)
-# Option 1
-export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
-
-# Option 2
-export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf
+# CLI tools path
+export PATH="/$PATH:/root/.cargo/bin:$PATH"
 ```
 
 ## Installation
