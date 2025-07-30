@@ -71,10 +71,19 @@ function runCommand(command, args = "") {
   terminal.sendText(`${commandPath} ${args}`);
 }
 
+// util for finding the executable file in the target/deploy directory
+function findExecutableFile(files, projectName, extension) {
+  const transformedProjectName = projectName.replace(/-/g, "_");
+  return files.find(
+    (file) =>
+      file.startsWith(`${transformedProjectName}`) && file.endsWith(extension)
+  );
+}
+
 function startSolanaDebugger() {
   const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
   const projectFolderName = path.basename(workspaceFolder);
-  const depsPath = `${workspaceFolder}/target/debug/deps`;
+  const depsPath = `${workspaceFolder}/target/deploy`;
 
   if (breakpointListenerDisposable) {
     breakpointListenerDisposable.dispose();
@@ -177,7 +186,8 @@ function startSolanaDebugger() {
   }
 
   exec(
-    `cargo test --no-run --lib --package=${packageName}`,
+    // Build the SBF program using cargo
+    `cargo build-sbf --debug`,
     { cwd: workspaceFolder },
     (err, stdout, stderr) => {
       if (err) {
@@ -200,16 +210,23 @@ function startSolanaDebugger() {
           const transformedProjectFolderName = packageName.replace(/-/g, "_");
           console.log("Transformed Project Folder", transformedProjectFolderName);
 
-          const executableFile = files.find(
-            (file) =>
-              file.startsWith(`${transformedProjectFolderName}-`) && !file.includes(".")
-          );
+          const executableFile = findExecutableFile(files, packageName, ".debug");
 
           const executablePath = `${depsPath}/${executableFile}`;
 
           console.log(projectFolderName);
           console.log(`Executable path: ${executablePath}`);
           console.log(`Executable file: ${executableFile}`);
+
+          const bpfCompiledFile = findExecutableFile(files, packageName, ".so");
+          const bpfCompiledPath = `${depsPath}/${bpfCompiledFile}`;
+
+          console.log(`BPF compiled path: ${bpfCompiledPath}`);
+          const agaveLedgerToolCommand = `agave-ledger-tool program run -l ledger -e debugger ${bpfCompiledPath}`
+
+          const agaveTerminal = vscode.window.createTerminal("Agave Ledger Tool");
+          agaveTerminal.show();
+          agaveTerminal.sendText(agaveLedgerToolCommand);
 
           const debuggerCommand = "solana-lldb";
 
@@ -220,7 +237,8 @@ function startSolanaDebugger() {
 
           setTimeout(() => {
             terminal.sendText(`target create ${executablePath}`);
-            terminal.sendText("process launch -- --nocapture");
+            terminal.sendText(`gdb-remote 127.0.0.1:9001`); // Connect to the gdb server that agave-ledger-tool started on 
+            // terminal.sendText("process launch -- --nocapture");
 
             const allBreakpoints = vscode.debug.breakpoints;
             if (allBreakpoints && allBreakpoints.length > 0) {

@@ -7,25 +7,35 @@
 
 ## Steps to Debug a Solana Program
 
-1. **Launch the Debugger**:
+1. **Start local ledger**:
+   - Open terminal and type
+```zsh
+solana-test-validator --ledger ./ledger
+```
+- **Note**: You should use that `naming` for your local ledger folder 
+
+2. **Launch the Debugger**:
 
    - Press `Cmd + Shift + P` (on Mac) or `Ctrl + Shift + P` (on Windows).
    - Select `Run Solana LLDB` from the command palette.
-   - This will launch the debugger and run the file that is currently open in the VSCode window.
+   - This is going to do the following steps:
+     1. It will compile your program using `cargo build-sbf --debug` to create sBPF `.so` and `.debug` stripped files.
+     2. Run the compiled `.so` file on a local ledger using `agave-ledger-tool` in debug mode, starting a GDB remote server (usually on port 9001) for `solana-lldb` to attach and control execution.
+     3. Launch `solana-lldb` and attach it to that GDB remote port, loading the `.debug` file for debugging.
 
-2. **Add Breakpoints**:
+3. **Add Breakpoints**:
 
    - After the file has run, you can add breakpoints.
    - To add a breakpoint, you can click on a row in the breakpoint area or press `F9`.
    - You can add and remove breakpoints, and commands will automatically be executed in the Solana LLDB terminal to reflect these changes.
    - **Note**: If the debugger is stopped, you will need to add all of the breakpoints again.
 
-3. **Re-run the Debugger**:
+4. **Re-run the Debugger**:
 
    - Press `Cmd + Shift + P` (on Mac) or `Ctrl + Shift + P` (on Windows) again.
    - Select `Re-run process launch` to run the debugger with the breakpoints.
 
-4. **Hit Breakpoints**:
+5. **Hit Breakpoints**:
    - When a breakpoint is hit, you will see the memory address location, frame, file, and row of the breakpoint in the terminal.
    - To continue execution, type `continue` in the terminal.
    - The program execution will continue to the next breakpoint or until it finishes.
