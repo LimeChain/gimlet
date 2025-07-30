@@ -80,7 +80,8 @@ export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf
 ## Usage
 
 1. Open your VS Code inside the Solana project folder.
-2. Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) to run `Run Agave Ledger Tool` or `Run Solana LLDB`.
+2. Run your local ledger using the command described bellow.
+3. Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) to run `Run Agave Ledger Tool` or `Run Solana LLDB`.
 
 ### Running Agave Ledger Tool
 
@@ -100,11 +101,12 @@ solana-test-validator --ledger ./ledger
 
 ### Debugging a Solana Program
 
-1. Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`).
-2. Select `Run Solana LLDB`.
-3. The extension will build and start debugging your Solana program using solana-lldb.
-4. Once everything is completed you can set and remove breakpoints in the IDE and commands will automatically run inside the terminal. (If you run it again you should remove current breakpoints and redo them).
-5. After you've set breakpoint you need to run the command `Re-run process launch` to launch the program again and stop at the set breakpoints.
+1. [Start local ledger](#running-agave-ledger-tool) as described above
+2. Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`).
+3. Select `Run Solana LLDB`.
+4. The extension will build and start debugging your Solana program using solana-lldb.
+5. Once everything is completed you can set and remove breakpoints in the IDE and commands will automatically run inside the terminal. (If you run it again you should remove current breakpoints and redo them).
+6. After you've set breakpoint you need to run the command `Re-run process launch` to launch the program again and stop at the set breakpoints.
 
 #### Re-run process launch command
 
