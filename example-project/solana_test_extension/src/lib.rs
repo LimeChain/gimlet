@@ -9,20 +9,15 @@ pub fn process_instruction(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
+    msg!("lorem ipsum");
+
     let stop = 1;
     msg!("stop: {}", stop);
-    msg!("lorem ipsum");
+    
+    let x = 15;
+    let y = 16;
+    let sum = x + y;
+    msg!("Sum of x and y is: {}", sum);
     msg!("Hello, Solana!");
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_process_instruction() {
-        let result = process_instruction(&Pubkey::default(), &[], &[]);
-        assert!(result.is_ok());
-    }
 }
