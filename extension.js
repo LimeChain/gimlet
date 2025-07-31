@@ -80,7 +80,7 @@ function findExecutableFile(files, projectName, extension) {
   );
 }
 
-function startSolanaDebugger() {
+async function startSolanaDebugger() {
   const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
   const projectFolderName = path.basename(workspaceFolder);
   const depsPath = `${workspaceFolder}/target/deploy`;
@@ -115,6 +115,7 @@ function startSolanaDebugger() {
     path.join(workspaceFolder, "program", "Cargo.toml"), // Alternative structure
     path.join(workspaceFolder, "Cargo.toml"), // Root level
   ];
+
   // Find first available Cargo.toml from common locations
   for (const potentialPath of potentialPaths) {
     if (fs.existsSync(potentialPath)) {
@@ -139,10 +140,14 @@ function startSolanaDebugger() {
   // Check Anchor structure (programs/[package-name]/Cargo.toml)
   if (!packageName) {
     const programsDir = path.join(workspaceFolder, "programs");
+    const programsList = []; // Contains the names of all programs
+
     if (fs.existsSync(programsDir)) {
       try {
         const programDirs = fs.readdirSync(programsDir).filter((item) => {
           try {
+            // Add the program name to the list
+            programsList.push(item);
             return fs.statSync(path.join(programsDir, item)).isDirectory();
           } catch (statError) {
             console.error(
@@ -152,22 +157,44 @@ function startSolanaDebugger() {
           }
         });
 
-        for (const dir of programDirs) {
-          const anchorCargoPath = path.join(programsDir, dir, "Cargo.toml");
-          if (fs.existsSync(anchorCargoPath)) {
-            try {
-              const cargoToml = fs.readFileSync(anchorCargoPath, "utf8");
-              const packageNameMatch = cargoToml.match(/^\s*name\s*=\s*"([^"]+)"/m);
-              if (packageNameMatch) {
-                packageName = packageNameMatch[1];
-                break;
-              }
-            } catch (readError) {
-              console.error(`Failed to read ${anchorCargoPath}: ${readError.message}`);
-              vscode.window.showWarningMessage(
-                `Error reading program ${dir} Cargo.toml: ${readError.message}`
+        // Bellow is the logic to handle multiple programs in an anchor project
+        if (programsList.length > 1) {
+          const programOptions = programsList.map((item) => ({
+            label: item,
+            description: "Select a program to debug",
+          }));
+
+          const selected = await vscode.window.showQuickPick(programOptions, {
+            placeHolder: "Select one of your programs to debug",
+          });
+
+          if (!selected) {
+            vscode.window.showErrorMessage("Gimlet: Please select a program to debug.");
+            return;
+          }
+          
+          const anchorCargoPath = path.join(programsDir, selected.label, "Cargo.toml");
+          const foundPackageName = checkIfAnchorCargoExists(anchorCargoPath, selected.label);
+          if (foundPackageName) {
+            packageName = foundPackageName;
+          } else {
+            vscode.window.showErrorMessage(
+              `Cargo.toml not found in selected program: ${selected.label}`
+            );
+            return;
+          }
+        } else {
+          for (const dir of programDirs) {
+            const anchorCargoPath = path.join(programsDir, dir, "Cargo.toml");
+            const foundPackageName = checkIfAnchorCargoExists(anchorCargoPath, dir);
+            if (foundPackageName) {
+              packageName = foundPackageName;
+              break;
+            } else {
+              vscode.window.showErrorMessage(
+                `Cargo.toml not found in program: ${dir}`
               );
-              // Continue checking other directories
+              return;
             }
           }
         }
@@ -185,17 +212,26 @@ function startSolanaDebugger() {
     return;
   }
 
-  exec(
-    // Build the SBF program using cargo
-    `cargo build-sbf --debug`,
-    { cwd: workspaceFolder },
-    (err, stdout, stderr) => {
-      if (err) {
-        vscode.window.showErrorMessage(`Build error: ${stderr}`);
-        return;
-      }
+  vscode.window.withProgress({
+    location: vscode.ProgressLocation.Notification,
+    title: "Building Solana program, for a multi-program project it can take some time because of compiling",
+    cancellable: false
+  }, (progress) => {
+    progress.report({ increment: 0, message: "Starting build..." });
+    
+    return new Promise((resolve) => {
+      exec(
+        // Build the SBF program using cargo
+        `cargo build-sbf --debug`,
+        { cwd: workspaceFolder },
+        (err, stdout, stderr) => {
+          if (err) {
+            vscode.window.showErrorMessage(`Build error: ${stderr}`);
+            resolve(); // Complete progress even on error
+            return;
+          }
 
-      try {
+          progress.report({ increment: 50, message: "Setting up debugger..." });      try {
         if (!fs.existsSync(depsPath)) {
           vscode.window.showErrorMessage(`Executable not found: ${depsPath}`);
           return;
@@ -239,6 +275,9 @@ function startSolanaDebugger() {
             terminal.sendText(`target create ${executablePath}`);
             terminal.sendText(`gdb-remote 127.0.0.1:9001`); // Connect to the gdb server that agave-ledger-tool started on 
             // terminal.sendText("process launch -- --nocapture");
+
+            progress.report({ increment: 100, message: "Build complete!" });
+            resolve(); // Complete the progress
 
             const allBreakpoints = vscode.debug.breakpoints;
             if (allBreakpoints && allBreakpoints.length > 0) {
@@ -285,17 +324,19 @@ function startSolanaDebugger() {
           );
 
           terminal.onDidClose(() => {
-            if (activeTerminal === terminal) {
-              activeTerminal = null;
-            }
+              if (activeTerminal === terminal) {
+                activeTerminal = null;
+              }
+            });
           });
-        });
-      } catch (e) {
-        vscode.window.showErrorMessage(`Error: ${e}`);
-        vscode.window.showErrorMessage(`Stderr Stack: ${stderr}`);
-      }
-    }
-  );
+        } catch (e) {
+          vscode.window.showErrorMessage(`Error: ${e}`);
+          vscode.window.showErrorMessage(`Stderr Stack: ${stderr}`);
+          resolve(); // Complete progress even on error
+        }
+      });
+    });
+  });
 }
 
 function reRunProcessLaunch() {
@@ -334,7 +375,7 @@ function activate(context) {
 
   context.subscriptions.push(disposable);
 
-  const disposable2 = vscode.commands.registerCommand("extension.runSolanaLLDB", () => {
+  const disposable2 = vscode.commands.registerCommand("extension.runSolanaLLDB",() => {
     startSolanaDebugger();
   });
 
@@ -362,3 +403,21 @@ module.exports = {
   activate,
   deactivate,
 };
+
+function checkIfAnchorCargoExists(anchorCargoPath, dir) {
+  if (fs.existsSync(anchorCargoPath)) {
+    try {
+      const cargoToml = fs.readFileSync(anchorCargoPath, "utf8");
+      const packageNameMatch = cargoToml.match(/^\s*name\s*=\s*"([^"]+)"/m);
+      if (packageNameMatch) {
+        return packageNameMatch[1]; // Return the package name instead of setting global variable
+      }
+    } catch (readError) {
+      console.error(`Failed to read ${anchorCargoPath}: ${readError.message}`);
+      vscode.window.showWarningMessage(
+        `Error reading program ${dir} Cargo.toml: ${readError.message}`
+      );
+    }
+  }
+  return null; // Return null if not found
+}
