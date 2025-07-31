@@ -375,7 +375,7 @@ function activate(context) {
 
   context.subscriptions.push(disposable);
 
-  const disposable2 = vscode.commands.registerCommand("extension.runSolanaLLDB",() => {
+  const disposable2 = vscode.commands.registerCommand("extension.runSolanaLLDB", () => {
     startSolanaDebugger();
   });
 
