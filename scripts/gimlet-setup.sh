@@ -184,6 +184,24 @@ check_python() {
     fi
 }
 
+check_file_descriptor_limits() {
+    log_info "Checking file descriptor limits..."
+    
+    local CURRENT_LIMIT=$(ulimit -n)
+    local RECOMMENDED_LIMIT=1000000
+
+    log_warning "File descriptor limit is $CURRENT_LIMIT, recommended value is at least $RECOMMENDED_LIMIT"
+    
+    if [ "$CURRENT_LIMIT" -lt "$RECOMMENDED_LIMIT" ]; then
+        log_error "File descriptor limit is too low!"
+        return 1  # or use exit 1 if you want to terminate the script
+    else
+        log_success "File descriptor limit is sufficient."
+    fi
+    
+    log_info "You can set it by running: 'ulimit -n $RECOMMENDED_LIMIT'"
+}
+
 # Find solana-lldb debugger
 # This depends on `find` which is available on most Unix-like systems, and it is slow, maybe we should find a way to speed it up
 # It is slow because it searches through the whole HOME directory and common paths, but if tools exists it will find it almost guaranteed
@@ -315,6 +333,7 @@ main() {
     detect_solana
     check_anchor
     check_python
+    check_file_descriptor_limits
     find_solana_lldb
     find_agave_ledger_tool
     
