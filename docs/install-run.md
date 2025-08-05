@@ -1,57 +1,80 @@
+# Gimlet Installation and Usage Guide
+
 ## Install Gimlet
 
-- Open VS Marketplace
-- Search Gimlet or click this [link](https://marketplace.visualstudio.com/items?itemName=limechain.gimlet)
-- Install
-- Restart VS Code if necessary
+### Installation Steps
+
+1. **Open VS Code Marketplace**
+2. **Search for Gimlet** or click [here](https://marketplace.visualstudio.com/items?itemName=limechain.gimlet)
+3. **Install** the extension
+4. **Restart VS Code** if necessary
 
 ## Steps to Debug a Solana Program
 
-1. **Start local ledger**:
-   - Open terminal and type
+### Prerequisites
+
+- **Note:** Run `Gimlet: Check Dependencies` in the Command Palette to verify all requirements.
+
+### 1. Start Local Ledger
+
+Open terminal and run:
+
 ```zsh
 solana-test-validator --ledger ./ledger
 ```
-- **Note**: You should use that `naming` for your local ledger folder 
 
-2. **Launch the Debugger**:
+> **Important:** You should use that specific naming convention for your local ledger folder.
 
-   - Press `Cmd + Shift + P` (on Mac) or `Ctrl + Shift + P` (on Windows).
-   - Select `Run Solana LLDB` from the command palette.
-   - This is going to do the following steps:
-     1. It will compile your program using `cargo build-sbf --debug` to create sBPF `.so` and `.debug` stripped files.
-     2. Run the compiled `.so` file on a local ledger using `agave-ledger-tool` in debug mode, starting a GDB remote server (usually on port 9001) for `solana-lldb` to attach and control execution.
-     3. Launch `solana-lldb` and attach it to that GDB remote port, loading the `.debug` file for debugging.
+### 2. Launch the Debugger
 
-3. **Add Breakpoints**:
+1. **Open Command Palette**: Press `Cmd + Shift + P` (macOS) or `Ctrl + Shift + P` (Windows)
+2. **Select**: `Run Solana LLDB` from the command palette
 
-   - After the file has run, you can add breakpoints.
-   - To add a breakpoint, you can click on a row in the breakpoint area or press `F9`.
-   - You can add and remove breakpoints, and commands will automatically be executed in the Solana LLDB terminal to reflect these changes.
-   - **Note**: If the debugger is stopped, you will need to add all of the breakpoints again.
+#### What Happens During Launch
 
-4. **Re-run the Debugger**:
+The debugger will automatically perform the following steps:
 
-   - Press `Cmd + Shift + P` (on Mac) or `Ctrl + Shift + P` (on Windows) again.
-   - Select `Re-run process launch` to run the debugger with the breakpoints.
+1. **Compile Program**: Uses `cargo build-sbf --debug` to create sBPF `.so` and `.debug` stripped files
+2. **Start Debug Server**: Runs the compiled `.so` file on local ledger using `agave-ledger-tool` in debug mode, starting a GDB remote server (usually on port 9001)
+3. **Attach Debugger**: Launches `solana-lldb` and attaches it to the GDB remote port, loading the `.debug` file for debugging
 
-5. **Hit Breakpoints**:
-   - When a breakpoint is hit, you will see the memory address location, frame, file, and row of the breakpoint in the terminal.
-   - To continue execution, type `continue` in the terminal.
-   - The program execution will continue to the next breakpoint or until it finishes.
+### 3. Add Breakpoints
+
+#### Setting Breakpoints
+
+- **After the file has run**, you can add breakpoints
+- **To add a breakpoint**: Click on a row in the breakpoint area or press `F9`
+- **Dynamic management**: You can add and remove breakpoints, and commands will automatically be executed in the Solana LLDB terminal to reflect these changes
+
+> **Important:** If the debugger is stopped, you will need to add all the breakpoints again.
+
+### 4. Re-run the Debugger
+
+1. **Open Command Palette**: Press `Cmd + Shift + P` (macOS) or `Ctrl + Shift + P` (Windows)
+2. **Select**: `Re-run process launch` to run the debugger with the breakpoints
+
+### 5. Hit Breakpoints
+
+#### When a Breakpoint is Hit
+
+- You will see the **memory address location**, **frame**, **file**, and **row** of the breakpoint in the terminal
+- **To continue execution**: Type `continue` in the terminal
+- **Program flow**: The program execution will continue to the next breakpoint or until it finishes
 
 ## Running the Example Project
 
-To run the example project, follow these steps:
+### Step-by-Step Instructions
 
-1. Open a terminal in the `example-project/solana_test_extension` folder.
-2. Open the `lib.rs` file located in the `src` directory.
-3. Press `Cmd + Shift + P` (on Mac) or `Ctrl + Shift + P` (on Windows) to open the Command Palette.
-4. Select `Run Solana LLDB` from the Command Palette.
-5. A popup will appear in the right corner with the message "Target folder not found. Cargo is installing necessary tools." Wait while Cargo installs the necessary tools.
-6. Once the installation is complete, the debugger will automatically start and execute the program.
-7. After the program finishes executing, you can set breakpoints and run it again using the Command Pallette and selecting `Re-run process launch`
+Follow these steps to run the example project:
+
+1. **Navigate to project**: Open a terminal in the `examples/solana_test_extension` folder
+2. **Open source file**: Open the `lib.rs` file located in the `src` directory
+3. **Open Command Palette**: Press `Cmd + Shift + P` (macOS) or `Ctrl + Shift + P` (Windows)
+4. **Start debugging**: Select `Run Solana LLDB` from the Command Palette
+5. **Wait for installation**: A popup will appear in the right corner with the message "Target folder not found. Cargo is installing necessary tools." Wait while Cargo installs the necessary tools
+6. **Automatic execution**: Once the installation is complete, the debugger will automatically start and execute the program
+7. **Set breakpoints**: After the program finishes executing, you can set breakpoints and run it again using the Command Palette and selecting `Re-run process launch`
 
 ## Additional LLDB Commands
 
-Refer to this site [LLDB Commands](https://lldb.llvm.org/use/map.html)
+For a comprehensive list of LLDB commands and their usage, refer to the official [LLDB Commands Documentation](https://lldb.llvm.org/use/map.html).

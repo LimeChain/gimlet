@@ -358,6 +358,21 @@ function activate(context) {
   // This line of code will only be executed once when your extension is activated
   console.log("Gimlet is now active!");
 
+  // This is automated script to check dependencies for Gimlet
+  const setupDisposable = vscode.commands.registerCommand(
+    "extension.runGimletSetup",
+    () => {
+      const scriptPath = path.join(__dirname, 'scripts/gimlet-setup.sh');
+      
+      // Create a terminal to show the beautiful output
+      const terminal = vscode.window.createTerminal("Gimlet Setup");
+      terminal.show();
+      terminal.sendText(`bash "${scriptPath}"`);
+    }
+  );
+
+  context.subscriptions.push(setupDisposable);
+
   const disposable = vscode.commands.registerCommand(
     "extension.runAgaveLedgerTool",
     () => {
