@@ -63,7 +63,6 @@ cargo-build-sbf --force-tools-install
 
 This will force the installation of missing Solana build tools required for debugging.
 
----
 ### Windows (WSL)
 
 #### 1. Prerequisites
@@ -91,7 +90,6 @@ export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf
 export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf
 ```
 
----
 ## Installation
 
 1. Install the extension from the VS Code Marketplace
@@ -154,12 +152,10 @@ This command re-runs the currently mounted executable in the same terminal, allo
 
 For a comprehensive list of LLDB commands and their usage, refer to the official [LLDB Commands Documentation](https://lldb.llvm.org/use/map.html).
 
----
 ## Example Project
 
 For detailed step-by-step instructions on how to run the example project, refer to the [Installation and Run Guide](docs/install-run.md).
 
----
 ## Troubleshooting
 
 ### macOS
@@ -205,7 +201,6 @@ export LLDB_DEBUGSERVER_PATH="/Applications/Xcode.app/Contents/SharedFrameworks/
 
 Refer to the [Apple Developer Forum thread](https://forums.developer.apple.com/forums/thread/17452) for instructions on disabling debugging protection for macOS systems.
 
----
 ### Windows (WSL)
 
 #### Common Issues and Solutions

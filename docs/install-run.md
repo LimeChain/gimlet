@@ -75,8 +75,6 @@ Follow these steps to run the example project:
 6. **Automatic execution**: Once the installation is complete, the debugger will automatically start and execute the program
 7. **Set breakpoints**: After the program finishes executing, you can set breakpoints and run it again using the Command Palette and selecting `Re-run process launch`
 
----
-
 ## Additional LLDB Commands
 
 For a comprehensive list of LLDB commands and their usage, refer to the official [LLDB Commands Documentation](https://lldb.llvm.org/use/map.html).
