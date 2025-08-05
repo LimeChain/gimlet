@@ -9,5 +9,21 @@ vsc-extension-quickstart.md
 **/eslint.config.mjs
 **/.vscode-test.*
 
-# Dont include the example project
-./example-project
+# Exclude example projects and their build artifacts
+examples/**
+**/target/**
+**/node_modules/**
+**/ledger/**
+**/test-ledger/**
+**/snapshot/**
+**/accounts_hardlinks/**
+
+# Exclude development files
+*.log
+.DS_Store
+Thumbs.db
+
+# Exclude cargo and rust files that aren't needed
+**/*.lock
+**/Cargo.lock
+**/.cargo/**
