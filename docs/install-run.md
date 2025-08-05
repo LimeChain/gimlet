@@ -46,7 +46,7 @@ The debugger will automatically perform the following steps:
 - **To add a breakpoint**: Click on a row in the breakpoint area or press `F9`
 - **Dynamic management**: You can add and remove breakpoints, and commands will automatically be executed in the Solana LLDB terminal to reflect these changes
 
-> **Important:** If the debugger is stopped, you will need to add all of the breakpoints again.
+> **Important:** If the debugger is stopped, you will need to add all the breakpoints again.
 
 ### 4. Re-run the Debugger
 
@@ -67,7 +67,7 @@ The debugger will automatically perform the following steps:
 
 Follow these steps to run the example project:
 
-1. **Navigate to project**: Open a terminal in the `example-project/solana_test_extension` folder
+1. **Navigate to project**: Open a terminal in the `examples/solana_test_extension` folder
 2. **Open source file**: Open the `lib.rs` file located in the `src` directory
 3. **Open Command Palette**: Press `Cmd + Shift + P` (macOS) or `Ctrl + Shift + P` (Windows)
 4. **Start debugging**: Select `Run Solana LLDB` from the Command Palette
