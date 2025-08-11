@@ -4,12 +4,21 @@ const os = require("os");
 const path = require("path");
 const fs = require("fs");
 
+const FUNCTION_ADDRESS_MAP_NAME = "function_address_map.txt";
 let breakpointMap = new Map();
 
 // This starts from 1 because in lldb breakpoints start from index 1.
 let bpCounter = 1;
 let breakpointListenerDisposable = null;
 let activeTerminal = null;
+
+// State variables
+let globalWorkspaceFolder = null;
+let globalBpfCompiledPath = null;
+let globalInputPath = null;
+let functionAddressMapPath = null;
+let isLldbConnected = false; // Track if LLDB is connected to the gdb server
+let isAnchor = false; // Track if the project is an Anchor project
 
 function getCommandPath(command) {
   const homeDir = os.homedir();
@@ -81,9 +90,15 @@ function findExecutableFile(files, projectName, extension) {
 }
 
 async function startSolanaDebugger() {
+  // TODO: Maybe these can be moved to a separate config file with all the validation checks
   const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
+  globalWorkspaceFolder = workspaceFolder;
+
   const projectFolderName = path.basename(workspaceFolder);
   const depsPath = `${workspaceFolder}/target/deploy`;
+  const inputPath = `${workspaceFolder}/input`;
+  globalInputPath = inputPath;
+  isLldbConnected = false; // Reset the connection status
 
   if (breakpointListenerDisposable) {
     breakpointListenerDisposable.dispose();
@@ -177,6 +192,7 @@ async function startSolanaDebugger() {
           const foundPackageName = checkIfAnchorCargoExists(anchorCargoPath, selected.label);
           if (foundPackageName) {
             packageName = foundPackageName;
+            isAnchor = true; // Set the project as Anchor
           } else {
             vscode.window.showErrorMessage(
               `Cargo.toml not found in selected program: ${selected.label}`
@@ -189,6 +205,7 @@ async function startSolanaDebugger() {
             const foundPackageName = checkIfAnchorCargoExists(anchorCargoPath, dir);
             if (foundPackageName) {
               packageName = foundPackageName;
+              isAnchor = true; // Set the project as Anchor
               break;
             } else {
               vscode.window.showErrorMessage(
@@ -248,7 +265,7 @@ async function startSolanaDebugger() {
 
           const executableFile = findExecutableFile(files, packageName, ".debug");
 
-          const executablePath = `${depsPath}/${executableFile}`;
+          const executablePath = `${depsPath}/${executableFile}`; // holds the .debug file that needs to be loaded in agave-ledger-tool and used for generating function_address_map
 
           console.log(projectFolderName);
           console.log(`Executable path: ${executablePath}`);
@@ -256,14 +273,22 @@ async function startSolanaDebugger() {
 
           const bpfCompiledFile = findExecutableFile(files, packageName, ".so");
           const bpfCompiledPath = `${depsPath}/${bpfCompiledFile}`;
+          globalBpfCompiledPath = bpfCompiledPath;
 
           console.log(`BPF compiled path: ${bpfCompiledPath}`);
-          const agaveLedgerToolCommand = `agave-ledger-tool program run -l ledger -e debugger ${bpfCompiledPath}`
 
-          const agaveTerminal = vscode.window.createTerminal("Agave Ledger Tool");
-          agaveTerminal.show();
-          agaveTerminal.sendText(agaveLedgerToolCommand);
-
+          // This creates a function address map file (Where the address will be used to set breakpoints)
+          // This will execute every time user runs `Run Solana LLDB Debugger` command, so every time the code compiles it will update the function address map
+          functionAddressMapPath = path.join(os.tmpdir(), FUNCTION_ADDRESS_MAP_NAME) // Used TempDir
+          const functionMapCommand = `llvm-objdump -t ${executablePath} --demangle | grep ' F ' | awk '{print $1, $6}' > ${functionAddressMapPath}`;
+          exec(functionMapCommand, {cwd: workspaceFolder}, (error, stdout, stderr) => {
+            if (error) {
+              vscode.window.showErrorMessage(`Error generating function address map: ${stderr}`);
+              return;
+            }
+            console.log(`Function address map generated: ${functionAddressMapName}`);
+          })
+       
           const debuggerCommand = "solana-lldb";
 
           const terminal = vscode.window.createTerminal("Solana LLDB Debugger");
@@ -273,8 +298,6 @@ async function startSolanaDebugger() {
 
           setTimeout(() => {
             terminal.sendText(`target create ${executablePath}`);
-            terminal.sendText(`gdb-remote 127.0.0.1:9001`); // Connect to the gdb server that agave-ledger-tool started on 
-            // terminal.sendText("process launch -- --nocapture");
 
             progress.report({ increment: 100, message: "Build complete!" });
             resolve(); // Complete the progress
@@ -284,9 +307,25 @@ async function startSolanaDebugger() {
               allBreakpoints.forEach((bp) => {
                 if (bp.location) {
                   const line = bp.location.range.start.line + 1;
-                  terminal.sendText(
-                    `breakpoint set --file ${bp.location.uri.fsPath} --line ${line}`
-                  );
+                  const functionName = getFunctionNameAtLine(bp.location.uri.fsPath, line);
+                  if (!functionName) {
+                    vscode.window.showErrorMessage(
+                      `Could not find function name at line ${line} in ${bp.location.uri.fsPath}`
+                    );
+                    return;
+                  }
+
+                  const BpAddress = getAddressFromFunctionName(functionName);
+                  if (!isAnchor) {
+                    terminal.sendText(
+                      `breakpoint set --name ${BpAddress}`
+                    )
+                  } else {
+                    terminal.sendText(
+                      `breakpoint set --address ${BpAddress}`
+                    );
+                  }
+
                   breakpointMap.set(bp.id, bpCounter);
                   bpCounter++;
                 }
@@ -301,10 +340,24 @@ async function startSolanaDebugger() {
               if (event.added.length > 0) {
                 event.added.forEach((bp) => {
                   const line = bp.location.range.start.line + 1;
-                  activeTerminal.sendText(
-                    `breakpoint set --file ${bp.location.uri.fsPath} --line ${line}`
-                  );
+                  const functionName = getFunctionNameAtLine(bp.location.uri.fsPath, line);
+                  if (!functionName) {
+                    vscode.window.showErrorMessage(
+                      `Could not find function name at line ${line} in ${bp.location.uri.fsPath}`
+                    );
+                    return;
+                  }
 
+                  const BpAddress = getAddressFromFunctionName(functionName);
+                  if (!isAnchor) {
+                    terminal.sendText(
+                      `breakpoint set --name ${BpAddress}`
+                    )
+                  } else {
+                    terminal.sendText(
+                      `breakpoint set --address ${BpAddress}`
+                    );
+                  }
                   breakpointMap.set(bp.id, bpCounter);
                   bpCounter++;
                 });
@@ -340,17 +393,18 @@ async function startSolanaDebugger() {
 }
 
 function reRunProcessLaunch() {
-  const terminal = vscode.window.terminals.find((t) => t.name === "Solana LLDB Debugger");
-
+  const terminal = getTerminalByName("Solana LLDB Debugger");
+  
   if (terminal) {
     activeTerminal = terminal;
-    terminal.sendText("process launch -- --nocapture");
+    terminal.sendText("continue"); // Resume the process in the LLDB debugger (process launch -- --nocapture)
   } else {
     vscode.window.showErrorMessage("Solana LLDB Debugger terminal not found.");
     startSolanaDebugger();
   }
 }
 
+// ============== VSCODE COMMANDS ==============
 /**
  * @param {vscode.ExtensionContext} context
  */
@@ -404,6 +458,15 @@ function activate(context) {
   );
 
   context.subscriptions.push(disposable3);
+
+  const disposable4 = vscode.commands.registerCommand(
+    "extension.runAgaveLedgerToolForBreakpoint",
+    () => {
+      runAgaveLedgerToolForBreakpoint();
+    }
+  );
+
+  context.subscriptions.push(disposable4);
 }
 
 function deactivate() {
@@ -412,6 +475,11 @@ function deactivate() {
     breakpointListenerDisposable = null;
   }
   activeTerminal = null;
+
+  if (functionAddressMapPath && fs.existsSync(functionAddressMapPath)) {
+    fs.unlinkSync(functionAddressMapPath); // Delete the function address map file
+    functionAddressMapPath = null; // Clear the path after deletion
+  }
 }
 
 module.exports = {
@@ -419,6 +487,7 @@ module.exports = {
   deactivate,
 };
 
+// ============== UTILITIES ==============
 function checkIfAnchorCargoExists(anchorCargoPath, dir) {
   if (fs.existsSync(anchorCargoPath)) {
     try {
@@ -435,4 +504,175 @@ function checkIfAnchorCargoExists(anchorCargoPath, dir) {
     }
   }
   return null; // Return null if not found
+}
+
+// This func is used to get the function name from a specific line in a file
+// It reads the lib.rs file, tracks the function definitions, and returns the function name at the specified line number
+function getFunctionNameAtLine(filePath, lineNumber) {
+  const lines = fs.readFileSync(filePath, 'utf8').split('\n');
+  let depth = 0
+  let name = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (/fn\s+(\w+)/.test(lines[i])) { 
+      name = RegExp.$1; 
+      depth = 0; 
+    };
+
+    depth += (lines[i].match(/{/g)||[]).length;
+    depth -= (lines[i].match(/}/g)||[]).length;
+
+    if (i + 1 === lineNumber) return depth > 0 ? name : null;
+  }
+
+  return null;
+}
+
+function runAgaveLedgerToolForBreakpoint() {
+  // get all breakpoints
+  const allBreakpoints = vscode.debug.breakpoints;
+  const latestTerminal = getTerminalByName("Agave Ledger Tool");
+  let bpObject = null;
+
+  if (latestTerminal) {
+    latestTerminal.dispose(); // closes the previous terminal if it exists
+  }
+
+  let lldbTerminal = getTerminalByName("Solana LLDB Debugger");
+  if (!lldbTerminal) {
+    vscode.window.showErrorMessage("Solana LLDB Debugger terminal not found. Use `Run Solana LLDB` from Command Pallette to start it!");
+    return;
+  }
+
+  if (!allBreakpoints || allBreakpoints.length === 0) {
+    vscode.window.showErrorMessage("No breakpoints found. Please set a breakpoint first.");
+    return;
+  }
+
+  // if one breakpoint, just run it instantly
+  if (allBreakpoints.length === 1) {
+    const bp = allBreakpoints[0];
+    if (bp.location) {
+      const line = bp.location.range.start.line + 1;
+      const functionName = getFunctionNameAtLine(bp.location.uri.fsPath, line);
+      bpObject = bp;
+
+      if (functionName) {
+        runAgaveLedgerTool(globalWorkspaceFolder, globalBpfCompiledPath, functionName, globalInputPath, bpObject);
+      } else {
+        vscode.window.showErrorMessage("Breakpoint is not inside a function.");
+      }
+    }
+    return;
+  }
+
+  // if more than one breakpoints, let user select one
+  const breakpointOptions = allBreakpoints.filter(bp => bp.location)
+    .map((bp, index) => {
+      const line = bp.location.range.start.line + 1;
+      const fileName = path.basename(bp.location.uri.fsPath);
+      const functionName = getFunctionNameAtLine(bp.location.uri.fsPath, line);
+      
+
+       return {
+        label: `${fileName}:${line}`,
+        description: functionName ? `Function: ${functionName}` : "Not in a function",
+        breakpoint: bp,
+        functionName: functionName
+      };
+  });
+
+  vscode.window.showQuickPick(breakpointOptions, {
+    placeHolder: "Select a breakpoint to run agave-ledger-tool for"
+  }).then(selected => {
+    if (selected && selected.functionName) {
+      bpObject = selected.breakpoint;
+      runAgaveLedgerTool(globalWorkspaceFolder, globalBpfCompiledPath, selected.functionName, globalInputPath, bpObject);
+    } else if (selected) {
+      vscode.window.showErrorMessage("Selected breakpoint is not inside a function.");
+    }
+  });
+}
+
+// This function run the agave-ledger-tool with the provided parameters
+function runAgaveLedgerTool(workspaceFolder, bpfCompiledPath, instructionName, inputPath, bpObject) {
+  const instructionInput = `${inputPath}/${instructionName}.json`;
+  
+  if (!fs.existsSync(instructionInput)) {
+    vscode.window.showErrorMessage(`Instruction input file not found: ${instructionInput}`);
+    return;
+  }
+  
+  const agaveLedgerToolCommand = `agave-ledger-tool program run ${bpfCompiledPath} --ledger ledger --mode debugger -i ${instructionInput}`;
+  
+  const agaveTerminal = vscode.window.createTerminal("Agave Ledger Tool");
+  agaveTerminal.show();
+  agaveTerminal.sendText(agaveLedgerToolCommand);
+
+  // Connect to the Solana LLDB Debugger terminal
+  // Wait some time before connecting LLDB to ensure agave-ledger-tool is ready
+  setTimeout(() => {
+    connectSolanaLLDBToAgaveLedgerTool();
+
+    // Remove and re-add the specific breakpoint
+    // Note: Implemented because of the `agave-ledger-tool`, needs to set the breakpoint after i have connected to the gdb-remote server
+    vscode.debug.removeBreakpoints([bpObject]);
+    setTimeout(() => {
+      vscode.debug.addBreakpoints([bpObject]);
+      console.log('Breakpoint re-added:', bpObject.location);
+    }, 1000); // small delay to ensure removal is processed
+
+  }, 5000); 
+}
+
+
+function connectSolanaLLDBToAgaveLedgerTool() {
+  const terminal = getTerminalByName("Solana LLDB Debugger");
+
+  if (isLldbConnected) {
+    terminal.sendText("process detach"); // Detach from the previous process if already connected
+  }
+  
+  if (terminal) {
+    activeTerminal = terminal;
+    terminal.sendText(`gdb-remote 127.0.0.1:9001`); // Connect to the gdb server that agave-ledger-tool started on 
+    isLldbConnected = true; // Set the connection status to true
+  };
+}
+
+function getTerminalByName(name) {
+  return vscode.window.terminals.find((terminal) => terminal.name === name);
+}
+
+// This takes the `address` from the map file for a given function name
+function getAddressFromFunctionName(functionName) {
+  // const mapFilePath = path.join(globalWorkspaceFolder, functionAddressMapName);
+  const mapFilePath = functionAddressMapPath;
+  const lines = fs.readFileSync(mapFilePath, "utf8").split("\n");
+  for (const line of lines) {
+    if (isAnchor) {
+        // `global::` is Anchor's internal naming convention for an instruction discriminator
+      if (line.match(new RegExp(`global::${functionName}(::|$)`))) {
+        return line.split(' ')[0]; // Return the address part of the line
+      }
+    } else {
+      /**
+       * Note: This is for native Solana programs.
+       * If the user uses the `#[no_mangle]` attribute, the function name will be preserved as is.
+       * If the user uses the `#[inline(never)]` attribute, they will be able to debug the function.
+       * (This is necessary if the function is too simple and Rust optimizes logic at compile time.)
+       */
+      // TODO: Find a way to handle this without making the user to use `#[no_mangle]` and `#[inline(never)]` macros
+      if (line.match(new RegExp(`${functionName}`))) {
+      /**
+       * Note: If we use the raw address instead of the function name, Solana sometimes remaps
+       * this address in LLDB to another (invalid) address. This can cause breakpoints to be set
+       * incorrectly or not trigger as expected. Using the function name is more reliable for
+       * setting breakpoints in this context.
+       */
+        return functionName;
+      }
+    }
+  }
+  return null;
 }
