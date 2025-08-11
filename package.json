@@ -36,7 +36,7 @@
       },
       {
         "command": "extension.reRunProcessLaunch",
-        "title": "Re-run process launch"
+        "title": "Continue process"
       },
       {
         "command": "extension.runAgaveLedgerToolForBreakpoint",
