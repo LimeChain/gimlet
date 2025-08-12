@@ -36,7 +36,11 @@
       },
       {
         "command": "extension.reRunProcessLaunch",
-        "title": "Re-run process launch"
+        "title": "Continue process"
+      },
+      {
+        "command": "extension.runAgaveLedgerToolForBreakpoint",
+        "title": "Run Agave Ledger Tool for Breakpoint"
       }
     ],
     "keybindings": [
