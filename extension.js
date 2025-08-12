@@ -19,7 +19,7 @@ let globalInputPath = null;
 let functionAddressMapPath = null;
 let isLldbConnected = false; // Track if LLDB is connected to the gdb server
 let isAnchor = false; // Track if the project is an Anchor project
-let selectedAnchorProgramName = null;; // If it's an Anchor project with multiple programs, this will hold the selected program name(if its null then its single program project) 
+let selectedAnchorProgramName = null; // If it's an Anchor project with multiple programs, this will hold the selected program name(if its null then its single program project) 
 
 function getCommandPath(command) {
   const homeDir = os.homedir();
