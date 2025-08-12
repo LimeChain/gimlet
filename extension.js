@@ -19,6 +19,7 @@ let globalInputPath = null;
 let functionAddressMapPath = null;
 let isLldbConnected = false; // Track if LLDB is connected to the gdb server
 let isAnchor = false; // Track if the project is an Anchor project
+let selectedAnchorProgramName = null;; // If it's an Anchor project with multiple programs, this will hold the selected program name(if its null then its single program project) 
 
 function getCommandPath(command) {
   const homeDir = os.homedir();
@@ -98,7 +99,9 @@ async function startSolanaDebugger() {
   const depsPath = `${workspaceFolder}/target/deploy`;
   const inputPath = `${workspaceFolder}/input`;
   globalInputPath = inputPath;
+
   isLldbConnected = false; // Reset the connection status
+  selectedAnchorProgramName = null; // Reset the selected program name
 
   if (breakpointListenerDisposable) {
     breakpointListenerDisposable.dispose();
@@ -190,6 +193,7 @@ async function startSolanaDebugger() {
           
           const anchorCargoPath = path.join(programsDir, selected.label, "Cargo.toml");
           const foundPackageName = checkIfAnchorCargoExists(anchorCargoPath, selected.label);
+          selectedAnchorProgramName = selected.label; // Store the selected program name
           if (foundPackageName) {
             packageName = foundPackageName;
             isAnchor = true; // Set the project as Anchor
@@ -596,7 +600,12 @@ function runAgaveLedgerToolForBreakpoint() {
 
 // This function run the agave-ledger-tool with the provided parameters
 function runAgaveLedgerTool(workspaceFolder, bpfCompiledPath, instructionName, inputPath, bpObject) {
-  const instructionInput = `${inputPath}/${instructionName}.json`;
+  // I want if its multi program anchor project, to use path like `input/program_name/instruction_name.json`
+  // If its single program anchor project, then use path like `input/instruction_name.json
+  let instructionInput = `${inputPath}/${instructionName}.json`;
+  if (selectedAnchorProgramName) {
+    instructionInput = `${inputPath}/${selectedAnchorProgramName}/${instructionName}.json`;
+  }
   
   if (!fs.existsSync(instructionInput)) {
     vscode.window.showErrorMessage(`Instruction input file not found: ${instructionInput}`);
