@@ -41,10 +41,6 @@
       {
         "command": "extension.runAgaveLedgerToolForBreakpoint",
         "title": "Run Agave Ledger Tool for Breakpoint"
-      },
-      {
-        "command": "extension.runGimletSetup",
-        "title": "Gimlet: Check Dependencies"
       }
     ],
     "keybindings": [
