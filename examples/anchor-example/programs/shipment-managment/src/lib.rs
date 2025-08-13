@@ -6,9 +6,9 @@ declare_id!("6GYuei9hR62ZJgmSxFAxqp5xfyzYnH3ErTaPJ5J4zoYw");
 pub mod shipment_managment {
     use super::*;
 
-    pub fn initialize_counter(ctx: Context<InitializeCounter>) -> Result<()> {
+    pub fn initialize_counter(ctx: Context<InitializeCounter>, initial_count: u64) -> Result<()> {
         let counter = &mut ctx.accounts.counter;
-        counter.count = 0;
+        counter.count = initial_count;
         counter.bump = ctx.bumps.counter;
         Ok(())
     }

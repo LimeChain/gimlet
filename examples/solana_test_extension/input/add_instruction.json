@@ -1,0 +1,21 @@
+{
+    "program_id": "DytGRPMPW5ymeVt9vkokEGWyGw3cmj8xKEEvi49YqDP3",
+    "accounts": [
+          {
+      "key": "FRnjgQTQD3aSif3oeYeE4nHW3NmFMSdhGhhEiZbeJqWU",
+      "is_signer": true,
+      "is_writable": true
+    },
+    {
+      "key": "11111111111111111111111111111111",
+      "is_signer": false,
+      "is_writable": false
+    },
+    {
+      "key": "SysvarRent111111111111111111111111111111111",
+      "is_signer": false,
+      "is_writable": false
+    }
+    ],
+  "instruction_data": [0]
+}

@@ -4,10 +4,8 @@
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
   },
-  "type": "module",
   "dependencies": {
-    "@coral-xyz/anchor": "^0.31.1",
-    "crypto": "^1.0.1"
+    "@coral-xyz/anchor": "^0.31.1"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",
