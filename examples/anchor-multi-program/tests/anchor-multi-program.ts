@@ -3,7 +3,8 @@ import { Program } from "@coral-xyz/anchor";
 import { ProgramA } from "../target/types/program_a";
 import { ProgramB } from "../target/types/program_b";
 import { ProgramC } from "../target/types/program_c";
-import { generateInstruction } from "instruction-generator";
+import { generateInstruction } from "gimlet-instruction-gen";
+
 
 describe("program a", () => {
   // Configure the client to use the local cluster.

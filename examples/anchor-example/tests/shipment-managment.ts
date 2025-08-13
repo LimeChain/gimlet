@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { ShipmentManagment } from "../target/types/shipment_managment";
-import { generateInstruction } from "instruction-generator";
+import { generateInstruction } from "gimlet-instruction-gen";
 
 describe("shipment-managment", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
