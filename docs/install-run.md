@@ -13,7 +13,9 @@
 
 ### Prerequisites
 
-- **Note:** Run `Gimlet: Check Dependencies` in the Command Palette to verify all requirements.
+>**Note:** Run `Gimlet: Check Dependencies` in the Command Palette to verify all requirements.
+  
+### Important: You must create JSON input file for `agave-ledger-tool`, read [here](./input-for-ledger-tool.md)
 
 ### 1. Start Local Ledger
 
@@ -35,23 +37,30 @@ solana-test-validator --ledger ./ledger
 The debugger will automatically perform the following steps:
 
 1. **Compile Program**: Uses `cargo build-sbf --debug` to create sBPF `.so` and `.debug` stripped files
-2. **Start Debug Server**: Runs the compiled `.so` file on local ledger using `agave-ledger-tool` in debug mode, starting a GDB remote server (usually on port 9001)
-3. **Attach Debugger**: Launches `solana-lldb` and attaches it to the GDB remote port, loading the `.debug` file for debugging
+2. **Attach Debugger**: Launches `solana-lldb`, loads the `.debug` file, and registers any breakpoints you set before or after starting the session.
 
-### 3. Add Breakpoints
+### 3. Launch tha Agave Ledger Tool on your solana local ledger
+1. **Open Command Palette**: Press `Cmd + Shift + P` (macOS) or `Ctrl + Shift + P` (Windows)
+2. **Select**: `Run Agave Ledger Tool for Breakpoint` from the command palette
+
+- This will deploy using `.so` file in a mocked environment on the solana-local-host and will execute the instruction you have provided --input for (the JSON file)
+- It will host a `gdb-remote` server which solanaLLDB will connect automatically when using Gimlet.
+  
+### 4. Add Breakpoints
 
 #### Setting Breakpoints
 
-- **After the file has run**, you can add breakpoints
-- **To add a breakpoint**: Click on a row in the breakpoint area or press `F9`
-- **Dynamic management**: You can add and remove breakpoints, and commands will automatically be executed in the Solana LLDB terminal to reflect these changes
+- **Restarting:** To debug another instruction, run the `Agave Ledger Tool for Breakpoints` command again with a new `input.json` for that specific instruction *(just ensure you have the JSON file in the folder gimlet will derive it automatically)*.
+  
+- **Process Launching:** After setting breakpoints, use `continue` to restart the program and stop at your breakpoints.
+  
+- **Multiple Breakpoints:** Gimlet will make you choose one of your set breakpoints because `agave-ledger-tool` can run only for one instruction at a time.
 
-> **Important:** If the debugger is stopped, you will need to add all the breakpoints again.
-
-### 4. Re-run the Debugger
+### 4. Continue the process in the Debugger
 
 1. **Open Command Palette**: Press `Cmd + Shift + P` (macOS) or `Ctrl + Shift + P` (Windows)
-2. **Select**: `Re-run process launch` to run the debugger with the breakpoints
+2. **Select**: `Continue process` to resume the debugger at specific breakpoint you have chosen.
+3. **Another**: or just type `continue` in the `Solana LLDB Debugger` terminal
 
 ### 5. Hit Breakpoints
 
@@ -59,11 +68,9 @@ The debugger will automatically perform the following steps:
 
 - You will see the **memory address location**, **frame**, **file**, and **row** of the breakpoint in the terminal
 - **To continue execution**: Type `continue` in the terminal
-- **Program flow**: The program execution will continue to the next breakpoint or until it finishes
+- **Program flow**: The program execution will continue until it finishes
 
 ## Running the Example Project
-
-### Step-by-Step Instructions
 
 Follow these steps to run the example project:
 
@@ -71,9 +78,17 @@ Follow these steps to run the example project:
 2. **Open source file**: Open the `lib.rs` file located in the `src` directory
 3. **Open Command Palette**: Press `Cmd + Shift + P` (macOS) or `Ctrl + Shift + P` (Windows)
 4. **Start debugging**: Select `Run Solana LLDB` from the Command Palette
-5. **Wait for installation**: A popup will appear in the right corner with the message "Target folder not found. Cargo is installing necessary tools." Wait while Cargo installs the necessary tools
-6. **Automatic execution**: Once the installation is complete, the debugger will automatically start and execute the program
-7. **Set breakpoints**: After the program finishes executing, you can set breakpoints and run it again using the Command Palette and selecting `Re-run process launch`
+5. **Run Agave Ledger Tool for Breakpoints**  
+   - In the Command Palette again, select **`Run Agave Ledger Tool for Breakpoint`**.  
+   - This will deploy and execute your instruction using the `input.json` file.
+6. **Monitor the Solana LLDB Terminal**  
+   - Wait until **agave-ledger-tool** connects successfully.  
+   - Then focus on the Solana LLDB terminal.
+7. **Set Breakpoints**  
+   - Once the setup is complete, set or remove breakpoints in your IDE as needed.
+8. **Continue Process**  
+   - Run the **`continue`** command inside the `solana-lldb` terminal to start debugging with your breakpoints active.
+   - Or use the `Continue process` from Command Palette both of them are the same
 
 ## Additional LLDB Commands
 

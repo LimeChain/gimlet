@@ -8,6 +8,7 @@ Gimlet is a VSCode Extension for debugging Solana programs. It is a wrapper for 
 - [Setup](#setup)
   - [macOS](#macos)
   - [Windows (WSL)](#windows-wsl)
+  - [Verify you are using Solana LLVM Tools](#verify-you-are-using-solana-llvm-tools)
 - [Installation](#installation)
 - [Usage](#usage)
   - [Running Agave Ledger Tool](#running-agave-ledger-tool)
@@ -90,6 +91,34 @@ export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf
 export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf
 ```
 
+### Verify you are using Solana LLVM Tools
+
+- To correctly debug `sBPF` Solana programs you must use the `llvm-objdump` and `solana-lldb` provided by Solana's Platform Tools - not your locally(system) installed version.
+
+#### 1. Make sure your PATH includes the Solana Platform Tools directory.
+
+```sh
+export PATH="$PATH:$HOME/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
+```
+
+#### 2. Confirm that `llvm-objdump` is coming from that path:
+
+```sh
+which llvm-objdump
+```
+<sub>
+Expected output:
+<span style="color: #4CAF50;">
+/.../.local/share/solana/install/active_release/bin/platform-tools-sdk/sbf/dependencies/platform-tools/llvm/bin/llvm-objdump
+</span>
+</sub>
+
+#### 3. Confirm that `solana-lldb` is in PATH:
+
+```sh
+which solana-lldb
+```
+
 ## Installation
 
 1. Install the extension from the VS Code Marketplace
@@ -124,27 +153,57 @@ The output will be displayed in the integrated terminal.
 
 > **Note:** Make sure you have a local ledger set up and running before executing commands.
 
-### Debugging a Solana Program
+## Debugging a Solana Program
+> **IMPORTANT for Native Solana Programs:**  
+> When debugging native Solana programs (not using Anchor), you **must** add the `#[no_mangle]` and `#[inline(never)]` attributes to each instruction function you want to debug.  
+> This ensures the function names are preserved and not optimized away, making breakpoints and debugging possible.
 
-#### Step-by-Step Process
 > **Note:** `Gimlet: Check Dependencies` in the Command Palette to verify all requirements.
 
-1. **Start local ledger** - Follow the instructions in [Running Agave Ledger Tool](#running-agave-ledger-tool)
-2. **Open Command Palette** - Use `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS)
-3. **Select debugging option** - Choose `Run Solana LLDB`
-4. **Automatic setup** - The extension will build and start debugging your Solana program using solana-lldb
-5. **Set breakpoints** - Once setup is complete, you can set and remove breakpoints in the IDE
-6. **Launch process** - Run the `Re-run process launch` command to start debugging with your breakpoints
+> **!IMPORTANT:** You must have JSON file to execute an instruction using `agave-ledger-tool` -> [Input JSON Guide](docs/input-for-ledger-tool.md).
+1. **Start Local Ledger**  
+   Run:  
+
+   ```bash
+   solana-test-validator --ledger ./ledger
+   ```
+
+   *(This launches the Agave ledger environment.)*
+
+2. **Open Command Palette**  
+   - **Windows/Linux:** `Ctrl + Shift + P`  
+   - **macOS:** `Cmd + Shift + P`
+  
+3. **Launch Solana LLDB Debugging**  
+   - In the Command Palette, select **`Run Solana LLDB`**.
+  
+4. **Run Agave Ledger Tool for Breakpoints**  
+   - In the Command Palette again, select **`Run Agave Ledger Tool for Breakpoint`**.  
+   - This will deploy and execute your instruction using the `input.json` file.
+  
+5. **Monitor the Solana LLDB Terminal**  
+   - Wait until **agave-ledger-tool** connects successfully.  
+   - Then focus on the Solana LLDB terminal.
+  
+6. **Set Breakpoints**  
+   - Once the setup is complete, set or remove breakpoints in your IDE as needed.
+  
+7. **Continue Process**  
+   - Run the **`continue`** command inside the `solana-lldb` terminal to start debugging with your breakpoints active.
+   - Or use the `Continue process` from Command Palette
+ both of them are the same
 
 #### Important Notes
 
-- **Breakpoint management**: If you run the debugger again, remove current breakpoints and set them again
-- **Process launching**: After setting breakpoints, use `Re-run process launch` to restart the program and stop at your breakpoints
-- **Restarting**: You can run the entire debugging command again to restart the whole process
+- **Restarting:** To debug another instruction, run the `Agave Ledger Tool for Breakpoints` command again with a new `input.json` for that specific instruction.
+  
+- **Process Launching:** After setting breakpoints, use `continue` to restart the program and stop at your breakpoints.
+  
+- **Multiple Breakpoints:** Gimlet will make you choose one of your set breakpoints because `agave-ledger-tool` can run only for one instruction at a time.
 
-#### `Re-run process launch` Command from Command Pallette
+#### `Continue process` Command from Command Palette
 
-This command re-runs the currently mounted executable in the same terminal, allowing you to restart debugging with your current breakpoints.
+This command resumes the currently paused breakpoint in the same terminal, allowing you to resume the debugging with your current breakpoint.
 
 > **Tip:** You can run the debugging command multiple times to restart the entire debugging session.
 
