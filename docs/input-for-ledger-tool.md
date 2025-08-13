@@ -7,6 +7,7 @@ input/initialize.json
 ```
 
 If you have a multi program anchor project, you **must** create an program folder, should have the exact program name that this JSON file specify inputs for:
+
 ```
 input/program_name/initialize.json
 ```
@@ -101,10 +102,13 @@ The instruction data JSON file **must be named exactly after the function** it c
 
 **Example:**  
 If you have a function:  
+
 ```rust
 pub fn some_random_function(ctx: Context<...>) -> Result<()> { ... }
 ```
+
 Then the JSON file containing the instruction data should be named:
+
 ```rs
 input/some_random_function.json
 ```

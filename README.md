@@ -92,12 +92,17 @@ export PATH="/$PATH:/root/.local/share/solana/install/active_release/bin/sdk/sbf
 ```
 
 ### Verify you are using Solana LLVM Tools
+
 - To correctly debug `sBPF` Solana programs you must use the `llvm-objdump` and `solana-lldb` provided by Solana's Platform Tools - not your locally(system) installed version.
+
 #### 1. Make sure your PATH includes the Solana Platform Tools directory.
+
 ```sh
 export PATH="$PATH:$HOME/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin"
 ```
+
 #### 2. Confirm that `llvm-objdump` is coming from that path:
+
 ```sh
 which llvm-objdump
 ```
@@ -109,6 +114,7 @@ Expected output:
 </sub>
 
 #### 3. Confirm that `solana-lldb` is in PATH:
+
 ```sh
 which solana-lldb
 ```
@@ -157,30 +163,41 @@ The output will be displayed in the integrated terminal.
 > **!IMPORTANT:** You must have JSON file to execute an instruction using `agave-ledger-tool` -> [Input JSON Guide](docs/input-for-ledger-tool.md).
 1. **Start Local Ledger**  
    Run:  
+
    ```bash
    solana-test-validator --ledger ./ledger
    ```
+
    *(This launches the Agave ledger environment.)*
+
 2. **Open Command Palette**  
    - **Windows/Linux:** `Ctrl + Shift + P`  
    - **macOS:** `Cmd + Shift + P`
+  
 3. **Launch Solana LLDB Debugging**  
    - In the Command Palette, select **`Run Solana LLDB`**.
+  
 4. **Run Agave Ledger Tool for Breakpoints**  
    - In the Command Palette again, select **`Run Agave Ledger Tool for Breakpoint`**.  
    - This will deploy and execute your instruction using the `input.json` file.
+  
 5. **Monitor the Solana LLDB Terminal**  
    - Wait until **agave-ledger-tool** connects successfully.  
    - Then focus on the Solana LLDB terminal.
+  
 6. **Set Breakpoints**  
    - Once the setup is complete, set or remove breakpoints in your IDE as needed.
+  
 7. **Continue Process**  
    - Run the **`continue`** command inside the `solana-lldb` terminal to start debugging with your breakpoints active.
    - Or use the `Continue process` from Command Pallette both of them are the same
 
 #### Important Notes
+
 - **Restarting:** To debug another instruction, run the `Agave Ledger Tool for Breakpoints` command again with a new `input.json` for that specific instruction.
+  
 - **Process Launching:** After setting breakpoints, use `continue` to restart the program and stop at your breakpoints.
+  
 - **Multiple Breakpoints:** Gimlet will make you choose one of your set breakpoints because `agave-ledger-tool` can run only for one instruction at a time.
 
 #### `Continue process` Command from Command Pallette
