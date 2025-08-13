@@ -190,7 +190,8 @@ The output will be displayed in the integrated terminal.
   
 7. **Continue Process**  
    - Run the **`continue`** command inside the `solana-lldb` terminal to start debugging with your breakpoints active.
-   - Or use the `Continue process` from Command Pallette both of them are the same
+   - Or use the `Continue process` from Command Palette
+ both of them are the same
 
 #### Important Notes
 
@@ -200,7 +201,7 @@ The output will be displayed in the integrated terminal.
   
 - **Multiple Breakpoints:** Gimlet will make you choose one of your set breakpoints because `agave-ledger-tool` can run only for one instruction at a time.
 
-#### `Continue process` Command from Command Pallette
+#### `Continue process` Command from Command Palette
 
 This command resumes the currently paused breakpoint in the same terminal, allowing you to resume the debugging with your current breakpoint.
 

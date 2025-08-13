@@ -88,7 +88,7 @@ Follow these steps to run the example project:
    - Once the setup is complete, set or remove breakpoints in your IDE as needed.
 8. **Continue Process**  
    - Run the **`continue`** command inside the `solana-lldb` terminal to start debugging with your breakpoints active.
-   - Or use the `Continue process` from Command Pallette both of them are the same
+   - Or use the `Continue process` from Command Palette both of them are the same
 
 ## Additional LLDB Commands
 
