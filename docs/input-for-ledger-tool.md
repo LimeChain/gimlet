@@ -116,3 +116,4 @@ input/some_random_function.json
 This will deploy your program to the mocked local ledger and execute the instruction using the provided input.
 
 #### For more details on the input format and additional examples, check out our example projects -> [here](../examples/).
+
