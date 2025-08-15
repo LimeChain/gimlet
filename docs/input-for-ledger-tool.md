@@ -6,7 +6,8 @@ To debug your Solana program with Gimlet and Agave Ledger Tool, you **must** cre
 input/initialize.json
 ```
 
-If you have a multi program anchor project, you **must** create an program folder, should have the exact program name that this JSON file specify inputs for:
+If you have a multi-program anchor project, you **must** create a program folder, which must have the exact program name that this `JSON` file specifies inputs for:
+
 ```
 input/program_name/initialize.json
 ```
@@ -25,7 +26,7 @@ Each JSON file must provide all the data required by Agave Ledger Tool to simula
 
 **Example:**
 
-```json
+```js
 {
   "program_id": "DozgQiYtGbdyniV2T74xMdmjZJvYDzoRFFqw7UR5MwPK",
   "accounts": [
@@ -101,15 +102,17 @@ The instruction data JSON file **must be named exactly after the function** it c
 
 **Example:**  
 If you have a function:  
+
 ```rust
 pub fn some_random_function(ctx: Context<...>) -> Result<()> { ... }
 ```
+
 Then the JSON file containing the instruction data should be named:
+
 ```rs
 input/some_random_function.json
 ```
 
 This will deploy your program to the mocked local ledger and execute the instruction using the provided input.
 
-#### For more details on the input format and additional examples, check out our example projects -> [Examples](../examples/).
-
+#### For more details on the input format and additional examples, check out our example projects -> [here](../examples/).
