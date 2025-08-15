@@ -6,8 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-shipment_managment = "6GYuei9hR62ZJgmSxFAxqp5xfyzYnH3ErTaPJ5J4zoYw"
-
+anchor_nested_functions = "2rc2qFi3LrceQa5snksLzxdHAQsShVBRoFhztMvYu4UJ"
 
 [registry]
 url = "https://api.apr.dev"

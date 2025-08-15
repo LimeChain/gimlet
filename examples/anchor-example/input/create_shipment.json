@@ -1,0 +1,35 @@
+{
+  "program_id": "6GYuei9hR62ZJgmSxFAxqp5xfyzYnH3ErTaPJ5J4zoYw",
+  "accounts": [
+    {
+      "key": "4hC3RNvsoYo7MVSsC7B32zd9saLWRUrHKBvq1k6APX6q",
+      "is_signer": false,
+      "is_writable": true
+    },
+    {
+      "key": "5yZff7govxUo19MgU3gqnoXXW43zsyq2yvY4wjGHVNvd",
+      "is_signer": false,
+      "is_writable": true
+    },
+    {
+      "key": "8CPpc5DfnZ3umUy1x2ab5xJSQzHXmyajuNY3zRxuEdDo",
+      "is_signer": true,
+      "is_writable": true
+    },
+    {
+      "key": "11111111111111111111111111111111",
+      "is_signer": false,
+      "is_writable": false
+    }
+  ],
+  "instruction_data": [
+    67,
+    64,
+    17,
+    114,
+    30,
+    143,
+    249,
+    247
+  ]
+}

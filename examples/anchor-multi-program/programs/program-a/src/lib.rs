@@ -1,9 +1,8 @@
 use anchor_lang::prelude::*;
 
-declare_id!("4BYT5J61VNQPZnx29mU33WQpBxYBJmz6kgkhkmcetxRf");
-
+declare_id!("2BJiU3UUhRmroYHXN6iEcbuw7PfDAJqcFRv9AFutQxzQ");
 #[program]
-pub mod anchor_multi_program {
+pub mod program_a {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
@@ -24,12 +23,7 @@ pub mod anchor_multi_program {
         msg!("Program A: Blast off!");
         Ok(())
     }
-
-    pub fn say_hello(ctx: Context<SayHello>, name: String) -> Result<()> {
-        msg!("Program A says: Hello {}! Nice to meet you!", name);
-        Ok(())
-    }
-
+    
     pub fn calculate_power(ctx: Context<CalculatePower>, base: u32, exp: u32) -> Result<()> {
         let result = base.pow(exp);
         msg!("Program A: {} ^ {} = {}", base, exp, result);

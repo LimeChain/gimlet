@@ -1,0 +1,25 @@
+{
+  "program_id": "6GYuei9hR62ZJgmSxFAxqp5xfyzYnH3ErTaPJ5J4zoYw",
+  "accounts": [
+    {
+      "key": "ACKKvDXfdcPJLbHPyMqW92bn7m3LtwwkZoQGjbubN7mm",
+      "is_signer": false,
+      "is_writable": true
+    },
+    {
+      "key": "8CPpc5DfnZ3umUy1x2ab5xJSQzHXmyajuNY3zRxuEdDo",
+      "is_signer": true,
+      "is_writable": true
+    }
+  ],
+  "instruction_data": [
+    20,
+    194,
+    109,
+    40,
+    25,
+    147,
+    129,
+    210
+  ]
+}

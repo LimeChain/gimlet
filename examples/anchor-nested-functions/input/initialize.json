@@ -1,0 +1,25 @@
+{
+  "program_id": "2rc2qFi3LrceQa5snksLzxdHAQsShVBRoFhztMvYu4UJ",
+  "accounts": [
+    {
+      "key": "5CHRSUU2KpfwtsTwQK5Mwz49knDHAobh5ABYpeWYgx7w",
+      "is_signer": true,
+      "is_writable": true
+    },
+    {
+      "key": "11111111111111111111111111111111",
+      "is_signer": false,
+      "is_writable": false
+    }
+  ],
+  "instruction_data": [
+    175,
+    175,
+    109,
+    31,
+    13,
+    152,
+    155,
+    237
+  ]
+}

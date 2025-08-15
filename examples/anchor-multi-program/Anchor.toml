@@ -6,9 +6,9 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-anchor_multi_program = "4BYT5J61VNQPZnx29mU33WQpBxYBJmz6kgkhkmcetxRf"
-program-b = "iEZJUbLTzUMwYmfVH3EvAM2AXLPqqgT4xjM8em1LhnU"
-program-c = "ALingcjbebWNtxtwoJQqmeHDk877NAvEim3WVK6u8Utn"
+program-a = "2BJiU3UUhRmroYHXN6iEcbuw7PfDAJqcFRv9AFutQxzQ"
+program-b = "EB7VLqytTRN8AeFmQW5hMLdwQpxqMqEQbZsrFwtitLAB"
+program-c = "G1iVfPqrUjjjLDRE27LEZmBUcBoDCZBSHWMNuAXQE7PM"
 
 [registry]
 url = "https://api.apr.dev"
