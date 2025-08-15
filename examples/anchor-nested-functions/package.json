@@ -5,7 +5,8 @@
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.31.1"
+    "@coral-xyz/anchor": "^0.31.1",
+    "@limechain/gimlet-anchor-instruction-input-generator": "^0.0.2"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",

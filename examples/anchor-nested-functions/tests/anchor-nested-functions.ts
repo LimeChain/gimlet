@@ -1,8 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { AnchorNestedFunctions } from "../target/types/anchor_nested_functions";
-import { generateInstruction } from "gimlet-instruction-gen";
-
+import { generateInstruction } from "@limechain/gimlet-anchor-instruction-input-generator";
 
 describe("anchor-nested-functions", () => {
   // Configure the client to use the local cluster.

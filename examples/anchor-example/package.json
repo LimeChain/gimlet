@@ -7,7 +7,7 @@
   "type": "module",
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
-    "crypto": "^1.0.1"
+    "@limechain/gimlet-anchor-instruction-input-generator": "^0.0.2"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",

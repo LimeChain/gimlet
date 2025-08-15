@@ -39,6 +39,13 @@
     bn.js "^5.1.2"
     buffer-layout "^1.2.0"
 
+"@limechain/gimlet-anchor-instruction-input-generator@^0.0.2":
+  version "0.0.2"
+  resolved "https://registry.npmjs.org/@limechain/gimlet-anchor-instruction-input-generator/-/gimlet-anchor-instruction-input-generator-0.0.2.tgz"
+  integrity sha512-Yxjtw6UXLMOPgs1FQDAUoRKahl1Wv6876psuyFFGxamsOXPDRwT+stf55JhuihiQgvpqM/20vmox9vNMW/K5ww==
+  dependencies:
+    fs "^0.0.1-security"
+
 "@noble/curves@^1.4.2":
   version "1.9.2"
   resolved "https://registry.npmjs.org/@noble/curves/-/curves-1.9.2.tgz"
@@ -405,11 +412,6 @@ cross-fetch@^3.1.5:
   dependencies:
     node-fetch "^2.7.0"
 
-crypto@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.npmjs.org/crypto/-/crypto-1.0.1.tgz"
-  integrity sha512-VxBKmeNcqQdiUQUW2Tzq0t377b54N2bMtXO/qiLa+6eRRmmC4qT3D4OnTGoT/U6O9aklQ/jTwbOtRMTTY8G0Ig==
-
 debug@4.3.3:
   version "4.3.3"
   resolved "https://registry.npmjs.org/debug/-/debug-4.3.3.tgz"
@@ -516,6 +518,11 @@ fs.realpath@^1.0.0:
   resolved "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz"
   integrity sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==
 
+fs@^0.0.1-security:
+  version "0.0.1-security"
+  resolved "https://registry.npmjs.org/fs/-/fs-0.0.1-security.tgz"
+  integrity sha512-3XY9e1pP0CVEUCdj5BmfIZxRBTSDycnbqhIOGec9QYtmVH2fbLpj86CFWkrNOkt/Fvty4KZG5lTglL9j/gJ87w==
+
 fsevents@~2.3.2:
   version "2.3.3"
   resolved "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz"
@@ -530,12 +537,6 @@ get-func-name@^2.0.1, get-func-name@^2.0.2:
   version "2.0.2"
   resolved "https://registry.npmjs.org/get-func-name/-/get-func-name-2.0.2.tgz"
   integrity sha512-8vXOvuE167CtIc3OyItco7N/dpRtBbYOsPsXCz7X/PMnlGjYjSGuZJgM1Y7mmew7BKf9BqvLX2tnOVy1BBUsxQ==
-
-"gimlet-instruction-gen@file:../../../gimlet-instruction-gen":
-  version "1.0.0"
-  resolved "file:../../../gimlet-instruction-gen"
-  dependencies:
-    fs "^0.0.1-security"
 
 glob-parent@~5.1.2:
   version "5.1.2"
