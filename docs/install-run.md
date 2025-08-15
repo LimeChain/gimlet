@@ -13,7 +13,8 @@
 
 ### Prerequisites
 
-- **Note:** Run `Gimlet: Check Dependencies` in the Command Palette to verify all requirements.
+>**Note:** Run `Gimlet: Check Dependencies` in the Command Palette to verify all requirements.
+  
 ### Important: You must create JSON input file for `agave-ledger-tool`, read [here](./input-for-ledger-tool.md)
 
 ### 1. Start Local Ledger
@@ -50,7 +51,9 @@ The debugger will automatically perform the following steps:
 #### Setting Breakpoints
 
 - **Restarting:** To debug another instruction, run the `Agave Ledger Tool for Breakpoints` command again with a new `input.json` for that specific instruction *(just ensure you have the JSON file in the folder gimlet will derive it automatically)*.
+  
 - **Process Launching:** After setting breakpoints, use `continue` to restart the program and stop at your breakpoints.
+  
 - **Multiple Breakpoints:** Gimlet will make you choose one of your set breakpoints because `agave-ledger-tool` can run only for one instruction at a time.
 
 ### 4. Continue the process in the Debugger
@@ -85,7 +88,7 @@ Follow these steps to run the example project:
    - Once the setup is complete, set or remove breakpoints in your IDE as needed.
 8. **Continue Process**  
    - Run the **`continue`** command inside the `solana-lldb` terminal to start debugging with your breakpoints active.
-   - Or use the `Continue process` from Command Pallette both of them are the same
+   - Or use the `Continue process` from Command Palette both of them are the same
 
 ## Additional LLDB Commands
 
