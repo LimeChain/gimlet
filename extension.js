@@ -631,7 +631,7 @@ function runAgaveLedgerTool(workspaceFolder, bpfCompiledPath, instructionName, i
       console.log('Breakpoint re-added:', bpObject.location);
     }, 1000); // small delay to ensure removal is processed
 
-  }, 5000); 
+  }, 8000); 
 }
 
 
