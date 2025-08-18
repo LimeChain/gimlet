@@ -1,4 +1,21 @@
-## Required Input Folder and Instruction JSON Files
+# Generating Input Files
+
+This guide outlines two methods for creating the necessary `input` folder and instruction JSON files for debugging. We highly recommend the automatic method to save time and prevent errors.
+
+## Table of Contents
+- [Automatic Generation](#automatic-approach)
+- [Manual Generation](#manual-approach)
+
+
+## Automatic Approach
+With this approach, you install an `npm package` as a dependency and use a function in your tests to pass all required accounts, automatically generating the JSON file for each instruction with the correct account data.
+
+**We highly recommend using this dependency in your project!**
+
+* Follow the docs to automatically generate the INPUT files. Click [here](https://github.com/LimeChain/gimlet-anchor-instruction-input-generator)
+
+
+## Manual Approach
 
 To debug your Solana program with Gimlet and Agave Ledger Tool, you **must** create an `input` folder in your project directory. For each instruction you want to test, add a `.json` file named after the instruction function. For example, for a Rust instruction function `pub fn initialize`, create:
 
@@ -6,7 +23,7 @@ To debug your Solana program with Gimlet and Agave Ledger Tool, you **must** cre
 input/initialize.json
 ```
 
-If you have a multi-program anchor project, you **must** create a program folder, which must have the exact program name that this `JSON` file specifies inputs for:
+If you have a multi-program Anchor project, you **must** create a program folder named exactly after the program, and place the corresponding JSON files inside:
 
 ```
 input/program_name/initialize.json
@@ -31,11 +48,11 @@ Each JSON file must provide all the data required by Agave Ledger Tool to simula
   "program_id": "DozgQiYtGbdyniV2T74xMdmjZJvYDzoRFFqw7UR5MwPK",
   "accounts": [
     {
-      "key": "524HMdYYBy6TAn4dK5vCcjiTmT2sxV6Xoue5EXrz22Ca", // For example this is ur signer local keypair
+      "key": "524HMdYYBy6TAn4dK5vCcjiTmT2sxV6Xoue5EXrz22Ca", // For example, this is your signer local keypair
       "owner": "BPFLoaderUpgradeab1e11111111111111111111",
       "is_signer": false,
       "is_writable": true,
-      "lamports": 1000, // should match `solana balance` output using --lamports flag
+      "lamports": 1000, // should match the `solana balance` output using --lamports flag
       "data": [0, 0, 0, 3]
     },
     {
