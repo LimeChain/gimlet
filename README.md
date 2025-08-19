@@ -18,7 +18,7 @@ Gimlet is a VSCode Extension for debugging Solana programs. It is a wrapper for 
 - [Troubleshooting](#troubleshooting)
   - [macOS Issues](#macos)
   - [Windows (WSL) Issues](#windows-wsl)
-  - [Solana-lldb platform tools Issues](#solana-lldb)
+  - [solana-lldb platform tools Issues](#solana-lldb)
 
 ## Prerequisites
 

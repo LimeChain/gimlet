@@ -8,7 +8,7 @@ This guide outlines two methods for creating the necessary `input` folder and in
 
 
 ## Automatic Approach
-With this approach, you install an `npm package` as a dependency and use a function in your tests to pass all required accounts, automatically generating the JSON file for each instruction with the correct account data.
+With this approach, you install an `gimlet-anchor-instruction-input-generator` - npm package as a dependency and use a function in your tests to pass all required accounts, automatically generating the JSON file for each instruction with the correct account data.
 
 **We highly recommend using this dependency in your project!**
 
