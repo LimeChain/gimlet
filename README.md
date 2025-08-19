@@ -18,6 +18,7 @@ Gimlet is a VSCode Extension for debugging Solana programs. It is a wrapper for 
 - [Troubleshooting](#troubleshooting)
   - [macOS Issues](#macos)
   - [Windows (WSL) Issues](#windows-wsl)
+  - [solana-lldb platform tools Issues](#solana-lldb)
 
 ## Prerequisites
 
@@ -264,16 +265,16 @@ Refer to the [Apple Developer Forum thread](https://forums.developer.apple.com/f
 
 #### Common Issues and Solutions
 
-##### `libpython 3.8.so.1.0` Not Found or Executable Not Found
+##### `libpython 3.10.so.1.0` Not Found or Executable Not Found
 
-Install Python 3.8 and development libraries:
+Install Python 3.10 and development libraries:
 
 ```sh
 sudo apt update
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt update
-sudo apt install python3.8 python3.8-dev
-python 3.8 --version
+sudo apt install python3.10 python3.10-dev
+python 3.10 --version
 ```
 
 ##### `lldb-server` Not Found Error
@@ -283,3 +284,42 @@ This issue occurs when the PATH for the LLDB server is not set correctly. Add th
 ```sh
 export LLDB_DEBUGSERVER_PATH="/usr/bin/lldb-server"
 ```
+
+### Solana LLDB 
+
+#### Common Issues and Solutions
+
+##### Still cannot find solana-lldb
+
+Sometimes, even after following the documentation to set up your PATH, tools like solana-lldb may not appear immediately. The exact location of platform-tools can vary slightly between machines, so you might need to locate it manually.
+
+Steps:
+
+1. Locate the solana installation folder
+   
+The default location is usually:
+
+```bash
+$HOME/.local/solana/install/active_release/bin
+```
+
+2. Find the `llvm/bin` folder
+   
+```bash
+platform-tools/llvm/bin
+```
+This directory contains solana-lldb, llvm-objdump, and other necessary tools.
+
+3. Add the folder to your PATH
+You can temporarily add it with:
+
+```bash
+export PATH=$HOME/.local/solana/install/active_release/bin/platform-tools/llvm/bin:$PATH
+```
+
+4. Verify the installation
+   
+```bash
+solana-lldb --version   
+```
+If it shows the version, your PATH is set correctly, and the debugger tools are ready to use.
