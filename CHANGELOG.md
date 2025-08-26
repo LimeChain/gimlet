@@ -2,7 +2,7 @@
 
 All notable changes to the "Gimlet" extension will be documented in this file.
 
-## [0.0.11] - 2025-8-26
+## [0.0.11] - 2025-08-26
 
 ### Added
 
@@ -12,7 +12,7 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 - Updated input ledger tool documentation.
   
-## [0.0.10] - 2025-8-19
+## [0.0.10] - 2025-08-19
 
 ### Added
 
