@@ -2,11 +2,21 @@
 
 All notable changes to the "Gimlet" extension will be documented in this file.
 
+## [0.0.11] - 2025-8-20
+
+### Added
+
+- Added documentation highlighting common errors and troubleshooting steps when manually creating input JSON files for `agave-ledger-tool`. [#45](https://github.com/LimeChain/gimlet/pull/45)
+
+### Changed
+
+- Updated input ledger tool documentation.
+  
 ## [0.0.10] - 2025-8-19
 
 ### Added
 
-- Docs update and improved time between lldb to ledger tool connection. [#44](https://github.com/LimeChain/gimlet/pull/44)
+- Improved time between lldb to ledger tool connection. [#44](https://github.com/LimeChain/gimlet/pull/44)
 
 ### Changed
 
@@ -22,7 +32,7 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ### Changed
 
-- Update documentation [#42](https://github.com/LimeChain/gimlet/pull/42)
+- Updated documentation [#42](https://github.com/LimeChain/gimlet/pull/42)
 - Updated the examples with input JSON files [#43](https://github.com/LimeChain/gimlet/pull/43)
 
 ## [0.0.8] - 2025-08-05
