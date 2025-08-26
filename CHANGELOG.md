@@ -2,7 +2,7 @@
 
 All notable changes to the "Gimlet" extension will be documented in this file.
 
-## [0.0.11] - 2025-8-20
+## [0.0.11] - 2025-8-26
 
 ### Added
 
