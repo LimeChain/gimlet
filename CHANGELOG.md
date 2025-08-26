@@ -17,6 +17,7 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 ### Added
 
 - Improved time between lldb to ledger tool connection. [#44](https://github.com/LimeChain/gimlet/pull/44)
+- Added Solana-lldb Troubleshooting
 
 ### Changed
 
