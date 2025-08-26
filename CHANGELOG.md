@@ -2,6 +2,29 @@
 
 All notable changes to the "Gimlet" extension will be documented in this file.
 
+## [0.0.10] - 2025-8-19
+
+### Added
+
+- Docs update and improved time between lldb to ledger tool connection. [#44](https://github.com/LimeChain/gimlet/pull/44)
+
+### Changed
+
+- Updated documentation for clearer setup instructions, troubleshooting steps, and usage guidance
+- Extended the time between solana-lldb and agave-ledger-tool gdb connection
+- Added the npm package link to the docs inside the input-for-ledger-tool.md to provide automatic JSON generation
+
+## [0.0.9] - 2025-08-15
+
+### Added
+
+- Mapped functions to addresses for instruction-level breakpoints with per-instruction debugging. [#41](https://github.com/LimeChain/gimlet/pull/41)
+
+### Changed
+
+- Update documentation [#42](https://github.com/LimeChain/gimlet/pull/42)
+- Updated the examples with input JSON files [#43](https://github.com/LimeChain/gimlet/pull/43)
+
 ## [0.0.8] - 2025-08-05
 
 ### Added

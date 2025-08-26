@@ -29,6 +29,18 @@ If you have a multi-program Anchor project, you **must** create a program folder
 input/program_name/initialize.json
 ```
 
+### ⚠️ Common Error: Invalid JSON Input
+
+> **If `agave-ledger-tool` fails or returns an error, it usually means your JSON input file is incomplete or incorrectly structured.**
+>
+> Typical issues include:
+> - Missing required accounts (such as sysvars or system program)
+> - Incorrect account properties (`owner`, `is_signer`, `is_writable`, etc.)
+> - Malformed or incomplete `instruction_data`
+>
+> **Solution:**  
+> Double-check that your JSON input matches your program’s instruction requirements and includes all necessary accounts and fields. Refer to the example below and your instruction definition for guidance.
+
 ### JSON Input File Structure
 
 Each JSON file must provide all the data required by Agave Ledger Tool to simulate the instruction, including:
