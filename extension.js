@@ -68,6 +68,40 @@ function getCommandPath(command) {
   }
 }
 
+function findSolanaLldbPath() {
+  const osPaths = {
+      'darwin': [
+          `${process.env.HOME}/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin/solana-lldb`,
+          '/usr/local/bin/solana-lldb'
+      ],
+      'linux': [
+          `${process.env.HOME}/.cache/solana/**/platform-tools/llvm/bin/solana-lldb`,
+          '/usr/bin/solana-lldb',
+          '/home/linuxbrew/.linuxbrew/bin/solana-lldb'
+      ],
+      'win32': [
+          path.join(process.env.APPDATA, 'solana', 'bin', 'solana-lldb.exe'),
+          path.join(process.env.LOCALAPPDATA, 'solana', 'bin', 'solana-lldb.exe')
+      ]
+  };
+
+  // 1. Search in system path
+  const pathCheck = which.sync('solana-lldb', {nothrow: true});
+  if (pathCheck) return pathCheck;
+
+  // 2. Search in more OS specific routes
+  const platformPaths = osPaths[process.platform] || [];
+  for (const p of platformPaths) {
+      const files = glob.sync(p);
+      if (files.length > 0) return files[0];
+  }
+
+  // 3. Fallback: project directory
+  const projectPath = path.join(workspaceRoot, 'cache', 'solana', '**', 'platform-tools', 'llvm', 'bin', 'solana-lldb');
+  const projectFiles = glob.sync(projectPath);
+  return projectFiles[0] || null;
+}
+
 function runCommand(command, args = "") {
   const commandPath = getCommandPath(command);
 
