@@ -401,7 +401,7 @@ function reRunProcessLaunch() {
   
   if (terminal) {
     activeTerminal = terminal;
-    terminal.sendText("continue"); // Resume the process in the LLDB debugger (process launch -- --nocapture)
+    terminal.sendText("next"); // Resume the process in the LLDB debugger (process launch -- --nocapture)
   } else {
     vscode.window.showErrorMessage("Solana LLDB Debugger terminal not found.");
     startSolanaDebugger();
