@@ -2,7 +2,7 @@ name: Publish VS Code Extension
 
 on:
   release:
-    types: [published]
+    types: [prereleased]
 
 jobs:
   publish:
@@ -10,12 +10,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-
       - name: Install dependencies
         run: npm install
       - name: Publish to Visual Studio Marketplace
@@ -23,3 +21,4 @@ jobs:
         with:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
+          preRelease: true
