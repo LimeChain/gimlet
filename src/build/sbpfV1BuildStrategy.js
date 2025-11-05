@@ -27,7 +27,7 @@ class SbpfV1BuildStrategy extends BaseBuildStrategy {
 
     getBuildCommand() {
         // if Anchor.toml exists, we build, then we delete the .so files to ensure we use the SBF V1 build
-        return `[ -f Anchor.toml ] && anchor build; rm target/deploy/*.so | true ; ${this.buildCommand}`;
+        return `[ -f Anchor.toml ] && anchor build; rm target/deploy/*.so || true ; ${this.buildCommand}`;
     }
 
     async build(progress) {
