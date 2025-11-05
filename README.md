@@ -73,6 +73,15 @@ Refer to the [Apple Developer Forum thread](https://forums.developer.apple.com/f
 
 ---
 
+### Platform-tools
+
+We recommend using platform-tools version **v1.51**.  
+To force-install the correct version inside your Rust project, run:
+
+```sh
+cargo build-sbf --tools-version v1.51 --debug --arch v1 --force-tools-install
+```
+
 ### Windows (WSL)
 
 #### Common Issues and Solutions
