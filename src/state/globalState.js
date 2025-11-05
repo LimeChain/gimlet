@@ -37,11 +37,11 @@ class GimletGeneralState {
                     `  ${libPath}`,
                     'Possible cause:',
                     '  - Your Solana toolchain or platform-tools version is incorrect or missing.',
-                    `Expected platform-tools version: ${this.platformToolsVersion}`,
+                    `Expected platform-tools version: v${this.platformToolsVersion}`,
                     `Original error: ${err}`,
                     'How to fix:',
                     '  Run the following command in your terminal to install the correct platform tools:',
-                    `    cargo build-sbf --tools-version ${this.platformToolsVersion} --debug --arch v1 --force-tools-install`,
+                    `    cargo build-sbf --tools-version v${this.platformToolsVersion} --debug --arch v1 --force-tools-install`,
                 ].join('\n')
             );
         }

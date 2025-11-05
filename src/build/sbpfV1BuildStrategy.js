@@ -33,6 +33,7 @@ class SbpfV1BuildStrategy extends BaseBuildStrategy {
     async build(progress) {
         const buildCmd = this.getBuildCommand();
         console.log(` Running command: ${buildCmd}`);
+        progress.report({ increment: 1, message: 'Building you program!' });
 
         return new Promise((resolve) => {
             exec(
@@ -47,6 +48,7 @@ class SbpfV1BuildStrategy extends BaseBuildStrategy {
                         return;
                     }
 
+                    progress.report({ increment: 2, message: 'Setting gimlet internals!' });
                     // Load the depsPath from gimlet config
                     const { depsPath } = await gimletConfigManager.resolveGimletConfig();
                     this.depsPath = depsPath;
@@ -77,7 +79,7 @@ class SbpfV1BuildStrategy extends BaseBuildStrategy {
 
                     if (progress)
                         progress.report({
-                            increment: 50,
+                            increment: 3,
                             message: 'Setting up debugger...',
                         });
                     resolve(true);

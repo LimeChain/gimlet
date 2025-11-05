@@ -30,12 +30,10 @@ async function SbpfCompile() {
     return vscode.window.withProgress(
         {
             location: vscode.ProgressLocation.Notification,
-            title: 'Building Solana program, setting up debugger...',
+            title: 'Setting Gimlet',
             cancellable: false,
         },
         async (progress) => {
-            progress.report({ increment: 0, message: 'Starting build...' });
-
             try {
                 const buildResult = await debuggerSession.buildStrategy.build(progress);
                 if (!buildResult) return;
@@ -98,7 +96,7 @@ async function activateDebugger(context) {
         rustAnalyzerSettingsManager.set('debug.engine', 'vadimcn.vscode-lldb');
         editorSettingsManager.set('codeLens', true);
     
-         // This is automated script to check dependencies for Gimlet
+        // This is automated script to check dependencies for Gimlet
         const setupDisposable = vscode.commands.registerCommand(
             'extension.runGimletSetup',
             () => {
