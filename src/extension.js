@@ -123,7 +123,7 @@ async function activateDebugger(context) {
             }
         });
             
-        const sbpfDebugDisposable = vscode.commands.registerCommand('gimlet.debugAtLine', async (document) => {
+        const sbpfDebugDisposable = vscode.commands.registerCommand('gimlet.debugAtLine', async (document, line) => {
             // Prevent starting a new session if one is already running
             if (isSessionRunning()) {
                 vscode.window.showInformationMessage('A Gimlet debug session is already running. Please stop the current session before starting a new one.');
@@ -168,8 +168,8 @@ async function activateDebugger(context) {
                                 debugListener.dispose();
                             }
                         });
-                        
-                        const result = await startRustAnalyzerDebugSession();
+
+                        const result = await startRustAnalyzerDebugSession(line);
                         
                         if (!result) {
                             vscode.window.showInformationMessage('Please ensure you have selected a runnable in the rust-analyzer prompt.');
@@ -239,14 +239,14 @@ function cleanupDebuggerSession() {
     clearDebuggerSession();
 }
 
-async function startRustAnalyzerDebugSession() {
+async function startRustAnalyzerDebugSession(line) {
     // rust-analyzer command to debug reusing the client and runnables it creates initially
-    const editor = vscode.window.activeTextEditor;
-    if (editor) {
-    // Set cursor to line 10, character 5 (zero-based)
-    const position = new vscode.Position(10, 5);
-    editor.selection = new vscode.Selection(position, position);
-    }
+        const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+    editor.selection = new vscode.Selection(
+        new vscode.Position(line, 0), 
+        new vscode.Position(line, 0)
+    );
     return await vscode.commands.executeCommand("rust-analyzer.debug");
 }
 

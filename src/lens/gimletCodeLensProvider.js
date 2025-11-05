@@ -30,7 +30,7 @@ class GimletCodeLensProvider {
                                 new vscode.CodeLens(symbol.range, {
                                     title: `$(debug-alt) ${LENS_TITLE}`,
                                     command: "gimlet.debugAtLine",
-                                    arguments: [document, functionName],
+                                    arguments: [document, line],
                                 })
                             );
                         }
@@ -57,12 +57,13 @@ class GimletCodeLensProvider {
                         const range = symbol.range;
                         const functionName = this.extractTestNameFromSymbolName(symbol.name);
                         const TS_LENS_TITLE = 'Sbpf Debug All';
+                        const line = range.start.line;
 
                         lenses.push(
                             new vscode.CodeLens(range, {
                                 title: `$(debug-alt) ${TS_LENS_TITLE}`,
                                 command: "gimlet.debugAtLine",
-                                arguments: [document, functionName],
+                                arguments: [document, line],
                             })
                         );
                     }
