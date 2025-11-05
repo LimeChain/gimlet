@@ -241,6 +241,12 @@ function cleanupDebuggerSession() {
 
 async function startRustAnalyzerDebugSession() {
     // rust-analyzer command to debug reusing the client and runnables it creates initially
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+    // Set cursor to line 10, character 5 (zero-based)
+    const position = new vscode.Position(10, 5);
+    editor.selection = new vscode.Selection(position, position);
+    }
     return await vscode.commands.executeCommand("rust-analyzer.debug");
 }
 
