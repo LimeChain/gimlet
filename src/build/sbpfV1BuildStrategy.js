@@ -2,7 +2,7 @@ const BaseBuildStrategy = require('./baseBuildStrategy');
 const { getDebuggerSession }  = require('../managers/sessionManager');
 const vscode = require('vscode');
 const fs = require('fs');
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 const BuildCommands = require('./buildCommands');
 const gimletConfigManager  = require('../config');
 const { safeReadDir } = require('../projectStructure');
@@ -32,59 +32,69 @@ class SbpfV1BuildStrategy extends BaseBuildStrategy {
 
     async build(progress) {
         const buildCmd = this.getBuildCommand();
-        console.log(` Running command: ${buildCmd}`);
-        progress.report({ increment: 1, message: 'Building you program!' });
+        progress.report({ increment: 1, message: 'Building your program!' });
 
         return new Promise((resolve) => {
-            exec(
+            const outputChannel = vscode.window.createOutputChannel('Gimlet');
+            outputChannel.show(true);
+            outputChannel.appendLine(`Running build command: ${buildCmd}\n`);
+
+            const buildProcess = spawn(
                 buildCmd,
-                { cwd: this.workspaceFolder },
-                async (err, stdout, stderr) => {
-                    if (err) {
-                        vscode.window.showErrorMessage(
-                            `Build error: ${stderr}`
-                        );
-                        resolve();
-                        return;
-                    }
-
-                    progress.report({ increment: 2, message: 'Setting gimlet internals!' });
-                    // Load the depsPath from gimlet config
-                    const { depsPath } = await gimletConfigManager.resolveGimletConfig();
-                    this.depsPath = depsPath;
-
-                    // Holds all the compiled programs in target/deploy
-                    let newFiles = await safeReadDir(this.depsPath);
-                    if (!newFiles) {
-                        resolve();
-                        return;
-                    }
-
-                    // Hash all the compiled programs
-                    for (let programCompiledFile of newFiles) {
-                        if (!programCompiledFile.endsWith('.so')) {
-                            continue;
-                        }
-
-                        const debugBinaryPath = `${this.depsPath}/${programCompiledFile.replace('.so', '.debug')}`;
-                        const bpfCompiledPath = `${this.depsPath}/${programCompiledFile}`;
-                        
-                        this.hashProgram(programCompiledFile);
-
-                        this.debuggerSession.executablesPaths[programCompiledFile] = {
-                            debugBinary: debugBinaryPath,
-                            bpfCompiledPath: bpfCompiledPath
-                        };
-                    }
-
-                    if (progress)
-                        progress.report({
-                            increment: 3,
-                            message: 'Setting up debugger...',
-                        });
-                    resolve(true);
+                {
+                    cwd: this.workspaceFolder,
+                    shell: true
                 }
-            );
+            )
+
+            buildProcess.stdout.on('data', (data) => {
+                outputChannel.append(data.toString());
+            });
+
+            buildProcess.stderr.on('data', (data) => {
+                outputChannel.append(data.toString());
+            });
+
+            buildProcess.on('close', async (code) => {
+                if (code !== 0) {
+                    throw new Error(`Build failed with exit code ${code}`);
+                }
+
+                // Load the depsPath from gimlet config
+                const { depsPath } = await gimletConfigManager.resolveGimletConfig();
+                this.depsPath = depsPath;
+
+                // Holds all the compiled programs in target/deploy
+                let newFiles = await safeReadDir(this.depsPath);
+                if (!newFiles) {
+                    resolve();
+                    return;
+                }
+
+                // Hash all the compiled programs
+                for (let programCompiledFile of newFiles) {
+                    if (!programCompiledFile.endsWith('.so')) {
+                        continue;
+                    }
+
+                    const debugBinaryPath = `${this.depsPath}/${programCompiledFile.replace('.so', '.debug')}`;
+                    const bpfCompiledPath = `${this.depsPath}/${programCompiledFile}`;
+                    
+                    this.hashProgram(programCompiledFile);
+
+                    this.debuggerSession.executablesPaths[programCompiledFile] = {
+                        debugBinary: debugBinaryPath,
+                        bpfCompiledPath: bpfCompiledPath
+                    };
+                }
+
+                if (progress)
+                    progress.report({
+                        increment: 3,
+                        message: 'Setting up debugger...',
+                    });
+                resolve(true);
+            });
         });
     }
 

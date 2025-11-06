@@ -66,8 +66,9 @@ class DebugConfigManager {
 
     // The test executor for TS anchor tests
     async spawnAnchorTestProcess() {
-        const logFilePath = `${globalState.globalWorkspaceFolder}/.gimlet.log`;
-        const logStream = fs.createWriteStream(logFilePath, { flags: 'w' });  
+        const outputChannel = vscode.window.createOutputChannel('Gimlet');
+        outputChannel.show(true);
+        outputChannel.appendLine(`Running build command: anchor test\n`);
 
         return new Promise((resolve, reject) => {
             // Get the active debug console
@@ -82,15 +83,12 @@ class DebugConfigManager {
             });
 
             anchorProcess.stderr.on('data', (data) => {
-                const output = data.toString();
-                const formatted = `[${new Date().toISOString()}] [stderr] ${output}`;
-                logStream.write(formatted);
+                outputChannel.append(data.toString());
+                
             });
 
             anchorProcess.stdout.on('data', (data) => {
-                const output = data.toString();
-                const formatted = `[${new Date().toISOString()}] [stdout] ${output}`;
-                logStream.write(formatted);
+                outputChannel.append(data.toString());
             });
 
             anchorProcess.on('error', (error) => {
