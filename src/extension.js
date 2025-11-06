@@ -18,6 +18,8 @@ const { VM_DEBUG_EXEC_INFO_FILE } = require('./constants');
 const { workspaceHasLitesvmOrMollusk } = require('./utils');
 const { isSessionRunning, hasSupportedBackend } = require('./debug');
 
+const fs = require('fs');
+
 let debuggerSession = null;
 // Global array ofr disposables that belong to activateDebugger
 let debuggerDisposables = [];
@@ -260,7 +262,7 @@ async function getRunnable(line) {
     );
     const result = await vscode.commands.executeCommand("rust-analyzer.getRunnable");
 
-    console.log("Runnable:", result);
+    fs.writeFileSync('/tmp/gimlet_runnable.json', JSON.stringify(result, null, 2));
 }
 
 
