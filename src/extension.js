@@ -169,6 +169,7 @@ async function activateDebugger(context) {
                             }
                         });
 
+                        await getRunnable(line);
                         const result = await startRustAnalyzerDebugSession(line);
                         
                         if (!result) {
@@ -241,13 +242,25 @@ function cleanupDebuggerSession() {
 
 async function startRustAnalyzerDebugSession(line) {
     // rust-analyzer command to debug reusing the client and runnables it creates initially
-        const editor = vscode.window.activeTextEditor;
+    const editor = vscode.window.activeTextEditor;
     if (!editor) return;
     editor.selection = new vscode.Selection(
         new vscode.Position(line, 0), 
         new vscode.Position(line, 0)
     );
     return await vscode.commands.executeCommand("rust-analyzer.debug");
+}
+
+async function getRunnable(line) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+    editor.selection = new vscode.Selection(
+        new vscode.Position(line, 0), 
+        new vscode.Position(line, 0)
+    );
+    const result = await vscode.commands.executeCommand("rust-analyzer.getRunnable");
+
+    console.log("Runnable:", result);
 }
 
 
