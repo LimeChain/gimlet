@@ -171,7 +171,7 @@ async function activateDebugger(context) {
                             }
                         });
 
-                        await getRunnable(line);
+                        // await getRunnable(line);
                         const result = await startRustAnalyzerDebugSession(line);
                         
                         if (!result) {
@@ -242,28 +242,36 @@ function cleanupDebuggerSession() {
     clearDebuggerSession();
 }
 
+// rust-analyzer command to debug reusing the client and runnables it creates initially
 async function startRustAnalyzerDebugSession(line) {
-    // rust-analyzer command to debug reusing the client and runnables it creates initially
+    const incrementedLine = line + 2;
+
     const editor = vscode.window.activeTextEditor;
     if (!editor) return;
+
+    // Set selection to the line for the rust-analyzer to pick up a runnable for
     editor.selection = new vscode.Selection(
-        new vscode.Position(line, 0), 
-        new vscode.Position(line, 0)
+        new vscode.Position(incrementedLine, 0), 
+        new vscode.Position(incrementedLine, 0)
     );
+
+    // TODO: You can implement a logic to validate the selection if it lands on the test function using the document data from the lens
     return await vscode.commands.executeCommand("rust-analyzer.debug");
 }
 
-async function getRunnable(line) {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) return;
-    editor.selection = new vscode.Selection(
-        new vscode.Position(line, 0), 
-        new vscode.Position(line, 0)
-    );
-    const result = await vscode.commands.executeCommand("rust-analyzer.getRunnable");
+// async function getRunnable(line) {
+//     const incrementedLine = line + 1;
+//     const editor = vscode.window.activeTextEditor;
+//     if (!editor) return;
+//     editor.selection = new vscode.Selection(
+//         new vscode.Position(incrementedLine, 0), 
+//         new vscode.Position(incrementedLine, 0)
+//     );
+//     const result = await vscode.commands.executeCommand("rust-analyzer.getRunnable");
 
-    fs.writeFileSync('/tmp/gimlet_runnable.json', JSON.stringify(result, null, 2));
-}
+//     // It works i receive it here
+//     fs.writeFileSync('/tmp/gimlet_runnable.json', JSON.stringify(result, null, 2));
+// }
 
 
 module.exports = {
