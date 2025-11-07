@@ -16,6 +16,7 @@ class GimletGeneralState {
         this.tcpPort = DEFAULT_TCP_PORT;
     }
 
+    // TODO: Implement a mechanism to allow user to pass custom path trough gimlet.json config file.
     getLldbLibraryPath() {
         const libPath = path.join(
             os.homedir(),

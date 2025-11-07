@@ -2,8 +2,6 @@
 
 Gimlet is a VSCode Extension that makes Solana smart contract debugging seamless, automated, and fully integrated into the VS Code experience, eliminating the need for manual configuration or terminal-only workflows.
 
-#### Install Gimlet from [here](https://marketplace.visualstudio.com/items?itemName=emilroydev.gimlet-beta)
-
 ---
 
 ## Table of Contents

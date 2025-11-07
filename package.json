@@ -4,7 +4,7 @@
     "description": "Debug Solana programs easily",
     "publisher": "limechain",
     "icon": "images/logo.png",
-    "version": "0.1.9",
+    "version": "0.1.10",
     "galleryBanner.color": {
         "color": "#21214c",
         "theme": "dark"
