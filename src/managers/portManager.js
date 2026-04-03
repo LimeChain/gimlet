@@ -1,31 +1,17 @@
+const crypto = require('crypto');
 const { exec } = require('child_process');
 const vscode = require('vscode');
 const { debugConfigManager } = require('./debugConfigManager');
+const { getDebuggerSession } = require('./sessionManager');
 const { globalState } = require('../state/globalState');
+const { log } = require('../logger');
 
 class PortManager {
     constructor() {
-        this.pollingTokens = {}; // Map of pollingKey -> token
+        this.pollingToken = null;
     }
 
-    // Used primarily for the config setup to check if the desired port is available
-    async isPortAvailable(port) {
-        return new Promise((resolve) => {
-            exec(
-                `netstat -nat | grep -E '[:|.]${port}\\b' | wc -l`,
-                (err, stdout) => {
-                    if (stdout.trim() > 0) {
-                        resolve(false);
-                    } else {
-                        resolve(true);
-                    }
-                }
-            );
-        });
-    }
-
-    async isPortOpen(currentTcpPort) {
-        const port = currentTcpPort; 
+    async isPortOpen(port) {
         return new Promise((resolve) => {
             exec(
                 `netstat -nat | grep -E '[:|.]${port}\\b' | grep 'LISTEN' | wc -l`,
@@ -37,67 +23,73 @@ class PortManager {
         });
     }
 
-    /**
-     * Used for rust tests
-     * Listen for up to 4 ports (for CPI depth 4).
-     * When a port opens, use the program hash to create the launch config and start debugging.
-     * @param {number[]} ports - array of ports to listen on
-    */
-    async listenAndStartDebugForPorts(ports) {
-        const pollingKey = ports.join(',');
-        if (this.pollingTokens[pollingKey]) return;
+    async listenAndStartDebugForPort(port) {
+        if (this.pollingToken) return;
 
         const myToken = Symbol();
-        this.pollingTokens[pollingKey] = myToken;
+        this.pollingToken = myToken;
 
-        // Track which ports have already started a debug session
-        const startedPorts = new Set();
-        while (this.pollingTokens[pollingKey] === myToken) {
-            for (const port of ports) {
-                if (startedPorts.has(port)) {
-                    // Check if the port is still open
-                    const stillOpen = await this.isPortOpen(port);
-                    if (!stillOpen) {
-                        startedPorts.delete(port); // Allow to start again if reopened
-                    } else {
-                        // Still open, skip
-                        continue;
-                    }
+        while (this.pollingToken === myToken) {
+            const isOpen = await this.isPortOpen(port);
+
+            if (isOpen) {
+                const metadataId = crypto.randomUUID();
+                const launchConfig = debugConfigManager.getLaunchConfig(port, metadataId);
+
+                const sessionPromise = new Promise(resolve => {
+                    const listener = vscode.debug.onDidStartDebugSession(session => {
+                        if (session.name === launchConfig.name) {
+                            listener.dispose();
+                            resolve(session);
+                        }
+                    });
+                });
+
+                log('Starting debug session on port:', port);
+                const lldbConfig = vscode.workspace.getConfiguration('lldb');
+                const originalLibrary = lldbConfig.get('library');
+                await lldbConfig.update('library', globalState.lldbLibrary, vscode.ConfigurationTarget.Workspace);
+                await vscode.debug.startDebugging(globalState.globalWorkspaceFolder, launchConfig);
+                log('Waiting for debug session to start...');
+                const vsDebugSession = await sessionPromise;
+                await lldbConfig.update('library', originalLibrary, vscode.ConfigurationTarget.Workspace);
+                log('Debug session started, connected to gdbstub on port:', port);
+
+                const gimletSession = getDebuggerSession();
+                if (gimletSession && !gimletSession.debugSessionId) {
+                    gimletSession.debugSessionId = vsDebugSession.id;
                 }
 
-                const isOpen = await this.isPortOpen(port);
+                log('Loading program modules...');
+                const loaded = await debugConfigManager.loadProgramModules(vsDebugSession, metadataId);
+                log('Program modules loaded:', loaded);
+                if (!loaded) {
+                    vscode.window.showErrorMessage('Failed to load program modules. Stopping debug session.');
+                    this.pollingToken = null;
+                    await vscode.debug.stopDebugging();
+                    break;
+                }
 
-                if (isOpen) {
-                    // When port opens get the program name from the current hash
-                    const programPath = await debugConfigManager.waitForProgramName();
-                    if (!programPath) {
-                        vscode.window.showErrorMessage('Timed out waiting for program. Stopping debug session.');
-                        delete this.pollingTokens[pollingKey]; // Stop the while loop
-                        await vscode.debug.stopDebugging(); // This stops the active debug session
+                // Wait for port to enter LISTEN again (next program ready)
+                log('Waiting for next program on port:', port);
+                while (this.pollingToken === myToken) {
+                    const listening = await this.isPortOpen(port);
+                    if (listening) {
+                        log('Next program ready on port:', port);
                         break;
-                    };
-
-                    // Dynamically create launch config using program hash or other info
-                    const launchConfig = await debugConfigManager.getLaunchConfigForSolanaLldb(port, programPath);
-                    if (!launchConfig) continue;
-
-                    const alreadyRunning = Array.isArray(vscode.debug.sessions)
-                        ? vscode.debug.sessions.some(session => session.name === launchConfig.name)
-                        : false;
-
-                    if (!alreadyRunning) {
-                        await vscode.debug.startDebugging(globalState.globalWorkspaceFolder, launchConfig);
-                        startedPorts.add(port);
                     }
-                } 
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
             }
+
             await new Promise(resolve => setTimeout(resolve, 1000));
         }
-        delete this.pollingTokens[pollingKey];
+
+        this.pollingToken = null;
     }
 
     cleanup() {
-        this.pollingTokens = {};
+        this.pollingToken = null;
     }
 }
 

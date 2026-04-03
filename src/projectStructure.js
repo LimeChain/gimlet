@@ -10,15 +10,4 @@ async function safeReadDir(dirPath) {
     }
 }
 
-async function safeFileExists(filePath) {
-    try {
-        await fs.promises.access(filePath, fs.constants.F_OK);
-        return true;
-    } catch (err) {
-        return false;
-    }
-}
-
-
-
-module.exports = {  safeReadDir, safeFileExists };
+module.exports = { safeReadDir };

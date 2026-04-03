@@ -23,7 +23,7 @@ Before using Gimlet, ensure you have the following tools installed:
 | `rust-analyzer`  | [Rust Analyzer Extension](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer) | VSCode extension     |
 | `codeLLDB`       | [CodeLLDB Extension](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)          | VSCode extension     |
 | `solana-cli`     | [Solana Docs](https://solana.com/docs/intro/installation)                                              | Use latest version   |
-| `platform-tools` | [Solana Docs](https://solana.com/docs/intro/installation)                                              | Use versions >= 1.51 |
+| `platform-tools` | [Solana Docs](https://solana.com/docs/intro/installation)                                              | Use versions >= 1.54 |
 
 ---
 
@@ -42,7 +42,14 @@ Gimlet makes debugging Solana programs inside VS Code effortless. Follow these s
 When you open your Solana project, **Gimlet** automatically creates a `.vscode/gimlet.json` configuration file.  
 You can customize this file to:
 - Specify a different **platform-tools version**
-- Change the default **TCP port** used for debugging  
+- Change the default **TCP port** used for debugging
+- Control whether the debugger **stops on entry** or runs straight to your first breakpoint  
+
+| Option                 | Default  | Description                                                                 |
+|------------------------|----------|-----------------------------------------------------------------------------|
+| `tcpPort`              | `1212`   | TCP port the gdbstub listens on                                             |
+| `platformToolsVersion` | `"1.54"` | Solana platform-tools version                                               |
+| `stopOnEntry`          | `true`   | Stop at program entry point; set to `false` to skip to the first breakpoint |
 
 Gimlet also adjusts a few **VS Code workspace settings** to ensure smooth integration.
 
@@ -50,10 +57,18 @@ Gimlet also adjusts a few **VS Code workspace settings** to ensure smooth integr
 
 1. **Open VS Code** in your Solana project folder.  
 2. **Install the Gimlet extension** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=emilroydev.gimlet-beta).  
-3. **Open a test case** — you’ll see a **CodeLens button** above it labeled:
+3. **Build your program** with debug symbols:
+   ```sh
+   cargo-build-sbf --tools-version v1.54 --debug --arch v1
+   ```
+4. **Run your test** with the debugger enabled:
+   ```sh
+   SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/deploy/debug/trace cargo test --features sbpf-debugger
+   ```
+5. **Open the test file in VS Code** — you’ll see a **CodeLens button** above it labeled:
    - `Sbpf Debug` → for individual Rust tests  
    - `Sbpf Debug All` → for TypeScript test suites  
-4. **Click the button** to start step-by-step debugging using **Gimlet**.  
+6. **Click the button** to connect **Gimlet** and start step-by-step debugging.  
 
 ---
 
@@ -73,11 +88,11 @@ Refer to the [Apple Developer Forum thread](https://forums.developer.apple.com/f
 
 ### Platform-tools
 
-We recommend using platform-tools version **v1.51**.  
+We recommend using platform-tools version **v1.54**.  
 To force-install the correct version inside your Rust project, run:
 
 ```sh
-cargo build-sbf --tools-version v1.51 --debug --arch v1 --force-tools-install
+cargo build-sbf --tools-version v1.54 --debug --arch v1 --force-tools-install
 ```
 
 ### Windows (WSL)

@@ -21,29 +21,16 @@
     ],
     "main": "./src/extension.js",
     "contributes": {
-        "configuration": {
-            "type": "object",
-            "title": "Solana LLDB Debugger Path",
-            "properties": {
-                "solanaDebugger.solanaLldbPath": {
-                    "type": "string",
-                    "default": "",
-                    "description": "Path to the solana-lldb executable"
-                },
-                "gimlet.enableCodeLens": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enable Gimlet custom CodeLens in Rust files."
-                }
-            }
-        },
         "commands": [
             {
                 "command": "extension.runGimletSetup",
-                "title": "Run Gimlet Setup"
+                "title": "Gimlet: Run Setup"
+            },
+            {
+                "command": "gimlet.stopSession",
+                "title": "Gimlet: Stop Debug Session"
             }
-        ],
-        "keybindings": []
+        ]
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",

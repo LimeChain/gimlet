@@ -3,8 +3,8 @@ const path = require('path');
 const fs = require('fs');
 
 // Shared state container for the debugger session
-const DEFAULT_TCP_PORT = 6612;
-const DEFAULT_PLATFORM_TOOLS_VERSION = '1.51';
+const DEFAULT_TCP_PORT = 1212;
+const DEFAULT_PLATFORM_TOOLS_VERSION = '1.54';
 const LIB_EXT = process.platform === 'darwin' ? 'dylib' : 'so';
 
 // General (global) state, singleton
@@ -14,6 +14,7 @@ class GimletGeneralState {
         this.platformToolsVersion = DEFAULT_PLATFORM_TOOLS_VERSION;
         this.lldbLibrary = this.getLldbLibraryPath();
         this.tcpPort = DEFAULT_TCP_PORT;
+        this.stopOnEntry = true;
     }
 
     // TODO: Implement a mechanism to allow user to pass custom path trough gimlet.json config file.
@@ -58,6 +59,9 @@ class GimletGeneralState {
     setConfig(config) {
         if (config.tcpPort !== undefined) {
             this.tcpPort = config.tcpPort;
+        }
+        if (config.stopOnEntry !== undefined) {
+            this.stopOnEntry = config.stopOnEntry;
         }
         if (
             config.platformToolsVersion !== undefined &&

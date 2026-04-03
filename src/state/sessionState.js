@@ -2,10 +2,10 @@
 class GimletDebuggerSession {
     constructor() {        
         this.debugSessionId = null;
-        this.buildStrategy = null;
 
         this.executablesPaths = {}; // Map of programName to executablePath
-        this.programHashToProgramName = []; 
+        this.programHashToProgramName = {}; // sha256 -> programName
+        this.programIdToHash = {}; // programId -> sha256
         this.currentProgramHash = null;
         
         this.tcpPort = null;
@@ -17,9 +17,9 @@ class GimletDebuggerSession {
 
     reset() {
         this.debugSessionId = null;
-        this.buildStrategy = null;
         this.executablesPaths = {};
-        this.programHashToProgramName = [];
+        this.programHashToProgramName = {};
+        this.programIdToHash = {};
         this.currentProgramHash = null;
         this.tcpPort = null;
     }
