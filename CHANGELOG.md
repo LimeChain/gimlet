@@ -2,6 +2,33 @@
 
 All notable changes to the "Gimlet" extension will be documented in this file.
 
+## [0.1.11] - 2026-04-03
+
+### Added
+
+- CPI debugging: debug across multiple programs in a single test
+- `stopOnEntry` option in `gimlet.json` to control initial breakpoint behavior
+- Timestamped logging via VS Code OutputChannel (`Gimlet` channel)
+- `Gimlet: Stop Debug Session` command
+- Program resolution via sha256 hash mapping from `program_ids.map`
+
+### Changed
+
+- Users now build manually with `cargo-build-sbf`
+- CodeLens no longer depends on rust-analyzer; uses direct text scanning
+- `lldb.library` scoped per debug session to avoid conflicts with rust-analyzer debugging
+- Rewrote `gimlet-setup.sh` to check current dependencies
+- Updated README and docs for new workflow
+- Compatible with platform-tools v1.54
+
+### Removed
+
+- Build strategies (`baseBuildStrategy`, `sbpfV1BuildStrategy`, `buildCommands`)
+- `constants.js`
+- `docs/input-for-ledger-tool.md`
+- Unused config properties (`solanaDebugger.solanaLldbPath`, `gimlet.enableCodeLens`)
+- `agave-ledger-tool` dependency
+
 ## [0.0.11] - 2025-08-26
 
 ### Added
