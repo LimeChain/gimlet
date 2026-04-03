@@ -1,25 +1,21 @@
 #!/bin/bash
 
 # Gimlet Setup Script
-# Automated setup for Gimlet Solana debugger VS Code extension
+# Checks dependencies for the Gimlet Solana debugger VS Code extension
 
 # Note: On Windows, please run this script inside WSL (Windows Subsystem for Linux)
 #       or Git Bash to ensure proper functionality.
-#       Running in CMD or PowerShell is NOT supported.
 
-set -e  # Exit on any error
+set -e
 
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Configuration
-GIMLET_DIR="$(pwd)"
-VSCODE_SETTINGS_DIR="$HOME/.vscode"
-SOLANA_CONFIG_DIR="$HOME/.config/solana"
+PLATFORM_TOOLS_VERSION="1.54"
 
 # Logging functions
 log_info() {
@@ -27,7 +23,7 @@ log_info() {
 }
 
 log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+    echo -e "${GREEN}[OK]${NC} $1"
 }
 
 log_warning() {
@@ -38,315 +34,172 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Display banner
 show_banner() {
     echo -e "${BLUE}"
     echo "╔══════════════════════════════════════════════════════╗"
-    echo "║                 GIMLET SETUP SCRIPT                  ║"
-    echo "║          Automated Solana Debugger Setup             ║"
+    echo "║              GIMLET DEPENDENCY CHECK                 ║"
     echo "╚══════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 }
 
-# Detect OS
-# Note: may behave differently if not run in bash
 detect_os() {
     log_info "Detecting operating system..."
 
-    DISTRO=""
-    VERSION=""
-
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         OS="linux"
+        LIB_EXT="so"
         if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
-            IS_WSL=true
-            log_info "Running inside Windows Subsystem for Linux (WSL)"
-        fi
-        if command_exists lsb_release; then
-            DISTRO=$(lsb_release -si)
-            VERSION=$(lsb_release -sr)
-            log_info "Detected: $DISTRO $VERSION"
-        else
-            log_info "Detected: Linux (unknown distribution)"
+            log_info "Running inside WSL"
         fi
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         OS="macos"
-        VERSION=$(sw_vers -productVersion)
-        log_info "Detected: macOS $VERSION"
-    elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
-        OS="windows"
-        log_info "Detected: Windows"
+        LIB_EXT="dylib"
+        log_info "Detected: macOS $(sw_vers -productVersion)"
     else
         log_error "Unsupported operating system: $OSTYPE"
         exit 1
     fi
-
-    export OS
 }
 
-# Detect Solana installation and distribution
-# Relies on `solana` command being available in PATH
-detect_solana() {
-    log_info "Detecting Solana installation..."
-    
-    if command_exists solana; then
-        SOLANA_VERSION=$(solana --version) || {
-          log_error "Failed to get Solana version or command timed out. Please make sure Solana CLI is installed correctly and included in PATH."
-          exit 1
-        }
-        log_success "Solana CLI found: $SOLANA_VERSION"
-        
-        # Detect distribution (Agave vs Solana Labs)
-        if echo "$SOLANA_VERSION" | grep -i "agave" >/dev/null; then
-            SOLANA_DIST="agave"
-            log_info "Distribution: Agave"
-        else
-            SOLANA_DIST="solana-labs"
-            log_info "Distribution: Solana Labs"
-        fi
-        
-        # Get Solana installation path
-        SOLANA_INSTALL_PATH=$(dirname "$(which solana)")
-        log_info "Solana install path: $SOLANA_INSTALL_PATH"
-        
-    else
-        log_error "Solana CLI not found. Please install Solana first."
-        log_info "Visit: https://docs.solana.com/cli/install-solana-cli-tools"
-        exit 1
-    fi
-}
-
-# Check Rust installation
 check_rust() {
     log_info "Checking Rust installation..."
-    
+
     if command_exists rustc; then
-        RUST_VERSION=$(rustc --version)
-        log_success "Rust found: $RUST_VERSION"
+        log_success "Rust: $(rustc --version)"
     else
-        log_error "Rust not found. Please install Rust first."
-        log_info "Visit: https://rustup.rs/"
-        exit 1
+        log_error "Rust not found. Install from: https://rustup.rs/"
+        return 1
     fi
-    
+
     if command_exists cargo; then
-        CARGO_VERSION=$(cargo --version)
-        log_success "Cargo found: $CARGO_VERSION"
+        log_success "Cargo: $(cargo --version)"
     else
-        log_error "Cargo not found. Please install Rust toolchain."
-        exit 1
-    fi
-}
-
-# Check Anchor installation (optional)
-# Relies on `anchor` command being available in PATH
-check_anchor() {
-    log_info "Checking Anchor installation..."
-    
-    if command_exists anchor; then
-        ANCHOR_VERSION=$(anchor --version)
-        log_success "Anchor found: $ANCHOR_VERSION"
-        HAS_ANCHOR=true
-    else
-        log_warning "Anchor not found (optional for Anchor projects)"
-        log_info "To install: 'cargo install --git https://github.com/coral-xyz/anchor avm --locked --force'"
-        HAS_ANCHOR=false
-    fi
-}
-
-# Check Python installation (expected: 3.10.1)
-# Relies on `python3` or `python` command being available in PATH
-check_python() {
-    log_info "Checking Python..."
-
-    local PY_CMD=""
-    if command_exists python3; then
-        PY_CMD="python3"
-    elif command_exists python; then
-        PY_CMD="python"
-    fi
-
-    if [ -n "$PY_CMD" ]; then
-        PYTHON_VERSION=$($PY_CMD --version 2>&1 | sed 's/Python //' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+')
-        if [ "$PYTHON_VERSION" = "3.10.1" ]; then
-            log_success "Python version is $PYTHON_VERSION, matches expected 3.10.1"
-        else
-            log_warning "Python version is $PYTHON_VERSION, expected 3.10.1"
-        fi
-    else
-        log_warning "Python not found (optional for some Solana tools)"
-        log_info "To install: https://www.python.org/downloads/"
-    fi
-}
-
-check_file_descriptor_limits() {
-    log_info "Checking file descriptor limits..."
-    
-    local CURRENT_LIMIT=$(ulimit -n)
-    local RECOMMENDED_LIMIT=1000000
-
-    log_warning "File descriptor limit is $CURRENT_LIMIT, recommended value is at least $RECOMMENDED_LIMIT"
-    
-    if [ "$CURRENT_LIMIT" -lt "$RECOMMENDED_LIMIT" ]; then
-        log_error "File descriptor limit is too low!"
-        return 1  # or use exit 1 if you want to terminate the script
-    else
-        log_success "File descriptor limit is sufficient."
-    fi
-    
-    log_info "You can set it by running: 'ulimit -n $RECOMMENDED_LIMIT'"
-}
-
-# Find solana-lldb debugger
-# This depends on `find` which is available on most Unix-like systems, and it is slow, maybe we should find a way to speed it up
-# It is slow because it searches through the whole HOME directory and common paths, but if tools exists it will find it almost guaranteed
-find_solana_lldb() {
-    log_info "Locating solana-lldb debugger, this may take a moment..."
-    
-    # Common paths where solana-lldb might be located
-    local possible_paths=(
-        "$HOME/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin/solana-lldb"
-        "$SOLANA_INSTALL_PATH/../share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin/solana-lldb"
-        "/usr/local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools/llvm/bin/solana-lldb"
-        "$(find $HOME -name "solana-lldb" 2>/dev/null | head -1)"
-    )
-    
-    for path in "${possible_paths[@]}"; do
-        if [ -f "$path" ]; then
-            SOLANA_LLDB_PATH="$path"
-            log_success "solana-lldb found: $path"
-            return 0
-        fi
-    done
-    
-    log_warning "solana-lldb not found in common locations"
-    log_info "Attempting to install Solana platform tools..."
-    
-    # Try to install platform tools
-    if solana install; then
-        log_info "Solana platform tools installation initiated"
-        sleep 5  # Give it time to install
-        
-        # Check again
-        for path in "${possible_paths[@]}"; do
-            if [ -f "$path" ]; then
-                SOLANA_LLDB_PATH="$path"
-                log_success "solana-lldb found after installation: $path"
-                return 0
-            fi
-        done
-    fi
-    
-    log_error "Could not locate or install solana-lldb"
-    log_info "Please ensure Solana platform tools are installed: 'solana install'"
-    exit 1
-}
-
-# Find agave-ledger-tool
-find_agave_ledger_tool() {
-    log_info "Locating agave-ledger-tool..."
-    
-    local possible_paths=(
-        "$HOME/.local/share/solana/install/active_release/bin/agave-ledger-tool"
-        "$SOLANA_INSTALL_PATH/agave-ledger-tool"
-        "/usr/local/bin/agave-ledger-tool"
-        "$(which agave-ledger-tool 2>/dev/null)"
-    )
-    
-    for path in "${possible_paths[@]}"; do
-        if [ -f "$path" ]; then
-            AGAVE_LEDGER_TOOL_PATH="$path"
-            log_success "agave-ledger-tool found: $path"
-            return 0
-        fi
-    done
-    
-    log_error "Could not locate agave-ledger-tool"
-    log_info "Please ensure Solana/Agave tools are properly installed"
-    exit 1
-}
-
-# Validate setup
-validate_setup() {
-    log_info "Validating Gimlet setup..."
-    
-    local errors=0
-    
-    # Check critical files exist
-    if [ ! -f "$SOLANA_LLDB_PATH" ]; then
-        log_error "solana-lldb not found at: $SOLANA_LLDB_PATH"
-        ((errors++))
-    fi
-    
-    if [ ! -f "$AGAVE_LEDGER_TOOL_PATH" ]; then
-        log_error "agave-ledger-tool not found at: $AGAVE_LEDGER_TOOL_PATH"
-        ((errors++))
-    fi
-
-    if [ $errors -eq 0 ]; then
-        log_success "Setup validation passed!"
-        return 0
-    else
-        log_error "Setup validation failed with $errors errors"
+        log_error "Cargo not found. Install Rust toolchain from: https://rustup.rs/"
         return 1
     fi
 }
 
-# Show setup summary
-show_summary() {
-    echo -e "\n${GREEN}╔══════════════════════════════════════════════════════╗${NC}"
-    echo -e "${GREEN}║                 SETUP COMPLETE!                      ║${NC}"
-    echo -e "${GREEN}╚══════════════════════════════════════════════════════╝${NC}\n"
-    
-    echo -e "${BLUE}Configuration Summary:${NC}"
-    echo -e "  OS: $OS"
-    echo -e "  Solana Distribution: $SOLANA_DIST"
-    echo -e "  Solana Version: $SOLANA_VERSION, ${YELLOW}should be >= 2.0.0${NC}"
-    echo -e "  solana-lldb: $SOLANA_LLDB_PATH"
-    echo -e "  Rust: $RUST_VERSION, ${YELLOW}should be >= 1.86.0${NC}"
-    echo -e "  agave-ledger-tool: $AGAVE_LEDGER_TOOL_PATH"
-    echo -e "  Anchor: $([ "$HAS_ANCHOR" = true ] && echo "Available" || echo "Not available")"
-    
-    echo -e "\n${YELLOW}Next Steps:${NC}"
-    echo -e "  1. Open VS Code in your desired project directory"
-    echo -e "  2. Press CTRL+Shift+P and search for 'Gimlet' commands"
-    echo -e "  3. Choose 'Run Solana LLDB' to start debugging"
-    echo -e "  4. Set breakpoints and start debugging!"
-    echo -e "  5. https://lldb.llvm.org/use/map.html for LLDB commands reference"
-    
-    echo -e "\n${GREEN}Happy debugging with Gimlet!${NC}"
-}
+check_solana() {
+    log_info "Checking Solana CLI..."
 
-# Main setup function
-main() {
-    show_banner
-    
-    log_info "Starting Gimlet setup process..."
-    
-    detect_os
-    check_rust
-    detect_solana
-    check_anchor
-    check_python
-    check_file_descriptor_limits
-    find_solana_lldb
-    find_agave_ledger_tool
-    
-    if validate_setup; then
-        show_summary
-        exit 0
+    if command_exists solana; then
+        log_success "Solana CLI: $(solana --version)"
     else
-        log_error "Setup incomplete. Please check the errors above."
-        exit 1
+        log_error "Solana CLI not found. Install from: https://solana.com/docs/intro/installation"
+        return 1
     fi
 }
 
-# Run setup if script is executed directly
+check_cargo_build_sbf() {
+    log_info "Checking cargo-build-sbf..."
+
+    if command_exists cargo-build-sbf; then
+        log_success "cargo-build-sbf found"
+    else
+        log_error "cargo-build-sbf not found. Install Solana platform tools."
+        log_info "Run: cargo build-sbf --tools-version v${PLATFORM_TOOLS_VERSION} --debug --arch v1 --force-tools-install"
+        return 1
+    fi
+}
+
+check_platform_tools() {
+    log_info "Checking platform-tools v${PLATFORM_TOOLS_VERSION}..."
+
+    local PLATFORM_TOOLS_DIR="$HOME/.cache/solana/v${PLATFORM_TOOLS_VERSION}/platform-tools"
+    local LLVM_BIN="$PLATFORM_TOOLS_DIR/llvm/bin"
+    local LLDB_LIB="$PLATFORM_TOOLS_DIR/llvm/lib/liblldb.${LIB_EXT}"
+
+    if [ ! -d "$PLATFORM_TOOLS_DIR" ]; then
+        log_error "Platform-tools v${PLATFORM_TOOLS_VERSION} not found at: $PLATFORM_TOOLS_DIR"
+        log_info "Install with: cargo build-sbf --tools-version v${PLATFORM_TOOLS_VERSION} --debug --arch v1 --force-tools-install"
+        return 1
+    fi
+
+    log_success "Platform-tools directory found"
+
+    # Check LLDB library
+    if [ -f "$LLDB_LIB" ] || [ -L "$LLDB_LIB" ]; then
+        log_success "LLDB library: $LLDB_LIB"
+    else
+        log_error "LLDB library not found: $LLDB_LIB"
+        return 1
+    fi
+
+    # Check required Python scripts
+    local SCRIPTS=("lldb_lookup.py" "solana_lookup.py" "solana_input_deserialize_abiv1.py" "solana_save_output.py")
+    local missing=0
+
+    for script in "${SCRIPTS[@]}"; do
+        if [ -f "$LLVM_BIN/$script" ]; then
+            log_success "Script: $script"
+        else
+            log_error "Missing script: $LLVM_BIN/$script"
+            ((missing++))
+        fi
+    done
+
+    if [ $missing -gt 0 ]; then
+        return 1
+    fi
+}
+
+check_vscode_extensions() {
+    log_info "Checking VS Code extensions..."
+
+    if command_exists code; then
+        local extensions=$(code --list-extensions 2>/dev/null)
+
+        if echo "$extensions" | grep -qi "vadimcn.vscode-lldb"; then
+            log_success "CodeLLDB extension installed"
+        else
+            log_error "CodeLLDB extension not found. Install from: https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb"
+        fi
+
+        if echo "$extensions" | grep -qi "rust-lang.rust-analyzer"; then
+            log_success "rust-analyzer extension installed"
+        else
+            log_warning "rust-analyzer extension not found (recommended)"
+        fi
+    else
+        log_warning "VS Code CLI (code) not available, skipping extension checks"
+    fi
+}
+
+show_summary() {
+    echo ""
+    echo -e "${BLUE}Build command:${NC}"
+    echo -e "  cargo-build-sbf --tools-version v${PLATFORM_TOOLS_VERSION} --debug --arch v1"
+    echo ""
+    echo -e "${BLUE}Test command:${NC}"
+    echo -e "  SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=\$PWD/target/deploy/debug/trace cargo test --features sbpf-debugger"
+    echo ""
+}
+
+main() {
+    show_banner
+
+    local errors=0
+
+    detect_os
+    check_rust || ((errors++))
+    check_solana || ((errors++))
+    check_cargo_build_sbf || ((errors++))
+    check_platform_tools || ((errors++))
+    check_vscode_extensions
+
+    echo ""
+    if [ $errors -eq 0 ]; then
+        echo -e "${GREEN}All dependencies satisfied.${NC}"
+        show_summary
+    else
+        echo -e "${RED}Found $errors issue(s). Please fix the errors above.${NC}"
+    fi
+}
+
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     main "$@"
 fi

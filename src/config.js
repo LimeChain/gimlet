@@ -26,8 +26,8 @@ class GimletConfigManager {
         const workspaceFolder = this.resolveWorkspaceFolder();
         if (!workspaceFolder) return null;
 
-        this.depsPath = path.join(workspaceFolder, 'target', 'deploy');
-        this.inputPath = path.join(workspaceFolder, 'input');
+        this.depsPath = path.join(workspaceFolder, 'target', 'deploy', 'debug'); // TODO(lime): Make this configurable
+        this.inputPath = path.join(workspaceFolder, 'input'); // TODO(lime): Make this configurable
 
         return {
             depsPath: this.depsPath,
@@ -41,17 +41,11 @@ class GimletConfigManager {
 
         const vscodeDir = path.join(workspaceFolder, '.vscode');
         const configPath = path.join(vscodeDir, 'gimlet.json');
-
-        // const available = await portManager.isPortAvailable(debuggerSession.tcpPort);
-        // if (!available) {
-        //     vscode.window.showErrorMessage(
-        //         `Port ${debuggerSession.tcpPort} is already in use by another service. Please choose a different port in your Gimlet config.`
-        //     );
-        // }
         
         const defaultConfig = {
             tcpPort: globalState.tcpPort,
             platformToolsVersion: globalState.platformToolsVersion,
+            stopOnEntry: globalState.stopOnEntry,
         };
 
         if (!fs.existsSync(vscodeDir)) {

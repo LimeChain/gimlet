@@ -13,82 +13,47 @@
 
 ### Prerequisites
 
->**Note:** Run `Gimlet: Check Dependencies` in the Command Palette to verify all requirements.
-  
-### Important: You must create JSON input file for `agave-ledger-tool`, read [here](./input-for-ledger-tool.md)
+>**Note:** Run `Gimlet: Run Setup` in the Command Palette to verify all requirements.
 
-### 1. Start Local Ledger
+### 1. Build Your Program
 
-Open terminal and run:
+Compile your program with debug symbols:
 
-```zsh
-solana-test-validator --ledger ./ledger
+```sh
+cargo-build-sbf --tools-version v1.54 --debug --arch v1
 ```
 
-> **Important:** You should use that specific naming convention for your local ledger folder.
+> **Note:** Re-run this command whenever you change your program code.
 
-### 2. Launch the Debugger
+### 2. Run Your Test
 
-1. **Open Command Palette**: Press `Cmd + Shift + P` (macOS) or `Ctrl + Shift + P` (Windows)
-2. **Select**: `Run Solana LLDB` from the command palette
+Run your test with the debugger enabled:
+
+```sh
+SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/deploy/debug/trace cargo test --features sbpf-debugger
+```
+
+This starts the test with a gdbstub listening on the specified TCP port, which Gimlet will connect to.
+
+### 3. Connect Gimlet
+
+1. **Open the test file** in VS Code — you'll see **CodeLens buttons** above test functions:
+   - `Sbpf Debug` → for individual Rust tests
+   - `Sbpf Debug All` → for TypeScript test suites
+2. **Click the button** to connect Gimlet and start step-by-step debugging.
 
 #### What Happens During Launch
 
-The debugger will automatically perform the following steps:
+Gimlet will automatically:
 
-1. **Compile Program**: Uses `cargo build-sbf --debug` to create sBPF `.so` and `.debug` stripped files
-2. **Attach Debugger**: Launches `solana-lldb`, loads the `.debug` file, and registers any breakpoints you set before or after starting the session.
+1. **Scan** `target/deploy/debug/` for compiled `.so` and `.debug` files
+2. **Connect** to the gdbstub via `gdb-remote` on the configured TCP port
+3. **Load** the correct `.debug` ELF binary into LLDB for symbol resolution
 
-### 3. Launch tha Agave Ledger Tool on your solana local ledger
-1. **Open Command Palette**: Press `Cmd + Shift + P` (macOS) or `Ctrl + Shift + P` (Windows)
-2. **Select**: `Run Agave Ledger Tool for Breakpoint` from the command palette
+### 4. Set and Hit Breakpoints
 
-- This will deploy using `.so` file in a mocked environment on the solana-local-host and will execute the instruction you have provided --input for (the JSON file)
-- It will host a `gdb-remote` server which solanaLLDB will connect automatically when using Gimlet.
-  
-### 4. Add Breakpoints
-
-#### Setting Breakpoints
-
-- **Restarting:** To debug another instruction, run the `Agave Ledger Tool for Breakpoints` command again with a new `input.json` for that specific instruction *(just ensure you have the JSON file in the folder gimlet will derive it automatically)*.
-  
-- **Process Launching:** After setting breakpoints, use `continue` to restart the program and stop at your breakpoints.
-  
-- **Multiple Breakpoints:** Gimlet will make you choose one of your set breakpoints because `agave-ledger-tool` can run only for one instruction at a time.
-
-### 4. Continue the process in the Debugger
-
-1. **Open Command Palette**: Press `Cmd + Shift + P` (macOS) or `Ctrl + Shift + P` (Windows)
-2. **Select**: `Continue process` to resume the debugger at specific breakpoint you have chosen.
-3. **Another**: or just type `continue` in the `Solana LLDB Debugger` terminal
-
-### 5. Hit Breakpoints
-
-#### When a Breakpoint is Hit
-
-- You will see the **memory address location**, **frame**, **file**, and **row** of the breakpoint in the terminal
-- **To continue execution**: Type `continue` in the terminal
-- **Program flow**: The program execution will continue until it finishes
-
-## Running the Example Project
-
-Follow these steps to run the example project:
-
-1. **Navigate to project**: Open a terminal in the `examples/solana_test_extension` folder
-2. **Open source file**: Open the `lib.rs` file located in the `src` directory
-3. **Open Command Palette**: Press `Cmd + Shift + P` (macOS) or `Ctrl + Shift + P` (Windows)
-4. **Start debugging**: Select `Run Solana LLDB` from the Command Palette
-5. **Run Agave Ledger Tool for Breakpoints**  
-   - In the Command Palette again, select **`Run Agave Ledger Tool for Breakpoint`**.  
-   - This will deploy and execute your instruction using the `input.json` file.
-6. **Monitor the Solana LLDB Terminal**  
-   - Wait until **agave-ledger-tool** connects successfully.  
-   - Then focus on the Solana LLDB terminal.
-7. **Set Breakpoints**  
-   - Once the setup is complete, set or remove breakpoints in your IDE as needed.
-8. **Continue Process**  
-   - Run the **`continue`** command inside the `solana-lldb` terminal to start debugging with your breakpoints active.
-   - Or use the `Continue process` from Command Palette both of them are the same
+- Set breakpoints in your Solana program source code before or after connecting
+- Use the VS Code debug controls to step through, continue, and inspect variables
 
 ## Additional LLDB Commands
 

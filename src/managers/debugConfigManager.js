@@ -1,149 +1,144 @@
 const fs = require('fs');
-const { globalState } = require('../state/globalState');
-const { getDebuggerSession } = require('../managers/sessionManager');
 const vscode = require('vscode');
-const { spawn } = require('child_process');
-const { VM_DEBUG_EXEC_INFO_FILE } = require('../constants');
+const { getDebuggerSession } = require('../managers/sessionManager');
+const { globalState } = require('../state/globalState');
+const os = require('os');
+const path = require('path');
+const { log } = require('../logger');
+
+function metadataFilePath(id) {
+    return `/tmp/gimlet-metadata-${id}.txt`;
+}
 
 class DebugConfigManager {
-    async getLaunchConfigForSolanaLldb(currentTcpPort, programKey) {
-        const debuggerSession = getDebuggerSession();
-        if (!debuggerSession) {
-            vscode.window.showErrorMessage('No active debugger session found.');
-            return null;
-        }
-        
-        const executablesOfProgram = debuggerSession.executablesPaths[programKey];
-        const debugExecutablePath = executablesOfProgram ? executablesOfProgram.debugBinary : null;
+    getSolanaScriptsDir() {
+        return path.join(
+            os.homedir(),
+            '.cache',
+            'solana',
+            `v${globalState.platformToolsVersion}`,
+            'platform-tools',
+            'llvm',
+            'bin'
+        );
+    }
 
-        if (!debugExecutablePath || !fs.existsSync(debugExecutablePath)) {
-            vscode.window.showErrorMessage('Executable path is not set or does not exist. Please first execute `anchor build` then start debugging.');
-            return null;
-        }
-
+    getLaunchConfig(currentTcpPort, metadataId) {
+        const metadataFile = metadataFilePath(metadataId);
+        const scriptsDir = this.getSolanaScriptsDir();
         return {
-            type: "lldb",
-            request: "launch",
-            name: `Sbpf Debug Port: ${currentTcpPort}`,
-            targetCreateCommands: [
-                `target create ${debugExecutablePath}`,
+            type: 'lldb',
+            request: 'launch',
+            name: `Sbpf Debug ${metadataId.slice(0, 8)}`,
+            initCommands: [
+                `command script import "${path.join(scriptsDir, 'lldb_lookup.py')}"`,
+                `command script import "${path.join(scriptsDir, 'solana_lookup.py')}"`,
+                `command script import "${path.join(scriptsDir, 'solana_input_deserialize_abiv1.py')}"`,
+                `command script import "${path.join(scriptsDir, 'solana_save_output.py')}"`,
             ],
+            targetCreateCommands: [],
             processCreateCommands: [`gdb-remote 127.0.0.1:${currentTcpPort}`],
+            postRunCommands: [
+                `solana_save_output ${metadataFile} process plugin packet monitor metadata`,
+            ],
         };
     }
 
-    // Wait until programName is available or timeout after 10 seconds
-    async waitForProgramName(timeoutMs = 10000, intervalMs = 100) {
-        const debuggerSession = getDebuggerSession();
-        if (!debuggerSession) {
-            vscode.window.showErrorMessage('No active debugger session found.');
-            return null;
-        }
+    async readMetadata(metadataId, timeoutMs = 10000, intervalMs = 100) {
+        const filePath = metadataFilePath(metadataId);
+        const start = Date.now();
+        while (Date.now() - start < timeoutMs) {
+            if (fs.existsSync(filePath)) {
+                const raw = fs.readFileSync(filePath, 'utf8').trim();
+                const content = raw.split('\n')[0].trim();
+                if (content) {
+                    fs.unlinkSync(filePath);
 
-        try {
-            this.pollForTmpFile(debuggerSession, timeoutMs); 
-            const start = Date.now();
-
-            while (Date.now() - start < timeoutMs) {
-                // TODO: Handle situations where we have a CPI to a program that is not in this project.
-                // It will not be in our map and we need to handle that case.
-                const programKey = debuggerSession.programHashToProgramName[debuggerSession.currentProgramHash];
-                if (programKey) {
-                    debuggerSession.tmpFilePollToken = null; // Stop polling
-                    return programKey;
-                };
-                await new Promise(resolve => setTimeout(resolve, intervalMs));
+                    const metadata = {};
+                    for (const part of content.split(';')) {
+                        const [key, value] = part.split('=');
+                        if (key && value) {
+                            metadata[key.trim()] = value.trim();
+                        }
+                    }
+                    return metadata;
+                }
             }
-            return null;
-        } catch (e) {
-            vscode.window.showErrorMessage(e.message);
-            return null;
-        } finally {
-            debuggerSession.currentProgramHash = null; // Reset after waiting
-            debuggerSession.tmpFilePollToken = null; // Stop polling
+            await new Promise((resolve) => setTimeout(resolve, intervalMs));
         }
+        return null;
     }
 
-    // The test executor for TS anchor tests
-    async spawnAnchorTestProcess() {
-        const outputChannel = vscode.window.createOutputChannel('Gimlet');
-        outputChannel.show(true);
-        outputChannel.appendLine(`Running build command: anchor test\n`);
-
-        return new Promise((resolve, reject) => {
-            // Get the active debug console
-            const anchorProcess = spawn('anchor', ['test'], {
-                env: {
-                    ...process.env,
-                    SBPF_DEBUG_PORT: globalState.tcpPort.toString(),
-                    VM_DEBUG_EXEC_INFO_FILE: VM_DEBUG_EXEC_INFO_FILE,
-                },
-                cwd: globalState.globalWorkspaceFolder,
-                stdio: ['inherit', 'pipe', 'pipe']
-            });
-
-            anchorProcess.stderr.on('data', (data) => {
-                outputChannel.append(data.toString());
-                
-            });
-
-            anchorProcess.stdout.on('data', (data) => {
-                outputChannel.append(data.toString());
-            });
-
-            anchorProcess.on('error', (error) => {
-                console.error(`Failed to start anchor: ${error}`);
-                reject(error);
-            });
-
-            anchorProcess.on('close', (code) => {
-                console.log(`anchor process exited with code ${code}`);
-                if (code === 0) {
-                    resolve();
-                } else {
-                    reject(new Error(`anchor process failed with code ${code}`));
-                }
-            });
-
-            return anchorProcess;
+    async runCommand(vsDebugSession, expression) {
+        await vsDebugSession.customRequest('evaluate', {
+            expression,
+            context: 'repl',
         });
     }
 
-    async pollForTmpFile(debuggerSession, timeoutMs = 10000) {
-        const filePath = VM_DEBUG_EXEC_INFO_FILE;
-        const intervalMs = 1000; // Poll every second
-        
-        const pollToken = Symbol('tmp-file-poll');
-        debuggerSession.tmpFilePollToken = pollToken;
-        
-        const start = Date.now();
-        
-        while (debuggerSession.tmpFilePollToken === pollToken && (Date.now() - start < timeoutMs)) {
-            try {
-                if (fs.existsSync(filePath)) {
-                    const content = fs.readFileSync(filePath, 'utf8');
-                    vscode.window.showInformationMessage(`Found VM output: ${content}`);
-                    
-                    // Set the hash so waitForProgramName can use it
-                    debuggerSession.currentProgramHash = content.trim();
-                    
-                    // delete the file after reading, may lead to multithreading issues
-                    // lets say i read current program hash and before i delete it i receive another program hash and delete the new output
-                    // fs.unlinkSync(filePath);
-                    
-                    break; // Stop polling once file is found
-                }
-            } catch (err) {
-                console.error(`Error reading ${VM_DEBUG_EXEC_INFO_FILE} file`, err);
-            }
-            
-            await new Promise(resolve => setTimeout(resolve, intervalMs));
+    async loadProgramModules(vsDebugSession, metadataId) {
+        const session = getDebuggerSession();
+        if (!session) return false;
+
+        const metadata = await this.readMetadata(metadataId);
+        if (!metadata || !metadata.program_id) {
+            vscode.window.showErrorMessage(
+                'Failed to read program metadata from debugger.'
+            );
+            return false;
         }
-        
-        debuggerSession.tmpFilePollToken = null;
+
+        const programId = metadata.program_id;
+        const hash = session.programIdToHash[programId];
+        if (!hash) {
+            vscode.window.showErrorMessage(
+                `Unknown program ID: ${programId}. Not found in program_ids.map.`
+            );
+            return false;
+        }
+
+        const programName = session.programHashToProgramName[hash];
+        if (!programName) {
+            vscode.window.showErrorMessage(
+                `No program found for hash: ${hash}`
+            );
+            return false;
+        }
+
+        const execInfo = session.executablesPaths[programName];
+        if (!execInfo || !execInfo.debugBinary) {
+            vscode.window.showErrorMessage(
+                `Debug binary not found for ${programName}`
+            );
+            return false;
+        }
+
+        const debugPath = execInfo.debugBinary;
+        const relativePath = path.relative(
+            globalState.globalWorkspaceFolder,
+            debugPath
+        );
+        log(
+            `Sbpf Debug ${metadataId.slice(0, 8)} → program=${programId} cpi=${metadata.cpi_level} caller=${metadata.caller} → ${relativePath}`
+        );
+
+        await this.runCommand(
+            vsDebugSession,
+            `target modules add ${debugPath}`
+        );
+        await this.runCommand(
+            vsDebugSession,
+            `target modules load -f ${debugPath} -s 0x0`
+        );
+
+        if (!globalState.stopOnEntry) {
+            await this.runCommand(vsDebugSession, 'continue');
+        }
+
+        return true;
     }
 }
 
 const debugConfigManager = new DebugConfigManager();
 
-module.exports = { debugConfigManager};
+module.exports = { debugConfigManager };
