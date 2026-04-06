@@ -37,24 +37,20 @@
         "compile": "echo 'No compilation needed for JavaScript'",
         "watch": "echo 'No watch needed for JavaScript'",
         "lint": "eslint .",
-        "pretest": "npm run lint",
-        "test": "vscode-test --config .vscode-test.json"
+        "pretest": "npm run lint"
     },
     "devDependencies": {
-        "@types/mocha": "^10.0.9",
-        "@types/node": "20.x",
-        "@types/vscode": "^1.104.0",
-        "@vscode/test-cli": "^0.0.10",
-        "@vscode/test-electron": "^2.4.1",
-        "eslint": "^9.13.0",
-        "globals": "^16.4.0",
-        "prettier": "^3.6.2"
+        "@types/node": "22.x",
+        "@types/vscode": "^1.110.0",
+        "eslint": "^10.2.0",
+        "globals": "^17.4.0",
+        "prettier": "^3.8.1"
     },
     "repository": {
         "type": "git",
         "url": "https://github.com/limechain/gimlet.git#develop"
     },
     "dependencies": {
-        "toml": "^3.0.0"
+        "toml": "^4.1.1"
     }
 }

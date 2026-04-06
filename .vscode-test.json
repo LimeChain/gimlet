@@ -1,8 +1,0 @@
-{
-  "vscodeVersion": "stable",
-  "extensionDevelopmentPath": ".",
-  "extensionTestsPath": "./test/extension.test.js",
-  "files": [
-    "./test/extension.test.js"
-  ]
-}
