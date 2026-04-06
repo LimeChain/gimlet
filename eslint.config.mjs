@@ -6,7 +6,6 @@ export default [{
         globals: {
             ...globals.commonjs,
             ...globals.node,
-            ...globals.mocha,
         },
 
         ecmaVersion: 2022,

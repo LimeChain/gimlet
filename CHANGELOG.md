@@ -2,6 +2,24 @@
 
 All notable changes to the "Gimlet" extension will be documented in this file.
 
+## [0.1.12] - 2026-04-06
+
+### Added
+
+- Screenshot in README demonstrating how the debugger works
+
+### Changed
+
+- Bump all dependencies to latest major versions: toml 4.1.1, eslint 10.2.0, globals 17.4.0, @types/node 22.x, @types/vscode 1.110.0, prettier 3.8.1
+
+### Removed
+
+- Unused test scaffolding (@types/mocha, @vscode/test-cli, @vscode/test-electron, boilerplate test file)
+
+### Fixed
+
+- Resolved all 75 reported npm vulnerabilities
+
 ## [0.1.11] - 2026-04-03
 
 ### Added
