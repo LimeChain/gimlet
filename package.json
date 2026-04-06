@@ -4,13 +4,13 @@
     "description": "Debug Solana programs easily",
     "publisher": "limechain",
     "icon": "images/logo.png",
-    "version": "0.1.11",
+    "version": "0.1.12",
     "galleryBanner.color": {
         "color": "#21214c",
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.104.0"
+        "vscode": "^1.110.1"
     },
     "categories": [
         "Other"
