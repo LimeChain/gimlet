@@ -64,9 +64,7 @@ class GimletGeneralState {
         if (config.stopOnEntry !== undefined) {
             this.stopOnEntry = config.stopOnEntry;
         }
-        if (config.sbfTraceDir !== undefined) {
-            this.sbfTraceDir = config.sbfTraceDir;
-        }
+        this.sbfTraceDir = config.sbfTraceDir || null;
         if (
             config.platformToolsVersion !== undefined &&
             config.platformToolsVersion !== this.platformToolsVersion

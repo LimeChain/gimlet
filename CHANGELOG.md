@@ -12,6 +12,14 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 - Trace directory now defaults to `target/sbf/trace` instead of `target/deploy/debug/sbf/trace`
 
+### Fixed
+
+- Show specific error messages for each scan failure instead of a generic one
+- Stop debug process when trace is not found
+- Recalculate config paths on hot-reload so cached values stay in sync
+- Load existing gimlet.json values into globalState on activation so sbfTraceDir is picked up immediately
+- Reset sbfTraceDir to default when removed from gimlet.json instead of keeping the stale value
+
 ## [0.1.12] - 2026-04-06
 
 ### Added
@@ -66,7 +74,7 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 ### Changed
 
 - Updated input ledger tool documentation.
-  
+
 ## [0.0.10] - 2025-08-19
 
 ### Added
