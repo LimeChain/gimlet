@@ -15,6 +15,7 @@ class GimletGeneralState {
         this.lldbLibrary = this.getLldbLibraryPath();
         this.tcpPort = DEFAULT_TCP_PORT;
         this.stopOnEntry = true;
+        this.sbfTraceDir = null;
     }
 
     // TODO: Implement a mechanism to allow user to pass custom path trough gimlet.json config file.
@@ -63,6 +64,7 @@ class GimletGeneralState {
         if (config.stopOnEntry !== undefined) {
             this.stopOnEntry = config.stopOnEntry;
         }
+        this.sbfTraceDir = config.sbfTraceDir || null;
         if (
             config.platformToolsVersion !== undefined &&
             config.platformToolsVersion !== this.platformToolsVersion

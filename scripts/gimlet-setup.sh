@@ -175,7 +175,7 @@ show_summary() {
     echo -e "  cargo-build-sbf --tools-version v${PLATFORM_TOOLS_VERSION} --debug --arch v1"
     echo ""
     echo -e "${BLUE}Test command:${NC}"
-    echo -e "  SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=\$PWD/target/deploy/debug/trace cargo test --features sbpf-debugger"
+    echo -e "  SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=\$PWD/target/sbf/trace cargo test --features sbpf-debugger"
     echo ""
 }
 

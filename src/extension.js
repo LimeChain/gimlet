@@ -25,9 +25,12 @@ let debuggerSession = null;
 let debuggerDisposables = [];
 let isActivationInProgress = false;
 
-function loadProgramIdMap(session, depsPath) {
-    const mapFile = path.join(depsPath, 'sbf', 'trace', 'program_ids.map');
-    if (!fs.existsSync(mapFile)) return false;
+function loadProgramIdMap(session, tracePath) {
+    const mapFile = path.join(tracePath, 'program_ids.map');
+    if (!fs.existsSync(mapFile)) {
+        vscode.window.showErrorMessage(`Gimlet: program_ids.map not found at ${mapFile}. Make sure your trace directory is correct.`);
+        return false;
+    }
 
     const content = fs.readFileSync(mapFile, 'utf8');
     for (const line of content.split('\n')) {
@@ -43,11 +46,14 @@ function loadProgramIdMap(session, depsPath) {
 }
 
 async function scanDeployDirectory(session) {
-    const { depsPath } = gimletConfigManager.resolveGimletConfig();
+    const { depsPath, tracePath } = gimletConfigManager.resolveGimletConfig();
     if (!depsPath) return false;
 
     const files = await safeReadDir(depsPath);
-    if (!files) return false;
+    if (!files) {
+        vscode.window.showErrorMessage(`No compiled programs found in ${depsPath}. Please build your program first with: cargo-build-sbf --tools-version v1.54 --debug --arch v1`);
+        return false;
+    }
 
     for (const file of files) {
         if (!file.endsWith('.so')) continue;
@@ -62,7 +68,7 @@ async function scanDeployDirectory(session) {
         };
     }
 
-    loadProgramIdMap(session, depsPath);
+    if (!loadProgramIdMap(session, tracePath)) return false;
     return true;
 }
 
@@ -173,10 +179,7 @@ async function activateDebugger(context) {
             try {
                 log('Starting debug session...');
                 const scanned = await scanDeployDirectory(debuggerSession);
-                if (!scanned) {
-                    vscode.window.showErrorMessage('No compiled programs found in target/deploy/debug. Please build your program first with: cargo-build-sbf --tools-version v1.54 --debug --arch v1');
-                    return;
-                }
+                if (!scanned) return;
                 log('Scanned deploy directory:', JSON.stringify(debuggerSession.executablesPaths));
                 log('Program ID map:', JSON.stringify(debuggerSession.programIdToHash));
                 log('Hash to name map:', JSON.stringify(debuggerSession.programHashToProgramName));
