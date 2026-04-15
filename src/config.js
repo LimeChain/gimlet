@@ -7,6 +7,7 @@ class GimletConfigManager {
     constructor() {
         this.workspaceFolder = null;
         this.depsPath = null;
+        this.tracePath = null;
         this.inputPath = null;
     }
 
@@ -27,10 +28,14 @@ class GimletConfigManager {
         if (!workspaceFolder) return null;
 
         this.depsPath = path.join(workspaceFolder, 'target', 'deploy', 'debug'); // TODO(lime): Make this configurable
+        this.tracePath = globalState.sbfTraceDir
+            ? path.join(workspaceFolder, globalState.sbfTraceDir)
+            : path.join(workspaceFolder, 'target', 'sbf', 'trace');
         this.inputPath = path.join(workspaceFolder, 'input'); // TODO(lime): Make this configurable
 
         return {
             depsPath: this.depsPath,
+            tracePath: this.tracePath,
             inputPath: this.inputPath
         };
     }

@@ -52,6 +52,7 @@ You can customize this file to:
 | `tcpPort`              | `1212`   | TCP port the gdbstub listens on                                             |
 | `platformToolsVersion` | `"1.54"` | Solana platform-tools version                                               |
 | `stopOnEntry`          | `true`   | Stop at program entry point; set to `false` to skip to the first breakpoint |
+| `sbfTraceDir`          | `null`   | Relative path from the workspace root to the SBF trace directory; defaults to `target/sbf/trace` |
 
 Gimlet also adjusts a few **VS Code workspace settings** to ensure smooth integration.
 
@@ -65,7 +66,7 @@ Gimlet also adjusts a few **VS Code workspace settings** to ensure smooth integr
    ```
 4. **Run your test** with the debugger enabled:
    ```sh
-   SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/deploy/debug/trace cargo test --features sbpf-debugger
+   SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/sbf/trace cargo test --features sbpf-debugger
    ```
 5. **Open the test file in VS Code** — you’ll see a **CodeLens button** above it labeled:
    - `Sbpf Debug` → for individual Rust tests  

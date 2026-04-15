@@ -30,7 +30,7 @@ cargo-build-sbf --tools-version v1.54 --debug --arch v1
 Run your test with the debugger enabled:
 
 ```sh
-SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/deploy/debug/trace cargo test --features sbpf-debugger
+SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/sbf/trace cargo test --features sbpf-debugger
 ```
 
 This starts the test with a gdbstub listening on the specified TCP port, which Gimlet will connect to.

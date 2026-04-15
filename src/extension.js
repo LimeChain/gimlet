@@ -25,8 +25,8 @@ let debuggerSession = null;
 let debuggerDisposables = [];
 let isActivationInProgress = false;
 
-function loadProgramIdMap(session, depsPath) {
-    const mapFile = path.join(depsPath, 'sbf', 'trace', 'program_ids.map');
+function loadProgramIdMap(session, tracePath) {
+    const mapFile = path.join(tracePath, 'program_ids.map');
     if (!fs.existsSync(mapFile)) return false;
 
     const content = fs.readFileSync(mapFile, 'utf8');
@@ -43,7 +43,7 @@ function loadProgramIdMap(session, depsPath) {
 }
 
 async function scanDeployDirectory(session) {
-    const { depsPath } = gimletConfigManager.resolveGimletConfig();
+    const { depsPath, tracePath } = gimletConfigManager.resolveGimletConfig();
     if (!depsPath) return false;
 
     const files = await safeReadDir(depsPath);
@@ -62,7 +62,7 @@ async function scanDeployDirectory(session) {
         };
     }
 
-    loadProgramIdMap(session, depsPath);
+    loadProgramIdMap(session, tracePath);
     return true;
 }
 

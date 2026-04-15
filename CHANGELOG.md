@@ -2,6 +2,16 @@
 
 All notable changes to the "Gimlet" extension will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- `sbfTraceDir` config option in `gimlet.json` to override the default trace directory with a workspace-relative path
+
+### Changed
+
+- Trace directory now defaults to `target/sbf/trace` instead of `target/deploy/debug/sbf/trace`
+
 ## [0.1.12] - 2026-04-06
 
 ### Added
