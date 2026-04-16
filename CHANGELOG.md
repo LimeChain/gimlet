@@ -4,9 +4,16 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.17] - 2026-04-16
+
+### Fixed
+
+- CI workflow with lint, syntax check, and dry-run packaging on every push
+
 ## [0.1.16] - 2026-04-16
 
 ### Fixed
+
 - Set PYTHONPATH for LLDB Python module resolution on all platforms
 
 ## [0.1.15] - 2026-04-16
