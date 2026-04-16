@@ -50,10 +50,21 @@ class PortManager {
                 log('Starting debug session on port:', port);
                 const lldbConfig = vscode.workspace.getConfiguration('lldb');
                 const originalLibrary = lldbConfig.get('library');
+                const originalAdapterEnv = lldbConfig.get('adapterEnv');
+
+                const pythonPath = debugConfigManager.getLldbPythonPath();
+                if (pythonPath) {
+                    const currentPythonPath = process.env.PYTHONPATH || '';
+                    const newPythonPath = currentPythonPath ? `${pythonPath}:${currentPythonPath}` : pythonPath;
+                    await lldbConfig.update('adapterEnv', { PYTHONPATH: newPythonPath }, vscode.ConfigurationTarget.Workspace);
+                }
                 await lldbConfig.update('library', globalState.lldbLibrary, vscode.ConfigurationTarget.Workspace);
+
                 await vscode.debug.startDebugging(globalState.globalWorkspaceFolder, launchConfig);
                 log('Waiting for debug session to start...');
                 const vsDebugSession = await sessionPromise;
+
+                await lldbConfig.update('adapterEnv', originalAdapterEnv, vscode.ConfigurationTarget.Workspace);
                 await lldbConfig.update('library', originalLibrary, vscode.ConfigurationTarget.Workspace);
                 log('Debug session started, connected to gdbstub on port:', port);
 

@@ -9,7 +9,7 @@ const { GimletCodeLensProvider } = require('./lens/gimletCodeLensProvider');
 
 const { rustAnalyzerSettingsManager, editorSettingsManager } = require('./managers/vscodeSettingsManager');
 const portManager = require('./managers/portManager')
-const { debugConfigManager } = require('./managers/debugConfigManager');
+
 
 const { setDebuggerSession, clearDebuggerSession } = require('./managers/sessionManager');
 
@@ -130,15 +130,6 @@ async function activateDebugger(context) {
         // Set necessary VS Code settings for optimal debugging experience
         await rustAnalyzerSettingsManager.set('debug.engine', 'vadimcn.vscode-lldb');
         await editorSettingsManager.set('codeLens', true);
-
-        const pythonPath = debugConfigManager.getLldbPythonPath();
-        if (pythonPath) {
-            const lldbConfig = vscode.workspace.getConfiguration('lldb');
-            const currentPythonPath = process.env.PYTHONPATH || '';
-            const newPythonPath = currentPythonPath ? `${pythonPath}:${currentPythonPath}` : pythonPath;
-            await lldbConfig.update('adapterEnv', { PYTHONPATH: newPythonPath }, vscode.ConfigurationTarget.Workspace);
-        }
-
         log('Settings configured');
     
         // This is automated script to check dependencies for Gimlet
