@@ -66,7 +66,7 @@ class DebugConfigManager {
             targetCreateCommands: [],
             processCreateCommands: [`gdb-remote 127.0.0.1:${currentTcpPort}`],
             postRunCommands: [
-                `solana_save_output ${metadataFile} process plugin packet monitor metadata`,
+                `solana_save_output "${metadataFile}" process plugin packet monitor metadata`,
             ],
         };
     }
