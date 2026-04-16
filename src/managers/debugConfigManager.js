@@ -151,11 +151,11 @@ class DebugConfigManager {
 
         await this.runCommand(
             vsDebugSession,
-            `target modules add ${debugPath}`
+            `target modules add "${debugPath}"`
         );
         await this.runCommand(
             vsDebugSession,
-            `target modules load -f ${debugPath} -s 0x0`
+            `target modules load -f "${debugPath}" -s 0x0`
         );
 
         if (!globalState.stopOnEntry) {
