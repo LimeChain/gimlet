@@ -4,9 +4,11 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.14] - 2026-04-16
+
 ### Fixed
 
-- Set PYTHONPATH for LLDB Python module resolution on all platforms via initCommands   
+- Set PYTHONPATH for LLDB Python module resolution on all platforms via initCommands
 
 ## [0.1.13] - 2026-04-16
 
@@ -26,7 +28,7 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 - Load existing gimlet.json values into globalState on activation so sbfTraceDir is picked up immediately
 - Reset sbfTraceDir to default when removed from gimlet.json instead of keeping the stale value
 - Auto-stop debugger when test execution ends or fails instead of polling forever
-- Auto-set PYTHONPATH for LLDB Python module resolution on all platforms 
+- Auto-set PYTHONPATH for LLDB Python module resolution on all platforms
 
 ## [0.1.12] - 2026-04-06
 
