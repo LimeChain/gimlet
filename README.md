@@ -60,7 +60,7 @@ You can customize this file to:
 | `tcpPort`              | `1212`   | TCP port the gdbstub listens on                                             |
 | `platformToolsVersion` | `"1.54"` | Solana platform-tools version                                               |
 | `stopOnEntry`          | `true`   | Stop at program entry point; set to `false` to skip to the first breakpoint |
-| `sbfTraceDir`          | `null`   | Relative path from the workspace root to the SBF trace directory; defaults to `target/sbf/trace` |
+| `sbfTraceDir`          | `null`   | **Relative** path from the workspace root to the SBF trace directory; defaults to `target/sbf/trace` |
 
 Gimlet also adjusts a few **VS Code workspace settings** (`.vscode/settings.json`) to ensure smooth integration:
 
