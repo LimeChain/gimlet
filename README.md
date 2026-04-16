@@ -63,7 +63,7 @@ You can customize this file to:
 ### 2. Setup Steps
 
 1. **Open VS Code** in your Solana project folder.  
-2. **Install the Gimlet extension** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=emilroydev.gimlet-beta).  
+2. **Install the Gimlet extension** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=limechain.gimlet).
 3. **Build your program** with debug symbols:
    ```sh
    RUSTFLAGS="-Copt-level=0 -C strip=none -C debuginfo=2" cargo build-sbf --tools-version v1.54 --debug --arch v1
