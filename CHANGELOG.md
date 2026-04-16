@@ -4,6 +4,10 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- Set PYTHONPATH for LLDB Python module resolution on all platforms via initCommands   
+
 ## [0.1.13] - 2026-04-16
 
 ### Added
