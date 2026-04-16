@@ -4,6 +4,11 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.18] - 2026-04-16
+
+- Improve error message when program_ids.map is not found to mention SBF_TRACE_DIR and sbfTraceDir config
+- Scope PYTHONPATH to debug session instead of persisting in workspace settings
+
 ## [0.1.17] - 2026-04-16
 
 ### Fixed
