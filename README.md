@@ -79,9 +79,9 @@ Gimlet also adjusts a few **VS Code workspace settings** (`.vscode/settings.json
    ```sh
    RUSTFLAGS="-Copt-level=0 -C strip=none -C debuginfo=2" cargo build-sbf --tools-version v1.54 --debug --arch v1
    ```
-4. **Run your test** with the debugger enabled:
+4. For example, with Mollusk, **run your test** with the debugger enabled (ensure your workspace's `Cargo.toml` includes the `sbpf-debugger` feature):
    ```sh
-   SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/sbf/trace cargo test --features sbpf-debugger
+   SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/sbf/trace cargo test
    ```
    `SBF_TRACE_DIR` is required: it tells the runtime where to emit `program_ids.map`, which maps each program ID to the SHA-256 of its ELF. Gimlet uses this mapping to locate the matching debug symbols.
 5. **Open the test file in VS Code** - you'll see a **CodeLens button** above it labeled:
