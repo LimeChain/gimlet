@@ -37,37 +37,41 @@ class DebugConfigManager {
         const pythonDir = fs.readdirSync(libDir).find(entry => entry.startsWith('python'));
         if (!pythonDir) return null;
 
-        return path.join(libDir, pythonDir, 'dist-packages');
+        const pythonLibDir = path.join(libDir, pythonDir);
+        const packagesDir = fs.readdirSync(pythonLibDir).find(entry => entry.endsWith('-packages'));
+        if (!packagesDir) return null;
+
+        return path.join(pythonLibDir, packagesDir);
     }
 
     getLaunchConfig(currentTcpPort, metadataId) {
         const metadataFile = metadataFilePath(metadataId);
         const scriptsDir = this.getSolanaScriptsDir();
-        const config = {
+        const initCommands = [];
+
+        const pythonPath = this.getLldbPythonPath();
+        if (pythonPath) {
+            initCommands.push(`script import sys; sys.path.insert(0, "${pythonPath}")`);
+        }
+
+        initCommands.push(
+            `command script import "${path.join(scriptsDir, 'lldb_lookup.py')}"`,
+            `command script import "${path.join(scriptsDir, 'solana_lookup.py')}"`,
+            `command script import "${path.join(scriptsDir, 'solana_input_deserialize_abiv1.py')}"`,
+            `command script import "${path.join(scriptsDir, 'solana_save_output.py')}"`,
+        );
+
+        return {
             type: 'lldb',
             request: 'launch',
             name: `Sbpf Debug ${metadataId.slice(0, 8)}`,
-            initCommands: [
-                `command script import "${path.join(scriptsDir, 'lldb_lookup.py')}"`,
-                `command script import "${path.join(scriptsDir, 'solana_lookup.py')}"`,
-                `command script import "${path.join(scriptsDir, 'solana_input_deserialize_abiv1.py')}"`,
-                `command script import "${path.join(scriptsDir, 'solana_save_output.py')}"`,
-            ],
+            initCommands,
             targetCreateCommands: [],
             processCreateCommands: [`gdb-remote 127.0.0.1:${currentTcpPort}`],
             postRunCommands: [
                 `solana_save_output ${metadataFile} process plugin packet monitor metadata`,
             ],
         };
-
-        const pythonPath = this.getLldbPythonPath();
-        if (pythonPath) {
-            config.env = {
-                PYTHONPATH: pythonPath + ':${env:PYTHONPATH}',
-            };
-        }
-
-        return config;
     }
 
     async readMetadata(metadataId, timeoutMs = 10000, intervalMs = 100) {
