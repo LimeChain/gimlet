@@ -28,9 +28,16 @@ class GimletConfigManager {
         if (!workspaceFolder) return null;
 
         this.depsPath = path.join(workspaceFolder, 'target', 'deploy', 'debug'); // TODO(lime): Make this configurable
-        this.tracePath = globalState.sbfTraceDir
-            ? path.join(workspaceFolder, globalState.sbfTraceDir)
-            : path.join(workspaceFolder, 'target', 'sbf', 'trace');
+        if (globalState.sbfTraceDir) {
+            const resolved = path.resolve(workspaceFolder, globalState.sbfTraceDir);
+            if (!resolved.startsWith(workspaceFolder + path.sep)) {
+                vscode.window.showErrorMessage('Gimlet: sbfTraceDir must be within the workspace directory.');
+                return null;
+            }
+            this.tracePath = resolved;
+        } else {
+            this.tracePath = path.join(workspaceFolder, 'target', 'sbf', 'trace');
+        }
         this.inputPath = path.join(workspaceFolder, 'input'); // TODO(lime): Make this configurable
 
         return {
