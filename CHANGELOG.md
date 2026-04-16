@@ -4,6 +4,16 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.19] - 2026-04-16
+
+### Changed
+
+- Updated README to align with latest sbpf-debugger feature changes
+
+### Fixed
+
+- Fail immediately when no debug session is found on the port instead of waiting silently
+
 ## [0.1.18] - 2026-04-16
 
 - Improve error message when program_ids.map is not found to mention SBF_TRACE_DIR and sbfTraceDir config
