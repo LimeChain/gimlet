@@ -7,7 +7,7 @@ const path = require('path');
 const { log } = require('../logger');
 
 function metadataFilePath(id) {
-    return `/tmp/gimlet-metadata-${id}.txt`;
+    return path.join(os.tmpdir(), `gimlet-metadata-${id}.txt`);
 }
 
 class DebugConfigManager {
