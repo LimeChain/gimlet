@@ -27,6 +27,12 @@ class PortManager {
     async listenAndStartDebugForPort(port) {
         if (this.pollingToken) return;
 
+        const isOpen = await this.isPortOpen(port);
+        if (!isOpen) {
+            vscode.window.showErrorMessage(`Gimlet: No debug session found on port ${port}. Make sure your test is running with SBF_DEBUG_PORT=${port}.`);
+            return;
+        }
+
         const myToken = Symbol();
         this.pollingToken = myToken;
 
