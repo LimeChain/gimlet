@@ -177,7 +177,7 @@ async function activateDebugger(context) {
             vscode.debug.stopDebugging();
         });
             
-        const sbpfDebugDisposable = vscode.commands.registerCommand('gimlet.debugAtLine', async (document, line) => {
+        const sbpfDebugDisposable = vscode.commands.registerCommand('gimlet.debugAtLine', async () => {
             // Prevent starting a new session if one is already running
             if (isSessionRunning()) {
                 vscode.window.showInformationMessage('A Gimlet debug session is already running. Please stop the current session before starting a new one.');
