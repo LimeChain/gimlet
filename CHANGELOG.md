@@ -19,6 +19,7 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 - Recalculate config paths on hot-reload so cached values stay in sync
 - Load existing gimlet.json values into globalState on activation so sbfTraceDir is picked up immediately
 - Reset sbfTraceDir to default when removed from gimlet.json instead of keeping the stale value
+- Auto-stop debugger when test execution ends or fails instead of polling forever
 
 ## [0.1.12] - 2026-04-06
 

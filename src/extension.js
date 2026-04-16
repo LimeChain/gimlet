@@ -153,6 +153,11 @@ async function activateDebugger(context) {
         // Listener to handle when debug ends
         const debugListener = vscode.debug.onDidTerminateDebugSession(session => {
             log('Debug session terminated:', session.name);
+            if (portManager.isPolling()) {
+                portManager.scheduleCleanup(() => cleanupDebuggerSession());
+            } else {
+                cleanupDebuggerSession();
+            }
         });
 
         const stopDisposable = vscode.commands.registerCommand('gimlet.stopSession', () => {
