@@ -34,11 +34,15 @@ class DebugConfigManager {
             'lib'
         );
 
-        const pythonDir = fs.readdirSync(libDir).find(entry => entry.startsWith('python'));
+        const pythonDir = fs
+            .readdirSync(libDir)
+            .find((entry) => entry.startsWith('python'));
         if (!pythonDir) return null;
 
         const pythonLibDir = path.join(libDir, pythonDir);
-        const packagesDir = fs.readdirSync(pythonLibDir).find(entry => entry.endsWith('-packages'));
+        const packagesDir = fs
+            .readdirSync(pythonLibDir)
+            .find((entry) => entry.endsWith('-packages'));
         if (!packagesDir) return null;
 
         return path.join(pythonLibDir, packagesDir);
@@ -52,7 +56,7 @@ class DebugConfigManager {
             `command script import "${path.join(scriptsDir, 'solana_lookup.py')}"`,
             `command script import "${path.join(scriptsDir, 'solana_input_deserialize_abiv1.py')}"`,
             `command script import "${path.join(scriptsDir, 'solana_save_output.py')}"`,
-        );
+        ];
 
         return {
             type: 'lldb',
