@@ -216,7 +216,7 @@ async function activateDebugger(context) {
 }
 
 async function startPortDebugListener() {
-    portManager.listenAndStartDebugForPort(debuggerSession.tcpPort);
+    await portManager.listenAndStartDebugForPort(debuggerSession.tcpPort);
 }
 
 function cleanupDebuggerSession() {
