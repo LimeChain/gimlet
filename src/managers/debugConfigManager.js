@@ -34,6 +34,11 @@ class DebugConfigManager {
             'lib'
         );
 
+        if (!fs.existsSync(libDir)) {
+            vscode.window.showErrorMessage(`Gimlet: Solana platform-tools v${globalState.platformToolsVersion} not found at ${libDir}. Run 'cargo-build-sbf --tools-version v${globalState.platformToolsVersion}' to install them.`);
+            return null;
+        }
+
         const pythonDir = fs
             .readdirSync(libDir)
             .find((entry) => entry.startsWith('python'));
