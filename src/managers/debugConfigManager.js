@@ -47,17 +47,7 @@ class DebugConfigManager {
     getLaunchConfig(currentTcpPort, metadataId) {
         const metadataFile = metadataFilePath(metadataId);
         const scriptsDir = this.getSolanaScriptsDir();
-        const initCommands = [];
-
-        const pythonPath = this.getLldbPythonPath();
-        if (pythonPath) {
-            initCommands.push(
-                `script import sys`,
-                `script sys.path.insert(0, "${pythonPath}")`,
-            );
-        }
-
-        initCommands.push(
+        const initCommands = [
             `command script import "${path.join(scriptsDir, 'lldb_lookup.py')}"`,
             `command script import "${path.join(scriptsDir, 'solana_lookup.py')}"`,
             `command script import "${path.join(scriptsDir, 'solana_input_deserialize_abiv1.py')}"`,
