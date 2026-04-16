@@ -65,6 +65,7 @@
         "url": "https://github.com/LimeChain/gimlet.git"
     },
     "dependencies": {
+        "systeminformation": "^5.31.5",
         "toml": "^4.1.1"
     }
 }
