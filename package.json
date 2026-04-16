@@ -5,15 +5,23 @@
     "publisher": "limechain",
     "icon": "images/logo.png",
     "version": "0.1.20",
-    "galleryBanner.color": {
+    "license": "MIT",
+    "galleryBanner": {
         "color": "#21214c",
         "theme": "dark"
     },
+    "keywords": [
+        "solana",
+        "debugger",
+        "sbpf",
+        "blockchain",
+        "solana-program"
+    ],
     "engines": {
         "vscode": "^1.110.1"
     },
     "categories": [
-        "Other"
+        "Debuggers"
     ],
     "activationEvents": [
         "onLanguage:rust",
@@ -29,6 +37,10 @@
             {
                 "command": "gimlet.stopSession",
                 "title": "Gimlet: Stop Debug Session"
+            },
+            {
+                "command": "gimlet.debugAtLine",
+                "title": "Gimlet: Debug at Line"
             }
         ]
     },
@@ -37,18 +49,20 @@
         "compile": "echo 'No compilation needed for JavaScript'",
         "watch": "echo 'No watch needed for JavaScript'",
         "lint": "eslint .",
-        "pretest": "npm run lint"
+        "format": "prettier --write ."
     },
     "devDependencies": {
-        "@types/node": "22.x",
-        "@types/vscode": "^1.110.0",
         "eslint": "^10.2.0",
         "globals": "^17.4.0",
         "prettier": "^3.8.1"
     },
+    "homepage": "https://github.com/LimeChain/gimlet#readme",
+    "bugs": {
+        "url": "https://github.com/LimeChain/gimlet/issues"
+    },
     "repository": {
         "type": "git",
-        "url": "https://github.com/limechain/gimlet.git#develop"
+        "url": "https://github.com/LimeChain/gimlet.git"
     },
     "dependencies": {
         "toml": "^4.1.1"
