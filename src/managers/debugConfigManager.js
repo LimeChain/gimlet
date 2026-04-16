@@ -23,10 +23,27 @@ class DebugConfigManager {
         );
     }
 
+    getLldbPythonPath() {
+        const libDir = path.join(
+            os.homedir(),
+            '.cache',
+            'solana',
+            `v${globalState.platformToolsVersion}`,
+            'platform-tools',
+            'llvm',
+            'lib'
+        );
+
+        const pythonDir = fs.readdirSync(libDir).find(entry => entry.startsWith('python'));
+        if (!pythonDir) return null;
+
+        return path.join(libDir, pythonDir, 'dist-packages');
+    }
+
     getLaunchConfig(currentTcpPort, metadataId) {
         const metadataFile = metadataFilePath(metadataId);
         const scriptsDir = this.getSolanaScriptsDir();
-        return {
+        const config = {
             type: 'lldb',
             request: 'launch',
             name: `Sbpf Debug ${metadataId.slice(0, 8)}`,
@@ -42,6 +59,15 @@ class DebugConfigManager {
                 `solana_save_output ${metadataFile} process plugin packet monitor metadata`,
             ],
         };
+
+        const pythonPath = this.getLldbPythonPath();
+        if (pythonPath) {
+            config.env = {
+                PYTHONPATH: pythonPath + ':${env:PYTHONPATH}',
+            };
+        }
+
+        return config;
     }
 
     async readMetadata(metadataId, timeoutMs = 10000, intervalMs = 100) {
