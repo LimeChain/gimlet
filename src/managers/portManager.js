@@ -29,7 +29,7 @@ class PortManager {
 
         const isOpen = await this.isPortOpen(port);
         if (!isOpen) {
-            vscode.window.showErrorMessage(`Gimlet: No debug session found on port ${port}. Make sure your test is running with SBF_DEBUG_PORT=${port}.`);
+            vscode.window.showErrorMessage(`Gimlet: No debug session found on port ${port}. Make sure your test is running with SBF_DEBUG_PORT=${port}, or change the port in .vscode/gimlet.json (tcpPort).`);
             return;
         }
 
