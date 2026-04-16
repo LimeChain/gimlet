@@ -83,7 +83,7 @@ Gimlet also adjusts a few **VS Code workspace settings** (`.vscode/settings.json
    ```sh
    SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/sbf/trace cargo test
    ```
-   `SBF_TRACE_DIR` is required: it tells the runtime where to emit `program_ids.map`, which maps each program ID to the SHA-256 of its ELF. Gimlet uses this mapping to locate the matching debug symbols.
+   `SBF_TRACE_DIR` is required: it tells the framework where to emit `program_ids.map`, which maps each program ID to the SHA-256 of its ELF. Gimlet uses this mapping to locate the matching debug symbols.
 5. **Open the test file in VS Code** - you'll see a **CodeLens button** above it labeled:
    - `Sbpf Debug` → for individual Rust tests  
    - `Sbpf Debug All` → for TypeScript test suites  
