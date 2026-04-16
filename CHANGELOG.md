@@ -4,6 +4,58 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.20] - 2026-04-16
+
+Stable release — consolidates all changes since v0.0.10.
+
+### Added
+
+- feat: CPI debugging across multiple programs in a single test ([#48](https://github.com/LimeChain/gimlet/pull/48))
+- feat: CodeLens button for SBPF debugging on Rust macros and TS test blocks
+- feat: SBPF debug via VS Code debug adapter
+- feat: session manager with state management and concurrent session prevention
+- feat: output channel for stdout and stderr
+- feat: configurable trace directory via `sbfTraceDir` in `gimlet.json` ([#50](https://github.com/LimeChain/gimlet/pull/50))
+- feat: support for all Solana projects, not only Anchor
+- feat: `stopOnEntry` option in `gimlet.json` to control initial breakpoint behavior
+- feat: `Gimlet: Stop Debug Session` command
+- feat: program resolution via sha256 hash mapping from `program_ids.map`
+- feat: timestamped logging via VS Code OutputChannel (`Gimlet` channel)
+- ci: add CI workflow with lint, syntax check, and dry-run packaging ([#54](https://github.com/LimeChain/gimlet/pull/54))
+- docs: troubleshooting documentation ([#45](https://github.com/LimeChain/gimlet/pull/45))
+
+### Fixed
+
+- fix: fail immediately when no debug session is found on the port ([#56](https://github.com/LimeChain/gimlet/pull/56))
+- fix: improve error message when `program_ids.map` is not found
+- fix: scope PYTHONPATH to debug session instead of persisting in workspace settings
+- fix: set PYTHONPATH for LLDB Python on all platforms ([#52](https://github.com/LimeChain/gimlet/pull/52), [#53](https://github.com/LimeChain/gimlet/pull/53))
+- fix: auto-stop debugger when test execution ends or fails ([#51](https://github.com/LimeChain/gimlet/pull/51))
+- fix: continue process command ([#46](https://github.com/LimeChain/gimlet/pull/46))
+- fix: symlink issues when using LLDB library on linux-x86
+- fix: rust-analyzer cursor pointer for editor
+- fix: resolved all 75 reported npm vulnerabilities ([#49](https://github.com/LimeChain/gimlet/pull/49))
+
+### Changed
+
+- docs: align readme with latest sbpf-debugger feature changes ([#55](https://github.com/LimeChain/gimlet/pull/55))
+- chore: bump dependencies & README ([#49](https://github.com/LimeChain/gimlet/pull/49))
+- refactor: simplified and modularized extension architecture ([#48](https://github.com/LimeChain/gimlet/pull/48))
+- refactor: CodeLens no longer depends on rust-analyzer; uses direct text scanning
+- refactor: users now build manually with `cargo-build-sbf`; removed build strategies
+- refactor: `lldb.library` scoped per debug session to avoid conflicts with rust-analyzer debugging
+- chore: trace directory defaults to `target/sbf/trace` instead of `target/deploy/debug/sbf/trace`
+- chore: compatible with platform-tools v1.54
+- chore: bump all dependencies to latest major versions
+
+### Removed
+
+- `agave-ledger-tool` dependency
+- Build strategies (`baseBuildStrategy`, `sbpfV1BuildStrategy`, `buildCommands`)
+- `constants.js`, `docs/input-for-ledger-tool.md`
+- Unused config properties (`solanaDebugger.solanaLldbPath`, `gimlet.enableCodeLens`)
+- Unused test scaffolding (`@types/mocha`, `@vscode/test-cli`, `@vscode/test-electron`)
+
 ## [0.1.19] - 2026-04-16
 
 ### Changed
