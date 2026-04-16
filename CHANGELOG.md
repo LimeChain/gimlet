@@ -4,6 +4,12 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.21] - 2026-04-16
+
+### Changed
+
+- refactor(port): replace `netstat` shell-out with `systeminformation` for cross-platform port detection
+
 ## [0.1.20] - 2026-04-16
 
 Stable release — consolidates all changes since v0.0.10.
