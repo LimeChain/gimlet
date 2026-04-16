@@ -60,6 +60,15 @@ You can customize this file to:
 | `stopOnEntry`          | `true`   | Stop at program entry point; set to `false` to skip to the first breakpoint |
 | `sbfTraceDir`          | `null`   | Relative path from the workspace root to the SBF trace directory; defaults to `target/sbf/trace` |
 
+Gimlet also adjusts a few **VS Code workspace settings** (`.vscode/settings.json`) to ensure smooth integration:
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| `rust-analyzer.debug.engine` | `"vadimcn.vscode-lldb"` | Tells rust-analyzer to use the CodeLLDB adapter for debugging |
+| `editor.codeLens` | `true` | Enables the inline **Sbpf Debug** / **Sbpf Debug All** buttons above tests |
+| `lldb.library` | Path to Solana platform-tools `liblldb` | Points CodeLLDB at the Solana-patched LLDB that understands sBPF ELFs |
+| `lldb.adapterEnv` → `PYTHONPATH` | Path to platform-tools Python packages | Ensures LLDB can find its Python dependencies at startup |
+
 ### 2. Setup Steps
 
 1. **Open VS Code** in your Solana project folder.  
