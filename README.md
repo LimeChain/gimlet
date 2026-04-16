@@ -75,7 +75,7 @@ Gimlet also adjusts a few **VS Code workspace settings** (`.vscode/settings.json
 
 1. **Open VS Code** in your Solana project folder.  
 2. **Install the Gimlet extension** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=limechain.gimlet).
-3. **Build your program** with debug symbols:
+3. **Build your program** with debug symbols (at the time of writing, this uses dynamic stack frames):
    ```sh
    RUSTFLAGS="-Copt-level=0 -C strip=none -C debuginfo=2" cargo build-sbf --tools-version v1.54 --debug --arch v1
    ```
