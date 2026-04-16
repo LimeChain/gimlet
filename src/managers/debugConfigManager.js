@@ -51,7 +51,10 @@ class DebugConfigManager {
 
         const pythonPath = this.getLldbPythonPath();
         if (pythonPath) {
-            initCommands.push(`script import sys; sys.path.insert(0, "${pythonPath}")`);
+            initCommands.push(
+                `script import sys`,
+                `script sys.path.insert(0, "${pythonPath}")`,
+            );
         }
 
         initCommands.push(
