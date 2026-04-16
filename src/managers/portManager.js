@@ -9,6 +9,7 @@ const { log } = require('../logger');
 class PortManager {
     constructor() {
         this.pollingToken = null;
+        this.cleanupTimer = null;
     }
 
     async isPortOpen(port) {
@@ -45,6 +46,7 @@ class PortManager {
                     });
                 });
 
+                this.cancelCleanupTimer();
                 log('Starting debug session on port:', port);
                 const lldbConfig = vscode.workspace.getConfiguration('lldb');
                 const originalLibrary = lldbConfig.get('library');
@@ -88,7 +90,28 @@ class PortManager {
         this.pollingToken = null;
     }
 
+    isPolling() {
+        return this.pollingToken !== null;
+    }
+
+    scheduleCleanup(onCleanup) {
+        this.cancelCleanupTimer();
+        this.cleanupTimer = setTimeout(() => {
+            log('No new program detected after session ended, cleaning up.');
+            this.cleanup();
+            if (onCleanup) onCleanup();
+        }, 3000);
+    }
+
+    cancelCleanupTimer() {
+        if (this.cleanupTimer) {
+            clearTimeout(this.cleanupTimer);
+            this.cleanupTimer = null;
+        }
+    }
+
     cleanup() {
+        this.cancelCleanupTimer();
         this.pollingToken = null;
     }
 }
