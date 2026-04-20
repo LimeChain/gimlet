@@ -4,6 +4,7 @@ const LENS_TITLE = "Sbpf Debug";
 const TEST_ATTR_PATTERNS = [/#\[test\]/, /#\[tokio::test\]/];
 const FN_PATTERN = /^\s*(pub\s+)?(async\s+)?fn\s+(\w+)/;
 
+// TODO(lime): codeLens passes [document, line] as command arguments, but gimlet.debugAtLine handler ignores them? "Debug at Line" doesn't know which line was clicked. Use the args in the handler or remove them
 class GimletCodeLensProvider {
     provideCodeLenses(document) {
         const lenses = [];

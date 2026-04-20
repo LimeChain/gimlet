@@ -57,6 +57,7 @@ class GimletGeneralState {
         }
     }
 
+    // TODO(lime): no validation of config values from user-controlled gimlet.json
     setConfig(config) {
         if (config.tcpPort !== undefined) {
             this.tcpPort = config.tcpPort;
@@ -75,6 +76,7 @@ class GimletGeneralState {
     }
 }
 
+// TODO(lime): module-level singleton throws during import — constructor calls getLldbLibraryPath() which throws if platform-tools missing
 module.exports = {
     globalState: new GimletGeneralState(), // Singleton
 }

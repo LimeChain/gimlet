@@ -21,6 +21,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const { log, error } = require('./logger');
 
+// TODO(lime): duplicate debuggerSession state — also tracked in sessionManager.js. Collapse to one source of truth
 let debuggerSession = null;
 // Global array ofr disposables that belong to activateDebugger
 let debuggerDisposables = [];
@@ -33,7 +34,7 @@ function loadProgramIdMap(session, tracePath) {
         return false;
     }
 
-    const content = fs.readFileSync(mapFile, 'utf8');
+    const content = fs.readFileSync(mapFile, 'utf8'); // TODO(lime): any possible collisions?
     for (const line of content.split('\n')) {
         const trimmed = line.trim();
         if (!trimmed) continue;
@@ -47,6 +48,7 @@ function loadProgramIdMap(session, tracePath) {
 }
 
 async function scanDeployDirectory(session) {
+    // TODO(lime): resolveGimletConfig returns null on validation failure — destructuring null throws TypeError before the `if (!depsPath)` check runs
     const { depsPath, tracePath } = gimletConfigManager.resolveGimletConfig();
     if (!depsPath) return false;
 
@@ -60,7 +62,7 @@ async function scanDeployDirectory(session) {
         if (!file.endsWith('.so')) continue;
 
         const soPath = path.join(depsPath, file);
-        const hash = crypto.createHash('sha256').update(fs.readFileSync(soPath)).digest('hex');
+        const hash = crypto.createHash('sha256').update(fs.readFileSync(soPath)).digest('hex'); // TODO(lime): any chance of too big .so files?
         session.setProgramNameForHash(hash, file);
 
         session.executablesPaths[file] = {
@@ -80,12 +82,13 @@ async function scanDeployDirectory(session) {
 async function activate(context) {
     await activateDebugger(context);
 
+    // TODO(lime): file-watcher - every Cargo.toml save triggers full re-activation
     const watcher = vscode.workspace.createFileSystemWatcher('**/Cargo.toml');
     watcher.onDidChange(() => activateDebugger(context));
     watcher.onDidCreate(() => activateDebugger(context));
     watcher.onDidDelete(() => activateDebugger(context));
 
-    context.subscriptions.push(watcher);    
+    context.subscriptions.push(watcher);
 }
 
 function deactivate() {
@@ -93,7 +96,7 @@ function deactivate() {
 }
 
 async function activateDebugger(context) {
-
+    // TODO(lime): re-activation drops pending debug sessions — if called mid-session (via Cargo.toml watcher), disposes the termination listener so cleanup never fires and debuggerSession stays stale. Check isSessionRunning() before disposing
     if (isActivationInProgress) {
         return;
     }
@@ -108,6 +111,7 @@ async function activateDebugger(context) {
         }
         debuggerDisposables = [];
 
+        // TODO(lime): multi-root workspaces are silently ignored — grabs workspaceFolders[0]
         const workspaceUri = vscode.workspace.workspaceFolders?.[0]?.uri;
         if (!workspaceUri) {
             log('No workspace folder found');
@@ -128,7 +132,9 @@ async function activateDebugger(context) {
         gimletConfigManager.watchGimletConfig(context);
 
         // Set necessary VS Code settings for optimal debugging experience
+        // TODO(lime): rust-analyzer.debug.engine silently overwritten at workspace level, never restored. Hostile to users who prefer a different engine
         await rustAnalyzerSettingsManager.set('debug.engine', 'vadimcn.vscode-lldb');
+        // TODO(lime): editor.codeLens force-set at workspace level
         await editorSettingsManager.set('codeLens', true);
         log('Settings configured');
     
@@ -168,6 +174,7 @@ async function activateDebugger(context) {
             vscode.debug.stopDebugging();
         });
             
+        // TODO(lime): CodeLens passes [document, line] as command args but this handler ignores them — "Debug at Line" doesn't actually know which line was clicked
         const sbpfDebugDisposable = vscode.commands.registerCommand('gimlet.debugAtLine', async () => {
             // Prevent starting a new session if one is already running
             if (isSessionRunning()) {

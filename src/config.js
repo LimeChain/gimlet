@@ -18,6 +18,7 @@ class GimletConfigManager {
             return null;
         }
 
+        // TODO(lime): multi-root workspaces always picks folders[0]
         this.workspaceFolder = folders[0].uri.fsPath;
         globalState.globalWorkspaceFolder = this.workspaceFolder;
         return this.workspaceFolder;
@@ -76,11 +77,13 @@ class GimletConfigManager {
             }
         }
 
+        // TODO(lime): writeFileSync rewrites gimlet.json on every activation. Only write when merged content differs from existing
         fs.writeFileSync(configPath, JSON.stringify(configToWrite, null, 4));
         return configPath;
     }
 
     watchGimletConfig(context) {
+        // TODO(lime): watcher leak — this method runs on every activateDebugger() call. Dispose previous watcher or guard against re-registration
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (!workspaceFolder) return;
 
