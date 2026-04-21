@@ -103,14 +103,14 @@ class PortManager {
         log('Starting debug session on port:', port);
 
         const pythonPath = debugConfigManager.getLldbPythonPath();
-        const updates = { library: globalState.lldbLibrary };
-        if (pythonPath) {
-            const currentPythonPath = process.env.PYTHONPATH || '';
-            updates.adapterEnv = { PYTHONPATH: currentPythonPath ? `${pythonPath}:${currentPythonPath}` : pythonPath };
-        }
 
         let vsDebugSession;
         try {
+            const updates = { library: globalState.lldbLibrary };
+            if (pythonPath) {
+                const currentPythonPath = process.env.PYTHONPATH || '';
+                updates.adapterEnv = { PYTHONPATH: currentPythonPath ? `${pythonPath}:${currentPythonPath}` : pythonPath };
+            }
             vsDebugSession = await withLldbConfig(updates, async () => {
                 await vscode.debug.startDebugging(globalState.globalWorkspaceFolder, launchConfig);
                 log('Waiting for debug session to start...');

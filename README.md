@@ -52,6 +52,8 @@ Gimlet makes debugging Solana programs inside VS Code effortless. Follow these s
 When you open your Solana project, **Gimlet** automatically creates a `.vscode/gimlet.json` configuration file.  
 You can customize this file to:
 - Specify a different **platform-tools version**
+- Point Gimlet at a **custom platform-tools install** (Nix, renamed dirs, custom toolchains, CI containers)
+- Override the **LLDB library file** directly (non-standard `liblldb` names or missing symlinks)
 - Change the default **TCP port** used for debugging
 - Control whether the debugger **stops on entry** or runs straight to your first breakpoint  
 
@@ -61,6 +63,10 @@ You can customize this file to:
 | `platformToolsVersion` | `"1.54"` | Solana platform-tools version                                               |
 | `stopOnEntry`          | `true`   | Stop at program entry point; set to `false` to skip to the first breakpoint |
 | `sbfTraceDir`          | `null`   | **Relative** path from the workspace root to the SBF trace directory; defaults to `target/sbf/trace` |
+| `platformToolsDir`     | `null`   | Absolute path to your platform-tools root. Gimlet derives the LLDB library, Python site-packages, and scripts dir from `{platformToolsDir}/llvm/{lib,bin}/` — use when your toolchain lives outside `~/.cache/solana/v{platformToolsVersion}/platform-tools/`. |
+| `lldbLibraryPath`      | `null`   | Absolute path to a specific `liblldb.dylib` / `liblldb.so` file. Wins over the derived LLDB default — use for non-standard library filenames (e.g. `liblldb.20.1.7-rust-dev.dylib`) or missing `liblldb.{ext}` symlinks. Does not affect Python/scripts paths; pair with `platformToolsDir` when the whole install is non-standard. |
+
+> **Which key do I need?** `platformToolsDir` alone covers most cases — it reroutes all three paths Gimlet depends on. Use `lldbLibraryPath` only when the LLDB library filename is non-standard or its symlink is missing. Leave both unset for the default `cargo build-sbf` layout at `~/.cache/solana/v{platformToolsVersion}/platform-tools/`.
 
 Gimlet also adjusts a few **VS Code workspace settings** (`.vscode/settings.json`) to ensure smooth integration:
 

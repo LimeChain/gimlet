@@ -12,30 +12,18 @@ function metadataFilePath(id) {
 
 class DebugConfigManager {
     getSolanaScriptsDir() {
-        return path.join(
-            os.homedir(),
-            '.cache',
-            'solana',
-            `v${globalState.platformToolsVersion}`,
-            'platform-tools',
-            'llvm',
-            'bin'
-        );
+        return globalState.getPlatformToolsBinDir();
     }
 
     getLldbPythonPath() {
-        const libDir = path.join(
-            os.homedir(),
-            '.cache',
-            'solana',
-            `v${globalState.platformToolsVersion}`,
-            'platform-tools',
-            'llvm',
-            'lib'
-        );
+        const libDir = globalState.getPlatformToolsLibDir();
 
         if (!fs.existsSync(libDir)) {
-            vscode.window.showErrorMessage(`Gimlet: Solana platform-tools v${globalState.platformToolsVersion} not found at ${libDir}. Run 'cargo-build-sbf --tools-version v${globalState.platformToolsVersion}' to install them.`);
+            vscode.window.showErrorMessage(
+                `Gimlet: Solana platform-tools not found at ${libDir}. ` +
+                `Run 'cargo-build-sbf --tools-version v${globalState.platformToolsVersion}' to install them, ` +
+                `or set "platformToolsDir" in .vscode/gimlet.json to point at an existing platform-tools directory.`
+            );
             return null;
         }
 
