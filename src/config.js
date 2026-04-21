@@ -2,6 +2,19 @@ const vscode = require('vscode');
 const path = require('path');
 const fs = require('fs');
 const { globalState } = require('./state/globalState');
+const { log } = require('./logger');
+
+function surfaceConfigValidation({ errors, unknownKeys }) {
+    if (errors.length > 0) {
+        const body = errors.map((e) => `  - ${e}`).join('\n');
+        vscode.window.showErrorMessage(
+            `Gimlet config has ${errors.length} issue${errors.length === 1 ? '' : 's'}. Invalid keys were ignored and defaults kept:\n${body}`
+        );
+    }
+    if (unknownKeys.length > 0) {
+        log(`Gimlet: unknown gimlet.json key${unknownKeys.length === 1 ? '' : 's'} ignored: ${unknownKeys.join(', ')}`);
+    }
+}
 
 class GimletConfigManager {
     constructor() {
@@ -71,7 +84,8 @@ class GimletConfigManager {
                 const existingConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
                 // Merge existing config with defaults (existing values take precedence)
                 configToWrite = { ...defaultConfig, ...existingConfig };
-                globalState.setConfig(existingConfig);
+                const validation = globalState.setConfig(existingConfig);
+                surfaceConfigValidation(validation);
             } catch (err) {
                 vscode.window.showErrorMessage('Failed to read existing Gimlet config, recreating: ' + err.message);
             }
@@ -95,11 +109,13 @@ class GimletConfigManager {
                 const configContent = fs.readFileSync(configPath, 'utf8');
                 const config = JSON.parse(configContent);
 
-                // Update your state here
-                globalState.setConfig(config);
+                const validation = globalState.setConfig(config);
                 this.resolveGimletConfig();
+                surfaceConfigValidation(validation);
 
-                vscode.window.showInformationMessage('Gimlet config updated and state refreshed.');
+                if (validation.errors.length === 0) {
+                    vscode.window.showInformationMessage('Gimlet config updated and state refreshed.');
+                }
             } catch (err) {
                 vscode.window.showErrorMessage('Failed to reload Gimlet config: ' + err.message);
             }

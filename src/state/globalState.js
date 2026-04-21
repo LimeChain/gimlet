@@ -7,6 +7,54 @@ const DEFAULT_TCP_PORT = 1212;
 const DEFAULT_PLATFORM_TOOLS_VERSION = '1.54';
 const LIB_EXT = process.platform === 'darwin' ? 'dylib' : 'so';
 
+// Validation schema for gimlet.json. Every key is optional; only type-checked when present.
+// Keep this in sync with setConfig() assignments below and the README options table.
+const SCHEMA = {
+    tcpPort:              { type: 'number',  range: [1, 65535] },
+    stopOnEntry:          { type: 'boolean' },
+    platformToolsVersion: { type: 'string',  pattern: /^\d+\.\d+(\.\d+)?$/ },
+    sbfTraceDir:          { type: 'string' },
+    platformToolsDir:     { type: 'string' },
+    lldbLibraryPath:      { type: 'string' },
+};
+
+function validateConfig(rawConfig) {
+    const errors = [];
+    const unknownKeys = [];
+    const cleanConfig = {};
+
+    for (const key of Object.keys(rawConfig)) {
+        if (!Object.prototype.hasOwnProperty.call(SCHEMA, key)) {
+            unknownKeys.push(key);
+        }
+    }
+
+    for (const [key, rule] of Object.entries(SCHEMA)) {
+        const v = rawConfig[key];
+        if (v === undefined) continue;
+
+        const keyErrors = [];
+        if (typeof v !== rule.type) {
+            keyErrors.push(`${key}: expected ${rule.type}, got ${typeof v}`);
+        } else {
+            if (rule.range && (v < rule.range[0] || v > rule.range[1])) {
+                keyErrors.push(`${key}: must be in [${rule.range[0]}, ${rule.range[1]}]`);
+            }
+            if (rule.pattern && !rule.pattern.test(v)) {
+                keyErrors.push(`${key}: does not match expected format (e.g. "1.54", "1.54.1")`);
+            }
+        }
+
+        if (keyErrors.length === 0) {
+            cleanConfig[key] = v;
+        } else {
+            errors.push(...keyErrors);
+        }
+    }
+
+    return { cleanConfig, errors, unknownKeys };
+}
+
 // General (global) state, singleton
 class GimletGeneralState {
     constructor() {
@@ -105,35 +153,41 @@ class GimletGeneralState {
         }
     }
 
-    // TODO(lime): no validation of config values from user-controlled gimlet.json
-    setConfig(config) {
-        if (config.tcpPort !== undefined) {
-            this.tcpPort = config.tcpPort;
-        }
-        if (config.stopOnEntry !== undefined) {
-            this.stopOnEntry = config.stopOnEntry;
-        }
-        this.sbfTraceDir = config.sbfTraceDir || null;
+    // Validates gimlet.json input against SCHEMA, applies only valid keys, and returns
+    // { errors, unknownKeys } so the caller (config.js) can surface one aggregated toast
+    // and log ignored keys to the Gimlet Output channel.
+    setConfig(rawConfig) {
+        const { cleanConfig, errors, unknownKeys } = validateConfig(rawConfig);
 
-        const nextDirOverride = config.platformToolsDir || null;
+        if (cleanConfig.tcpPort !== undefined) {
+            this.tcpPort = cleanConfig.tcpPort;
+        }
+        if (cleanConfig.stopOnEntry !== undefined) {
+            this.stopOnEntry = cleanConfig.stopOnEntry;
+        }
+        this.sbfTraceDir = cleanConfig.sbfTraceDir || null;
+
+        const nextDirOverride = cleanConfig.platformToolsDir || null;
         if (nextDirOverride !== this.platformToolsDirOverride) {
             this.platformToolsDirOverride = nextDirOverride;
             this.invalidateLldbLibrary();
         }
 
-        const nextLibOverride = config.lldbLibraryPath || null;
+        const nextLibOverride = cleanConfig.lldbLibraryPath || null;
         if (nextLibOverride !== this.lldbLibraryPathOverride) {
             this.lldbLibraryPathOverride = nextLibOverride;
             this.invalidateLldbLibrary();
         }
 
         if (
-            config.platformToolsVersion !== undefined &&
-            config.platformToolsVersion !== this.platformToolsVersion
+            cleanConfig.platformToolsVersion !== undefined &&
+            cleanConfig.platformToolsVersion !== this.platformToolsVersion
         ) {
-            this.platformToolsVersion = config.platformToolsVersion;
+            this.platformToolsVersion = cleanConfig.platformToolsVersion;
             this.invalidateLldbLibrary();
         }
+
+        return { errors, unknownKeys };
     }
 }
 
