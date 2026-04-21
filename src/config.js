@@ -103,8 +103,13 @@ class GimletConfigManager {
             }
         }
 
-        // TODO(lime): writeFileSync rewrites gimlet.json on every activation. Only write when merged content differs from existing
-        fs.writeFileSync(configPath, JSON.stringify(configToWrite, null, 4));
+        // Diff-then-write: avoid mtime churn and the self-write feedback loop through
+        // watchGimletConfig that would otherwise fire on every activation.
+        const next = JSON.stringify(configToWrite, null, 4);
+        const prev = fs.existsSync(configPath) ? fs.readFileSync(configPath, 'utf8') : null;
+        if (next !== prev) {
+            fs.writeFileSync(configPath, next);
+        }
         return configPath;
     }
 
