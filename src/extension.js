@@ -48,9 +48,9 @@ function loadProgramIdMap(session, tracePath) {
 }
 
 async function scanDeployDirectory(session) {
-    // TODO(lime): resolveGimletConfig returns null on validation failure — destructuring null throws TypeError before the `if (!depsPath)` check runs
-    const { depsPath, tracePath } = gimletConfigManager.resolveGimletConfig();
-    if (!depsPath) return false;
+    const cfg = gimletConfigManager.resolveGimletConfig();
+    if (!cfg) return false;
+    const { depsPath, tracePath } = cfg;
 
     const files = await safeReadDir(depsPath);
     if (!files) {
