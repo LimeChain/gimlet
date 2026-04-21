@@ -21,7 +21,6 @@ class GimletConfigManager {
         this.workspaceFolder = null;
         this.depsPath = null;
         this.tracePath = null;
-        this.inputPath = null;
     }
 
     resolveWorkspaceFolder() {
@@ -41,7 +40,22 @@ class GimletConfigManager {
         const workspaceFolder = this.resolveWorkspaceFolder();
         if (!workspaceFolder) return null;
 
-        this.depsPath = path.join(workspaceFolder, 'target', 'deploy', 'debug'); // TODO(lime): Make this configurable
+        // depsPath: gimlet.json override (workspace-relative, containment-checked)
+        //        → CARGO_TARGET_DIR env var, if set (used as-is; may live outside workspace)
+        //        → workspace/target/deploy/debug default
+        if (globalState.depsPathOverride) {
+            const resolved = path.resolve(workspaceFolder, globalState.depsPathOverride);
+            if (!resolved.startsWith(workspaceFolder + path.sep)) {
+                vscode.window.showErrorMessage('Gimlet: depsPath must be within the workspace directory.');
+                return null;
+            }
+            this.depsPath = resolved;
+        } else if (process.env.CARGO_TARGET_DIR) {
+            this.depsPath = path.join(process.env.CARGO_TARGET_DIR, 'deploy', 'debug');
+        } else {
+            this.depsPath = path.join(workspaceFolder, 'target', 'deploy', 'debug');
+        }
+
         if (globalState.sbfTraceDir) {
             const resolved = path.resolve(workspaceFolder, globalState.sbfTraceDir);
             if (!resolved.startsWith(workspaceFolder + path.sep)) {
@@ -52,12 +66,10 @@ class GimletConfigManager {
         } else {
             this.tracePath = path.join(workspaceFolder, 'target', 'sbf', 'trace');
         }
-        this.inputPath = path.join(workspaceFolder, 'input'); // TODO(lime): Make this configurable
 
         return {
             depsPath: this.depsPath,
             tracePath: this.tracePath,
-            inputPath: this.inputPath
         };
     }
 

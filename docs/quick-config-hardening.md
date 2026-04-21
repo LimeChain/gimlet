@@ -21,7 +21,7 @@ Full rationale, code examples, and risks per change: `docs/user-context/config-h
 - `src/state/globalState.js`: lazy getter for `lldbLibrary`, `invalidateLldbLibrary()`, `getPlatformToolsDir()` / `getPlatformToolsLibDir()` / `getPlatformToolsBinDir()` derivation methods, 3-tier `getLldbLibraryPath()` (override → derived default → diagnostic), `platformToolsDirOverride` and `lldbLibraryPathOverride` fields, `SCHEMA` + `validateConfig()`, both override keys consumed in `setConfig`.
 - `src/managers/debugConfigManager.js`: `getSolanaScriptsDir()` and `getLldbPythonPath()` consume `globalState.getPlatformToolsBinDir()` / `getPlatformToolsLibDir()`; "platform-tools not found" toast names `platformToolsDir` as remediation. (Added per amendment **A-1**.)
 - `src/managers/portManager.js`: **one-line relocation only** — move `const updates = { library: globalState.lldbLibrary };` inside the existing `try` block in `runDebugSessionIteration`. `withLldbConfig` is untouched.
-- `src/config.js`: `depsPath` and `inputPath` 3-tier resolution with workspace-containment check, diff-then-write in `ensureGimletConfig`, dispose-previous-watcher in `watchGimletConfig`.
+- `src/config.js`: `depsPath` 3-tier resolution with workspace-containment check, diff-then-write in `ensureGimletConfig`, dispose-previous-watcher in `watchGimletConfig`. (Dead `inputPath` field also removed — see amendment A-3.)
 - `src/extension.js`: null-guard `resolveGimletConfig()` return before destructure in `scanDeployDirectory`.
 
 ## Acceptance Criteria
@@ -67,10 +67,15 @@ Full rationale, code examples, and risks per change: `docs/user-context/config-h
 - **When** `setConfig` runs
 - **Then** a single toast enumerates both violations; activation continues with defaults for the bad keys; unknown keys warn but don't reject.
 
-### AC-7: `depsPath` and `inputPath` overrides honoured (Change 3)
-- **Given** `gimlet.json` sets `"depsPath": "custom/target/deploy/debug"` and `"inputPath": "fixtures"` (workspace-relative)
+### AC-7: `depsPath` override honoured (Change 3; inputPath removed per A-3)
+- **Given** `gimlet.json` sets `"depsPath": "custom/target/deploy/debug"` (workspace-relative)
 - **When** `resolveGimletConfig()` runs
-- **Then** the resolved paths are used, and both are rejected via error toast if they resolve outside the workspace root (same containment rule as `sbfTraceDir` at `config.js:34`).
+- **Then** the resolved path is used, and it is rejected via error toast if it resolves outside the workspace root (same containment rule as `sbfTraceDir` at `config.js:34`).
+
+### AC-7b: Empty or `.so`-less `depsPath` produces a clear error (amendment A-4)
+- **Given** `depsPath` resolves to a directory that exists and is inside the workspace, but contains zero `.so` files (e.g. user wrote `"./target"` instead of `"./target/deploy/debug"`)
+- **When** `scanDeployDirectory` iterates the folder
+- **Then** a single error toast fires — `Gimlet: no .so files found in {depsPath}. depsPath must point at the directory that directly contains your compiled programs (with their .so.debug siblings). For standard Cargo builds this is "target/deploy/debug", not "target" itself.` — and the polling loop exits. The session does not proceed with an empty executable map (which would surface later as a cryptic "Unknown program ID" error).
 
 ### AC-8: `CARGO_TARGET_DIR` fallback for `depsPath` (Change 3)
 - **Given** no `depsPath` override in `gimlet.json` AND `CARGO_TARGET_DIR` is set in the environment
@@ -108,9 +113,9 @@ Full rationale, code examples, and risks per change: `docs/user-context/config-h
 - **[LOCKED] No I/O in module-load.** `require('./state/globalState')` must never throw. I/O happens behind the lazy getter.
 - **[LOCKED] 3-tier resolution for every configurable path.** Override → convention/env-var → diagnostic with install command AND `gimlet.json` alternative.
 - **[LOCKED] Validate at the boundary, one toast.** Bad `gimlet.json` → single aggregated error message enumerating all violations; unknown keys warn, not reject.
-- **[LOCKED] Don't auto-write override keys.** `lldbLibraryPath`, `depsPath`, `inputPath` stay absent in `gimlet.json` unless the user set them. Absence means "use default."
+- **[LOCKED] Don't auto-write override keys.** `lldbLibraryPath`, `platformToolsDir`, `depsPath` stay absent in `gimlet.json` unless the user set them. Absence means "use default."
 - **[LOCKED] Atomic commit for 1+2+2a.** Shipping Change 2 without 2a regresses the polling loop; shipping Change 1 without 2 keeps the module-load throw in place.
-- **[LOCKED] Workspace containment check for overridable paths.** Resolved `depsPath`/`inputPath` must `startsWith(workspaceFolder + path.sep)` — same rule as `sbfTraceDir`.
+- **[LOCKED] Workspace containment check for overridable paths.** Resolved `depsPath` must `startsWith(workspaceFolder + path.sep)` — same rule as `sbfTraceDir`.
 
 ## Tasks
 
@@ -132,10 +137,11 @@ Six atomic commits in order. Each task = one commit.
   - Files: `src/state/globalState.js`
   - Depends: Task 2 (SCHEMA must include `lldbLibraryPath` from Task 2)
 
-- [ ] **Task 4 — Change 3: `depsPath` + `inputPath` 3-tier resolution with containment check**
+- [ ] **Task 4 — Change 3 (amended A-3): `depsPath` 3-tier resolution with containment check; `inputPath` removed entirely**
   - AC: AC-7, AC-8
-  - Files: `src/config.js` (:31, :43-44), `src/state/globalState.js` (extend SCHEMA + `setConfig` with `depsPath`/`inputPath`)
+  - Files: `src/config.js` (resolveGimletConfig; drop inputPath plumbing), `src/state/globalState.js` (SCHEMA + setConfig — depsPath only)
   - Depends: Task 3
+  - Amendment: A-3 — `inputPath` was dead code (computed, returned, never consumed); removed entirely rather than made configurable
 
 - [ ] **Task 5 — Change 6: diff-then-write `gimlet.json` in `ensureGimletConfig`**
   - AC: AC-9
@@ -154,7 +160,7 @@ truths:
   - "gimlet.json.lldbLibraryPath, when set and pointing at a real file, is the value that withLldbConfig injects as lldb.library for a Gimlet session."
   - "After a Gimlet session ends (success or failure), .vscode/settings.json on disk contains the user's original lldb.library value (or is restored to absent if originally absent)."
   - "Malformed gimlet.json values produce exactly one aggregated error toast; activation continues with defaults where a field was invalid."
-  - "Resolved depsPath and inputPath are always inside the workspace root; attempts to escape produce an error toast and return null from resolveGimletConfig()."
+  - "Resolved depsPath is always inside the workspace root; attempts to escape produce an error toast and return null from resolveGimletConfig()."
   - "Activating N times in a row with no gimlet.json content change writes to gimlet.json zero times after the first (no mtime churn)."
   - "Editing gimlet.json once fires exactly one reload toast regardless of how many activateDebugger calls have occurred."
 

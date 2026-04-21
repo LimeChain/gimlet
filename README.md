@@ -63,6 +63,7 @@ You can customize this file to:
 | `platformToolsVersion` | `"1.54"` | Solana platform-tools version                                               |
 | `stopOnEntry`          | `true`   | Stop at program entry point; set to `false` to skip to the first breakpoint |
 | `sbfTraceDir`          | `null`   | **Relative** path from the workspace root to the SBF trace directory; defaults to `target/sbf/trace` |
+| `depsPath`             | `null`   | **Workspace-relative** path to the directory holding your compiled `.so` programs (plus `.debug` files). Defaults to `target/deploy/debug`, or to `$CARGO_TARGET_DIR/deploy/debug` if that env var is set. Use when your Cargo artifacts land outside the default. Must stay inside the workspace. |
 | `platformToolsDir`     | `null`   | Absolute path to your platform-tools root. Gimlet derives the LLDB library, Python site-packages, and scripts dir from `{platformToolsDir}/llvm/{lib,bin}/` — use when your toolchain lives outside `~/.cache/solana/v{platformToolsVersion}/platform-tools/`. |
 | `lldbLibraryPath`      | `null`   | Absolute path to a specific `liblldb.dylib` / `liblldb.so` file. Wins over the derived LLDB default — use for non-standard library filenames (e.g. `liblldb.20.1.7-rust-dev.dylib`) or missing `liblldb.{ext}` symlinks. Does not affect Python/scripts paths; pair with `platformToolsDir` when the whole install is non-standard. |
 

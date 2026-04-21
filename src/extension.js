@@ -58,8 +58,10 @@ async function scanDeployDirectory(session) {
         return false;
     }
 
+    let soCount = 0;
     for (const file of files) {
         if (!file.endsWith('.so')) continue;
+        soCount++;
 
         const soPath = path.join(depsPath, file);
         const hash = crypto.createHash('sha256').update(fs.readFileSync(soPath)).digest('hex'); // TODO(lime): any chance of too big .so files?
@@ -69,6 +71,15 @@ async function scanDeployDirectory(session) {
             debugBinary: path.join(depsPath, file + '.debug'),
             bpfCompiledPath: soPath,
         };
+    }
+
+    if (soCount === 0) {
+        vscode.window.showErrorMessage(
+            `Gimlet: no .so files found in ${depsPath}. ` +
+            `depsPath must point at the directory that directly contains your compiled programs (with their .so.debug siblings). ` +
+            `For standard Cargo builds this is "target/deploy/debug", not "target" itself.`
+        );
+        return false;
     }
 
     if (!loadProgramIdMap(session, tracePath)) return false;

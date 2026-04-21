@@ -49,3 +49,36 @@ New AC-10b added to `docs/quick-config-hardening.md` to cover the broader event 
 **Deviation class:** Rule 2 (moderate — task scope expansion, not architectural).
 
 **Out of scope for this amendment:** Stale `.vscode/settings.json` state left by crashed sessions (`lldb.library` retaining Gimlet's injected override value); CodeLLDB configuration caching behaviour. Both may need their own follow-ups after this story ships, based on further testing.
+
+---
+
+## A-3 — 2026-04-22 — Drop `inputPath` from Task 4 (dead code removal)
+
+**Trigger:** During Task 4 review, `inputPath` was found to be vestigial: `resolveGimletConfig()` computed and returned `{ depsPath, tracePath, inputPath }`, but the sole caller (`extension.js:53`) destructures only `depsPath` and `tracePath`. `inputPath` was read nowhere in the codebase (grep-verified across `src/`, `extension.js`, `managers/`, `lens/`). Original plan intent is unrecoverable from current sources and recent git history; likely leftover from a removed/planned feature.
+
+**Resolution:** Rather than making a dead config key overridable, remove it entirely:
+
+- `SCHEMA` — `inputPath` entry deleted from `globalState.js`.
+- `globalState.GimletGeneralState` — `this.inputPathOverride` field deleted from constructor; assignment in `setConfig` deleted.
+- `config.js` — `this.inputPath` field deleted from `GimletConfigManager` constructor; entire `inputPath` resolution block deleted from `resolveGimletConfig`; `inputPath` dropped from the returned object.
+- `README.md` — `inputPath` row deleted from the options table.
+
+Task 4 now only adds configurability for `depsPath`. AC-7 updated to reference depsPath only; the "Resolved depsPath and inputPath …" must_have truth reduced to depsPath.
+
+**Deviation class:** Rule 2 (moderate — removes a (dead) documented API surface originally planned). No behavior change for users — nothing consumed `inputPath` before either.
+
+**If `inputPath` semantics become needed in the future:** re-introduce the config key AND the consumer together; a key without a reader is worse than no key.
+
+---
+
+## A-4 — 2026-04-22 — Harden `scanDeployDirectory` against `.so`-less `depsPath`
+
+**Trigger:** During Task 4 user testing, `"depsPath": "./target"` (a directory that exists, is inside the workspace, contains no `.so` files directly — Cargo puts them in subfolders) passed all checks silently. `scanDeployDirectory` iterated the folder, skipped every non-`.so` entry, left `session.executablesPaths` empty, and returned `true`. The session then "started" and the user saw no immediate error — failures only surfaced later as cryptic "Unknown program ID" messages when breakpoints fired.
+
+This failure mode existed pre-Task-4 (the hardcoded `target/deploy/debug` could also be empty), but Task 4 materially widens the reachability: users who customize `depsPath` will occasionally aim at the wrong folder (common mistake: pointing at `target/` instead of `target/deploy/debug/`).
+
+**Resolution:** Add a post-scan count check in `src/extension.js` `scanDeployDirectory`. If the loop processes zero `.so` files, surface a single error toast — including the resolved path and the specific nudge that the common mistake is one level too high — and return `false` before the polling loop starts.
+
+**Scope impact:** Task 4 commit now also touches `src/extension.js` (previously committed by Task 1). Single `scanDeployDirectory` function, +10 lines.
+
+**Deviation class:** Rule 2 (moderate — UX improvement tied to Task 4's new configurability, not an architectural change). New AC-7b added to `docs/quick-config-hardening.md`.
