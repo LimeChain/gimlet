@@ -12,7 +12,9 @@ function surfaceConfigValidation({ errors, unknownKeys }) {
         );
     }
     if (unknownKeys.length > 0) {
-        log(`Gimlet: unknown gimlet.json key${unknownKeys.length === 1 ? '' : 's'} ignored: ${unknownKeys.join(', ')}`);
+        log(
+            `Gimlet: unknown gimlet.json key${unknownKeys.length === 1 ? '' : 's'} ignored: ${unknownKeys.join(', ')}`
+        );
     }
 }
 
@@ -21,6 +23,7 @@ class GimletConfigManager {
         this.workspaceFolder = null;
         this.depsPath = null;
         this.tracePath = null;
+        this._configWatcher = null;
     }
 
     resolveWorkspaceFolder() {
@@ -44,27 +47,51 @@ class GimletConfigManager {
         //        → CARGO_TARGET_DIR env var, if set (used as-is; may live outside workspace)
         //        → workspace/target/deploy/debug default
         if (globalState.depsPathOverride) {
-            const resolved = path.resolve(workspaceFolder, globalState.depsPathOverride);
+            const resolved = path.resolve(
+                workspaceFolder,
+                globalState.depsPathOverride
+            );
             if (!resolved.startsWith(workspaceFolder + path.sep)) {
-                vscode.window.showErrorMessage('Gimlet: depsPath must be within the workspace directory.');
+                vscode.window.showErrorMessage(
+                    'Gimlet: depsPath must be within the workspace directory.'
+                );
                 return null;
             }
             this.depsPath = resolved;
         } else if (process.env.CARGO_TARGET_DIR) {
-            this.depsPath = path.join(process.env.CARGO_TARGET_DIR, 'deploy', 'debug');
+            this.depsPath = path.join(
+                process.env.CARGO_TARGET_DIR,
+                'deploy',
+                'debug'
+            );
         } else {
-            this.depsPath = path.join(workspaceFolder, 'target', 'deploy', 'debug');
+            this.depsPath = path.join(
+                workspaceFolder,
+                'target',
+                'deploy',
+                'debug'
+            );
         }
 
         if (globalState.sbfTraceDir) {
-            const resolved = path.resolve(workspaceFolder, globalState.sbfTraceDir);
+            const resolved = path.resolve(
+                workspaceFolder,
+                globalState.sbfTraceDir
+            );
             if (!resolved.startsWith(workspaceFolder + path.sep)) {
-                vscode.window.showErrorMessage('Gimlet: sbfTraceDir must be within the workspace directory.');
+                vscode.window.showErrorMessage(
+                    'Gimlet: sbfTraceDir must be within the workspace directory.'
+                );
                 return null;
             }
             this.tracePath = resolved;
         } else {
-            this.tracePath = path.join(workspaceFolder, 'target', 'sbf', 'trace');
+            this.tracePath = path.join(
+                workspaceFolder,
+                'target',
+                'sbf',
+                'trace'
+            );
         }
 
         return {
@@ -79,7 +106,6 @@ class GimletConfigManager {
 
         const vscodeDir = path.join(workspaceFolder, '.vscode');
         const configPath = path.join(vscodeDir, 'gimlet.json');
-        
         const defaultConfig = {
             tcpPort: globalState.tcpPort,
             platformToolsVersion: globalState.platformToolsVersion,
@@ -93,20 +119,27 @@ class GimletConfigManager {
         let configToWrite = defaultConfig;
         if (fs.existsSync(configPath)) {
             try {
-                const existingConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+                const existingConfig = JSON.parse(
+                    fs.readFileSync(configPath, 'utf8')
+                );
                 // Merge existing config with defaults (existing values take precedence)
                 configToWrite = { ...defaultConfig, ...existingConfig };
                 const validation = globalState.setConfig(existingConfig);
                 surfaceConfigValidation(validation);
             } catch (err) {
-                vscode.window.showErrorMessage('Failed to read existing Gimlet config, recreating: ' + err.message);
+                vscode.window.showErrorMessage(
+                    'Failed to read existing Gimlet config, recreating: ' +
+                        err.message
+                );
             }
         }
 
         // Diff-then-write: avoid mtime churn and the self-write feedback loop through
         // watchGimletConfig that would otherwise fire on every activation.
         const next = JSON.stringify(configToWrite, null, 4);
-        const prev = fs.existsSync(configPath) ? fs.readFileSync(configPath, 'utf8') : null;
+        const prev = fs.existsSync(configPath)
+            ? fs.readFileSync(configPath, 'utf8')
+            : null;
         if (next !== prev) {
             fs.writeFileSync(configPath, next);
         }
@@ -114,14 +147,22 @@ class GimletConfigManager {
     }
 
     watchGimletConfig(context) {
-        // TODO(lime): watcher leak — this method runs on every activateDebugger() call. Dispose previous watcher or guard against re-registration
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        // Dispose any previous watcher — activateDebugger can run multiple times
+        // (Cargo.toml saves, manual triggers). Without this, each call registered
+        // a new watcher and a single config edit would fire N reload toasts.
+        if (this._configWatcher) {
+            this._configWatcher.dispose();
+            this._configWatcher = null;
+        }
+
+        const workspaceFolder =
+            vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (!workspaceFolder) return;
 
         const configPath = path.join(workspaceFolder, '.vscode', 'gimlet.json');
         const watcher = vscode.workspace.createFileSystemWatcher(configPath);
 
-        watcher.onDidChange(() => {
+        const reloadFromDisk = () => {
             try {
                 const configContent = fs.readFileSync(configPath, 'utf8');
                 const config = JSON.parse(configContent);
@@ -131,13 +172,35 @@ class GimletConfigManager {
                 surfaceConfigValidation(validation);
 
                 if (validation.errors.length === 0) {
-                    vscode.window.showInformationMessage('Gimlet config updated and state refreshed.');
+                    vscode.window.showInformationMessage(
+                        'Gimlet config updated and state refreshed.'
+                    );
                 }
             } catch (err) {
-                vscode.window.showErrorMessage('Failed to reload Gimlet config: ' + err.message);
+                vscode.window.showErrorMessage(
+                    'Failed to reload Gimlet config: ' + err.message
+                );
             }
-        });
+        };
 
+        const resetToDefaults = () => {
+            // File removed — treat as an empty config so every override clears back to null.
+            globalState.setConfig({});
+            this.resolveGimletConfig();
+            vscode.window.showInformationMessage(
+                'Gimlet config removed; using defaults.'
+            );
+        };
+
+        // All three events route through the same handlers. Atomic-save editors
+        // (rename+replace on save, common with format-on-save or on Windows) fire
+        // onDidDelete + onDidCreate instead of onDidChange — without the Create
+        // handler, Gimlet would miss the save entirely.
+        watcher.onDidChange(reloadFromDisk);
+        watcher.onDidCreate(reloadFromDisk);
+        watcher.onDidDelete(resetToDefaults);
+
+        this._configWatcher = watcher;
         context.subscriptions.push(watcher);
     }
 }
