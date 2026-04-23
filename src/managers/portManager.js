@@ -14,12 +14,20 @@ async function withLldbConfig(updates, fn) {
     }
     try {
         for (const [key, value] of Object.entries(updates)) {
-            await lldbConfig.update(key, value, vscode.ConfigurationTarget.Workspace);
+            await lldbConfig.update(
+                key,
+                value,
+                vscode.ConfigurationTarget.Workspace
+            );
         }
         return await fn();
     } finally {
         for (const [key, value] of Object.entries(originals)) {
-            await lldbConfig.update(key, value, vscode.ConfigurationTarget.Workspace);
+            await lldbConfig.update(
+                key,
+                value,
+                vscode.ConfigurationTarget.Workspace
+            );
         }
     }
 }
@@ -30,7 +38,7 @@ function awaitDebugSessionStart(sessionName, timeoutMs) {
     let settled = false;
 
     const promise = new Promise((resolve, reject) => {
-        listener = vscode.debug.onDidStartDebugSession(session => {
+        listener = vscode.debug.onDidStartDebugSession((session) => {
             if (session.name === sessionName) {
                 settled = true;
                 clearTimeout(timeout);
@@ -42,7 +50,11 @@ function awaitDebugSessionStart(sessionName, timeoutMs) {
         timeout = setTimeout(() => {
             settled = true;
             listener.dispose();
-            reject(new Error(`Debug session did not start within ${timeoutMs / 1000} seconds`));
+            reject(
+                new Error(
+                    `Debug session did not start within ${timeoutMs / 1000} seconds`
+                )
+            );
         }, timeoutMs);
     });
 
@@ -65,7 +77,12 @@ class PortManager {
     async isPortOpen(port) {
         try {
             const connections = await si.networkConnections();
-            return connections.some(c => c.localPort === String(port) && (c.protocol === 'tcp4' || c.protocol === 'tcp') && c.state === 'LISTEN');
+            return connections.some(
+                (c) =>
+                    c.localPort === String(port) &&
+                    (c.protocol === 'tcp4' || c.protocol === 'tcp') &&
+                    c.state === 'LISTEN'
+            );
         } catch (err) {
             log(`Port check failed: ${err.message}`);
             return false;
@@ -76,7 +93,9 @@ class PortManager {
         if (this.pollingToken) return;
 
         if (!(await this.isPortOpen(port))) {
-            vscode.window.showErrorMessage(`Gimlet: No debug session found on port ${port}. Make sure your test is running with SBF_DEBUG_PORT=${port}, or change the port in .vscode/gimlet.json (tcpPort).`);
+            vscode.window.showErrorMessage(
+                `Gimlet: No debug session found on port ${port}. Make sure your test is running with SBF_DEBUG_PORT=${port}, or change the port in .vscode/gimlet.json (tcpPort).`
+            );
             return;
         }
 
@@ -85,10 +104,13 @@ class PortManager {
 
         while (this.pollingToken === myToken) {
             if (await this.isPortOpen(port)) {
-                const shouldContinue = await this.runDebugSessionIteration(port, myToken);
+                const shouldContinue = await this.runDebugSessionIteration(
+                    port,
+                    myToken
+                );
                 if (!shouldContinue) break;
             }
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
         }
 
         this.pollingToken = null;
@@ -96,8 +118,12 @@ class PortManager {
 
     async runDebugSessionIteration(port, myToken) {
         const metadataId = crypto.randomUUID();
-        const launchConfig = debugConfigManager.getLaunchConfig(port, metadataId);
-        const { promise: sessionPromise, cancel: cancelSessionWait } = awaitDebugSessionStart(launchConfig.name, 30000);
+        const launchConfig = debugConfigManager.getLaunchConfig(
+            port,
+            metadataId
+        );
+        const { promise: sessionPromise, cancel: cancelSessionWait } =
+            awaitDebugSessionStart(launchConfig.name, 30000);
 
         this.cancelCleanupTimer();
         log('Starting debug session on port:', port);
@@ -109,10 +135,17 @@ class PortManager {
             const updates = { library: globalState.lldbLibrary };
             if (pythonPath) {
                 const currentPythonPath = process.env.PYTHONPATH || '';
-                updates.adapterEnv = { PYTHONPATH: currentPythonPath ? `${pythonPath}:${currentPythonPath}` : pythonPath };
+                updates.adapterEnv = {
+                    PYTHONPATH: currentPythonPath
+                        ? `${pythonPath}:${currentPythonPath}`
+                        : pythonPath,
+                };
             }
             vsDebugSession = await withLldbConfig(updates, async () => {
-                await vscode.debug.startDebugging(globalState.globalWorkspaceFolder, launchConfig);
+                await vscode.debug.startDebugging(
+                    globalState.globalWorkspaceFolder,
+                    launchConfig
+                );
                 log('Waiting for debug session to start...');
                 return sessionPromise;
             });
@@ -131,10 +164,15 @@ class PortManager {
         }
 
         log('Loading program modules...');
-        const loaded = await debugConfigManager.loadProgramModules(vsDebugSession, metadataId);
+        const loaded = await debugConfigManager.loadProgramModules(
+            vsDebugSession,
+            metadataId
+        );
         log('Program modules loaded:', loaded);
         if (!loaded) {
-            vscode.window.showErrorMessage('Failed to load program modules. Stopping debug session.');
+            vscode.window.showErrorMessage(
+                'Failed to load program modules. Stopping debug session.'
+            );
             await vscode.debug.stopDebugging();
             return false;
         }
@@ -145,7 +183,7 @@ class PortManager {
                 log('Next program ready on port:', port);
                 break;
             }
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 500));
         }
 
         return true;

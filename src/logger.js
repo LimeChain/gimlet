@@ -10,7 +10,9 @@ function getChannel() {
 }
 
 function format(args) {
-    return args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' ');
+    return args
+        .map((a) => (typeof a === 'string' ? a : JSON.stringify(a)))
+        .join(' ');
 }
 
 function log(...args) {

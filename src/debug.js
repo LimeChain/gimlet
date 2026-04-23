@@ -1,4 +1,4 @@
-const { getDebuggerSession } = require("./managers/sessionManager");
+const { getDebuggerSession } = require('./managers/sessionManager');
 
 /**
  * Check if a Gimlet debugger session is already active.
@@ -9,5 +9,5 @@ function isSessionRunning() {
 }
 
 module.exports = {
-    isSessionRunning
-}
+    isSessionRunning,
+};

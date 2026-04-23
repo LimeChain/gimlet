@@ -1,32 +1,32 @@
 name: Publish VS Code Extension
 
 on:
-  release:
-    types: [released]
+    release:
+        types: [released]
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    publish:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
 
-      - name: Install dependencies
-        run: npm install
+            - name: Install dependencies
+              run: npm install
 
-      - name: Lint
-        run: npm run lint
+            - name: Lint
+              run: npm run lint
 
-      - name: Syntax check
-        run: find src -name '*.js' -exec node -c {} +
+            - name: Syntax check
+              run: find src -name '*.js' -exec node -c {} +
 
-      - name: Publish to Visual Studio Marketplace
-        uses: HaaLeo/publish-vscode-extension@v2
-        with:
-          pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
-          registryUrl: https://marketplace.visualstudio.com
+            - name: Publish to Visual Studio Marketplace
+              uses: HaaLeo/publish-vscode-extension@v2
+              with:
+                  pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
+                  registryUrl: https://marketplace.visualstudio.com

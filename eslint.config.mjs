@@ -1,24 +1,26 @@
-import globals from "globals";
+import globals from 'globals';
 
-export default [{
-    files: ["**/*.js"],
-    languageOptions: {
-        globals: {
-            ...globals.commonjs,
-            ...globals.node,
+export default [
+    {
+        files: ['**/*.js'],
+        languageOptions: {
+            globals: {
+                ...globals.commonjs,
+                ...globals.node,
+            },
+
+            ecmaVersion: 2022,
+            sourceType: 'module',
         },
 
-        ecmaVersion: 2022,
-        sourceType: "module",
+        rules: {
+            'no-const-assign': 'warn',
+            'no-this-before-super': 'warn',
+            'no-undef': 'warn',
+            'no-unreachable': 'warn',
+            'no-unused-vars': 'warn',
+            'constructor-super': 'warn',
+            'valid-typeof': 'warn',
+        },
     },
-
-    rules: {
-        "no-const-assign": "warn",
-        "no-this-before-super": "warn",
-        "no-undef": "warn",
-        "no-unreachable": "warn",
-        "no-unused-vars": "warn",
-        "constructor-super": "warn",
-        "valid-typeof": "warn",
-    },
-}];
+];

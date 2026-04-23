@@ -13,7 +13,7 @@
 
 ### Prerequisites
 
->**Note:** Run `Gimlet: Run Setup` in the Command Palette to verify all requirements.
+> **Note:** Run `Gimlet: Run Setup` in the Command Palette to verify all requirements.
 
 ### 1. Build Your Program
 
@@ -38,8 +38,8 @@ This starts the test with a gdbstub listening on the specified TCP port, which G
 ### 3. Connect Gimlet
 
 1. **Open the test file** in VS Code — you'll see **CodeLens buttons** above test functions:
-   - `Sbpf Debug` → for individual Rust tests
-   - `Sbpf Debug All` → for TypeScript test suites
+    - `Sbpf Debug` → for individual Rust tests
+    - `Sbpf Debug All` → for TypeScript test suites
 2. **Click the button** to connect Gimlet and start step-by-step debugging.
 
 #### What Happens During Launch

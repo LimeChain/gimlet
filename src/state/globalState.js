@@ -10,13 +10,13 @@ const LIB_EXT = process.platform === 'darwin' ? 'dylib' : 'so';
 // Validation schema for gimlet.json. Every key is optional; only type-checked when present.
 // Keep this in sync with setConfig() assignments below and the README options table.
 const SCHEMA = {
-    tcpPort:              { type: 'number',  range: [1, 65535] },
-    stopOnEntry:          { type: 'boolean' },
-    platformToolsVersion: { type: 'string',  pattern: /^\d+\.\d+(\.\d+)?$/ },
-    sbfTraceDir:          { type: 'string' },
-    platformToolsDir:     { type: 'string' },
-    lldbLibraryPath:      { type: 'string' },
-    depsPath:             { type: 'string' },
+    tcpPort: { type: 'number', range: [1, 65535] },
+    stopOnEntry: { type: 'boolean' },
+    platformToolsVersion: { type: 'string', pattern: /^\d+\.\d+(\.\d+)?$/ },
+    sbfTraceDir: { type: 'string' },
+    platformToolsDir: { type: 'string' },
+    lldbLibraryPath: { type: 'string' },
+    depsPath: { type: 'string' },
 };
 
 function validateConfig(rawConfig) {
@@ -39,10 +39,14 @@ function validateConfig(rawConfig) {
             keyErrors.push(`${key}: expected ${rule.type}, got ${typeof v}`);
         } else {
             if (rule.range && (v < rule.range[0] || v > rule.range[1])) {
-                keyErrors.push(`${key}: must be in [${rule.range[0]}, ${rule.range[1]}]`);
+                keyErrors.push(
+                    `${key}: must be in [${rule.range[0]}, ${rule.range[1]}]`
+                );
             }
             if (rule.pattern && !rule.pattern.test(v)) {
-                keyErrors.push(`${key}: does not match expected format (e.g. "1.54", "1.54.1")`);
+                keyErrors.push(
+                    `${key}: does not match expected format (e.g. "1.54", "1.54.1")`
+                );
             }
         }
 
