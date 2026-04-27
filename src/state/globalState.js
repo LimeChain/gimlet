@@ -1,46 +1,8 @@
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
-
-// Shared state container for the debugger session
-const DEFAULT_TCP_PORT = 1212;
-const DEFAULT_STOP_ON_ENTRY = true;
-const DEFAULT_PLATFORM_TOOLS_VERSION = '1.54';
-const MIN_PLATFORM_TOOLS_VERSION = '1.54';
-const LIB_EXT = process.platform === 'darwin' ? 'dylib' : 'so';
-
-// Compares Solana platform-tools versions ("1.54", "2.0") — major.minor only.
-// Returns negative if a<b, zero if equal, positive if a>b.
-function compareVersions(a, b) {
-    const [aMajor, aMinor] = a.split('.').map(Number);
-    const [bMajor, bMinor] = b.split('.').map(Number);
-    return aMajor - bMajor || aMinor - bMinor;
-}
-
-// Validation schema for gimlet.json. Every key is optional; only type-checked when present.
-// Keep this in sync with setConfig() assignments below and the README options table.
-const SCHEMA = {
-    tcpPort:              { type: 'number'  },
-    stopOnEntry:          { type: 'boolean' },
-    platformToolsVersion: { type: 'string'  },
-    sbfTraceDir:          { type: 'string'  },
-    platformToolsDir:     { type: 'string'  },
-    lldbLibraryPath:      { type: 'string'  },
-    artifactPath:         { type: 'string'  },
-};
-
-const CHECKS = {
-    tcpPort: [
-        { test: (v) => Number.isInteger(v),    error: () => 'must be an integer' },
-        { test: (v) => v >= 1 && v <= 65535,   error: () => 'must be in [1, 65535]' },
-    ],
-    platformToolsVersion: [
-        { test: (v) => /^\d+\.\d+$/.test(v),
-          error: () => 'does not match expected format (e.g. "1.54")' },
-        { test: (v) => compareVersions(v, MIN_PLATFORM_TOOLS_VERSION) >= 0,
-          error: (v) => `${v} is not supported by Gimlet (minimum: ${MIN_PLATFORM_TOOLS_VERSION})` },
-    ],
-};
+const { SCHEMA, CHECKS } = require('./configSchema');
+const { DEFAULT_PLATFORM_TOOLS_VERSION, DEFAULT_STOP_ON_ENTRY, DEFAULT_TCP_PORT, LIB_EXT } = require('./constants');
 
 // Tri-state apply for a single key. Pairs with validateConfig's output:
 //   valid value         → cleanConfig has it      → return it
