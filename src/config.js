@@ -171,7 +171,9 @@ class GimletConfigManager {
         if (!workspaceFolder) return;
 
         const configPath = path.join(workspaceFolder, '.vscode', 'gimlet.json');
-        const watcher = vscode.workspace.createFileSystemWatcher(configPath);
+        const watcher = vscode.workspace.createFileSystemWatcher(
+            new vscode.RelativePattern(workspaceFolder, '.vscode/gimlet.json')
+        );
 
         const reloadFromDisk = () => {
             try {
