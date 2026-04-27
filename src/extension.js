@@ -187,6 +187,16 @@ async function activateDebugger(context) {
             
         // TODO(lime): CodeLens passes [document, line] as command args but this handler ignores them — "Debug at Line" doesn't actually know which line was clicked
         const sbpfDebugDisposable = vscode.commands.registerCommand('gimlet.debugAtLine', async () => {
+            // Block launch when gimlet.json has any validation error. Falling back
+            // to defaults would silently mask the user's bad value.
+            if (globalState.lastConfigErrors.length > 0) {
+                const body = globalState.lastConfigErrors.map((e) => `  - ${e}`).join('\n');
+                vscode.window.showErrorMessage(
+                    `Gimlet: cannot start debug — fix gimlet.json first:\n${body}`
+                );
+                return;
+            }
+
             // Prevent starting a new session if one is already running
             if (isSessionRunning()) {
                 vscode.window.showInformationMessage('A Gimlet debug session is already running. Please stop the current session before starting a new one.');

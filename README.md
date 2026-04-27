@@ -60,7 +60,7 @@ You can customize this file to:
 | Option                 | Default  | Description                                                                 |
 |------------------------|----------|-----------------------------------------------------------------------------|
 | `tcpPort`              | `1212`   | TCP port the gdbstub listens on                                             |
-| `platformToolsVersion` | `"1.54"` | Solana platform-tools version                                               |
+| `platformToolsVersion` | `"1.54"` | Solana platform-tools version. Major.minor only (e.g. `"1.54"`); minimum supported is `1.54`. |
 | `stopOnEntry`          | `true`   | Stop at program entry point; set to `false` to skip to the first breakpoint |
 | `sbfTraceDir`          | `$PWD/target/sbf/trace` | **Workspace-relative** path to the SBF trace directory.                  |
 | `artifactPath`         | `$PWD/target/deploy/debug` | **Workspace-relative** path to the directory holding your compiled `.so` programs (plus `.debug` files). Falls back to `$CARGO_TARGET_DIR/deploy/debug` if that env var is set. Use when your Cargo artifacts land outside the default. Must stay inside the workspace. |

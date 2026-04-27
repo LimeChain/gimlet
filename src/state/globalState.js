@@ -6,19 +6,51 @@ const fs = require('fs');
 const DEFAULT_TCP_PORT = 1212;
 const DEFAULT_STOP_ON_ENTRY = true;
 const DEFAULT_PLATFORM_TOOLS_VERSION = '1.54';
+const MIN_PLATFORM_TOOLS_VERSION = '1.54';
 const LIB_EXT = process.platform === 'darwin' ? 'dylib' : 'so';
+
+// Compares Solana platform-tools versions ("1.54", "2.0") — major.minor only.
+// Returns negative if a<b, zero if equal, positive if a>b.
+function compareVersions(a, b) {
+    const [aMajor, aMinor] = a.split('.').map(Number);
+    const [bMajor, bMinor] = b.split('.').map(Number);
+    return aMajor - bMajor || aMinor - bMinor;
+}
 
 // Validation schema for gimlet.json. Every key is optional; only type-checked when present.
 // Keep this in sync with setConfig() assignments below and the README options table.
 const SCHEMA = {
-    tcpPort:              { type: 'number',  integer: true, range: [1, 65535] },
+    tcpPort:              { type: 'number'  },
     stopOnEntry:          { type: 'boolean' },
-    platformToolsVersion: { type: 'string',  pattern: /^\d+\.\d+(\.\d+)?$/ },
-    sbfTraceDir:          { type: 'string' },
-    platformToolsDir:     { type: 'string' },
-    lldbLibraryPath:      { type: 'string' },
-    artifactPath:         { type: 'string' },
+    platformToolsVersion: { type: 'string'  },
+    sbfTraceDir:          { type: 'string'  },
+    platformToolsDir:     { type: 'string'  },
+    lldbLibraryPath:      { type: 'string'  },
+    artifactPath:         { type: 'string'  },
 };
+
+const CHECKS = {
+    tcpPort: [
+        { test: (v) => Number.isInteger(v),    error: () => 'must be an integer' },
+        { test: (v) => v >= 1 && v <= 65535,   error: () => 'must be in [1, 65535]' },
+    ],
+    platformToolsVersion: [
+        { test: (v) => /^\d+\.\d+$/.test(v),
+          error: () => 'does not match expected format (e.g. "1.54")' },
+        { test: (v) => compareVersions(v, MIN_PLATFORM_TOOLS_VERSION) >= 0,
+          error: (v) => `${v} is not supported by Gimlet (minimum: ${MIN_PLATFORM_TOOLS_VERSION})` },
+    ],
+};
+
+// Tri-state apply for a single key. Pairs with validateConfig's output:
+//   valid value         → cleanConfig has it      → return it
+//   key absent          → not in rawConfig        → return defaultValue
+//   present but invalid → in rawConfig, not clean → return current (keep prior, don't fall back)
+function resolveConfigValue(rawConfig, cleanConfig, key, current, defaultValue) {
+    if (cleanConfig[key] !== undefined) return cleanConfig[key];
+    if (!Object.prototype.hasOwnProperty.call(rawConfig, key)) return defaultValue;
+    return current;
+}
 
 function validateConfig(rawConfig) {
     // Guard non-object roots: `null` would crash Object.keys, and primitives/arrays
@@ -46,25 +78,18 @@ function validateConfig(rawConfig) {
         const v = rawConfig[key];
         if (v === undefined) continue;
 
-        const keyErrors = [];
         if (typeof v !== rule.type) {
-            keyErrors.push(`${key}: expected ${rule.type}, got ${typeof v}`);
-        } else {
-            if (rule.integer && !Number.isInteger(v)) {
-                keyErrors.push(`${key}: must be an integer`);
-            } else if (rule.range && (v < rule.range[0] || v > rule.range[1])) {
-                keyErrors.push(`${key}: must be in [${rule.range[0]}, ${rule.range[1]}]`);
-            }
-            if (rule.pattern && !rule.pattern.test(v)) {
-                keyErrors.push(`${key}: does not match expected format (e.g. "1.54", "1.54.1")`);
-            }
+            errors.push(`${key}: expected ${rule.type}, got ${typeof v}`);
+            continue;
         }
 
-        if (keyErrors.length === 0) {
-            cleanConfig[key] = v;
-        } else {
-            errors.push(...keyErrors);
+        const failed = (CHECKS[key] || []).find((check) => !check.test(v));
+        if (failed) {
+            errors.push(`${key}: ${failed.error(v)}`);
+            continue;
         }
+
+        cleanConfig[key] = v;
     }
 
     return { cleanConfig, errors, unknownKeys };
@@ -82,6 +107,9 @@ class GimletGeneralState {
         this.stopOnEntry = DEFAULT_STOP_ON_ENTRY;
         this.sbfTraceDir = null;
         this.artifactPathOverride = null;
+        // Latest validation result. Populated by setConfig; checked by the debug
+        // command to block launch when gimlet.json has any invalid value.
+        this.lastConfigErrors = [];
     }
 
     get lldbLibrary() {
@@ -175,33 +203,39 @@ class GimletGeneralState {
     setConfig(rawConfig) {
         const { cleanConfig, errors, unknownKeys } = validateConfig(rawConfig);
 
-        // Missing keys reset to defaults — setConfig({}) means "no overrides".
-        // Without this, deleting gimlet.json would leave previously-set scalars
-        // stuck at their last value despite the "using defaults" toast.
-        this.tcpPort = cleanConfig.tcpPort !== undefined
-            ? cleanConfig.tcpPort
-            : DEFAULT_TCP_PORT;
-        this.stopOnEntry = cleanConfig.stopOnEntry !== undefined
-            ? cleanConfig.stopOnEntry
-            : DEFAULT_STOP_ON_ENTRY;
-        this.sbfTraceDir = cleanConfig.sbfTraceDir || null;
-        this.artifactPathOverride = cleanConfig.artifactPath || null;
+        // Capture for the debug-launch gate in extension.js.
+        this.lastConfigErrors = errors;
 
-        const nextDirOverride = cleanConfig.platformToolsDir || null;
+        // Non-object root: schema error already raised, leave state untouched.
+        if (rawConfig === null || typeof rawConfig !== 'object' || Array.isArray(rawConfig)) {
+            return { errors, unknownKeys };
+        }
+
+        const resolve = (key, current, defaultValue) =>
+            resolveConfigValue(rawConfig, cleanConfig, key, current, defaultValue);
+
+        this.tcpPort = resolve('tcpPort', this.tcpPort, DEFAULT_TCP_PORT);
+        this.stopOnEntry = resolve('stopOnEntry', this.stopOnEntry, DEFAULT_STOP_ON_ENTRY);
+        this.sbfTraceDir = resolve('sbfTraceDir', this.sbfTraceDir, null);
+        this.artifactPathOverride = resolve('artifactPath', this.artifactPathOverride, null);
+
+        const nextDirOverride = resolve('platformToolsDir', this.platformToolsDirOverride, null);
         if (nextDirOverride !== this.platformToolsDirOverride) {
             this.platformToolsDirOverride = nextDirOverride;
             this.invalidateLldbLibrary();
         }
 
-        const nextLibOverride = cleanConfig.lldbLibraryPath || null;
+        const nextLibOverride = resolve('lldbLibraryPath', this.lldbLibraryPathOverride, null);
         if (nextLibOverride !== this.lldbLibraryPathOverride) {
             this.lldbLibraryPathOverride = nextLibOverride;
             this.invalidateLldbLibrary();
         }
 
-        const nextPlatformToolsVersion = cleanConfig.platformToolsVersion !== undefined
-            ? cleanConfig.platformToolsVersion
-            : DEFAULT_PLATFORM_TOOLS_VERSION;
+        const nextPlatformToolsVersion = resolve(
+            'platformToolsVersion',
+            this.platformToolsVersion,
+            DEFAULT_PLATFORM_TOOLS_VERSION
+        );
         if (nextPlatformToolsVersion !== this.platformToolsVersion) {
             this.platformToolsVersion = nextPlatformToolsVersion;
             this.invalidateLldbLibrary();
