@@ -9,16 +9,16 @@ Gimlet is a VSCode Extension that makes Solana smart contract debugging seamless
 ## Table of Contents
 
 - [Gimlet](#gimlet)
-    - [Table of Contents](#table-of-contents)
-    - [Prerequisites](#prerequisites)
-    - [Introduction](#introduction)
-    - [Getting Started with Gimlet](#getting-started-with-gimlet)
-        - [1. Automatic Configuration](#1-automatic-configuration)
-        - [2. Setup Steps](#2-setup-steps)
-    - [Troubleshooting](#troubleshooting)
-        - [Permission Denied When Trying to Debug a Program](#permission-denied-when-trying-to-debug-a-program)
-        - [Platform-tools](#platform-tools)
-        - [Python Issues](#python-issues)
+  - [Table of Contents](#table-of-contents)
+  - [Prerequisites](#prerequisites)
+  - [Introduction](#introduction)
+  - [Getting Started with Gimlet](#getting-started-with-gimlet)
+    - [1. Automatic Configuration](#1-automatic-configuration)
+    - [2. Setup Steps](#2-setup-steps)
+  - [Troubleshooting](#troubleshooting)
+    - [Permission Denied When Trying to Debug a Program](#permission-denied-when-trying-to-debug-a-program)
+    - [Platform-tools](#platform-tools)
+    - [Python Issues](#python-issues)
 
 ---
 
@@ -27,7 +27,7 @@ Gimlet is a VSCode Extension that makes Solana smart contract debugging seamless
 Before using Gimlet, ensure you have the following tools installed:
 
 | Tool             | Installation Command                                                                                   | Notes                |
-| ---------------- | ------------------------------------------------------------------------------------------------------ | -------------------- |
+|------------------|--------------------------------------------------------------------------------------------------------|----------------------|
 | `rust-analyzer`  | [Rust Analyzer Extension](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer) | VSCode extension     |
 | `codeLLDB`       | [CodeLLDB Extension](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)          | VSCode extension     |
 | `solana-cli`     | [Solana Docs](https://solana.com/docs/intro/installation)                                              | Use latest version   |
@@ -51,51 +51,50 @@ Gimlet makes debugging Solana programs inside VS Code effortless. Follow these s
 
 When you open your Solana project, **Gimlet** automatically creates a `.vscode/gimlet.json` configuration file.  
 You can customize this file to:
-
 - Specify a different **platform-tools version**
 - Point Gimlet at a **custom platform-tools install** (Nix, renamed dirs, custom toolchains, CI containers)
 - Override the **LLDB library file** directly (non-standard `liblldb` names or missing symlinks)
 - Change the default **TCP port** used for debugging
-- Control whether the debugger **stops on entry** or runs straight to your first breakpoint
+- Control whether the debugger **stops on entry** or runs straight to your first breakpoint  
 
-| Option                 | Default  | Description                                                                                                                                                                                                                                                                                                                         |
-| ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tcpPort`              | `1212`   | TCP port the gdbstub listens on                                                                                                                                                                                                                                                                                                     |
-| `platformToolsVersion` | `"1.54"` | Solana platform-tools version                                                                                                                                                                                                                                                                                                       |
-| `stopOnEntry`          | `true`   | Stop at program entry point; set to `false` to skip to the first breakpoint                                                                                                                                                                                                                                                         |
-| `sbfTraceDir`          | `null`   | **Relative** path from the workspace root to the SBF trace directory; defaults to `target/sbf/trace`                                                                                                                                                                                                                                |
-| `depsPath`             | `null`   | **Workspace-relative** path to the directory holding your compiled `.so` programs (plus `.debug` files). Defaults to `target/deploy/debug`, or to `$CARGO_TARGET_DIR/deploy/debug` if that env var is set. Use when your Cargo artifacts land outside the default. Must stay inside the workspace.                                  |
-| `platformToolsDir`     | `null`   | Absolute path to your platform-tools root. Gimlet derives the LLDB library, Python site-packages, and scripts dir from `{platformToolsDir}/llvm/{lib,bin}/` — use when your toolchain lives outside `~/.cache/solana/v{platformToolsVersion}/platform-tools/`.                                                                      |
+| Option                 | Default  | Description                                                                 |
+|------------------------|----------|-----------------------------------------------------------------------------|
+| `tcpPort`              | `1212`   | TCP port the gdbstub listens on                                             |
+| `platformToolsVersion` | `"1.54"` | Solana platform-tools version                                               |
+| `stopOnEntry`          | `true`   | Stop at program entry point; set to `false` to skip to the first breakpoint |
+| `sbfTraceDir`          | `null`   | **Relative** path from the workspace root to the SBF trace directory; defaults to `target/sbf/trace` |
+| `depsPath`             | `null`   | **Workspace-relative** path to the directory holding your compiled `.so` programs (plus `.debug` files). Defaults to `target/deploy/debug`, or to `$CARGO_TARGET_DIR/deploy/debug` if that env var is set. Use when your Cargo artifacts land outside the default. Must stay inside the workspace. |
+| `platformToolsDir`     | `null`   | Absolute path to your platform-tools root. Gimlet derives the LLDB library, Python site-packages, and scripts dir from `{platformToolsDir}/llvm/{lib,bin}/` — use when your toolchain lives outside `~/.cache/solana/v{platformToolsVersion}/platform-tools/`. |
 | `lldbLibraryPath`      | `null`   | Absolute path to a specific `liblldb.dylib` / `liblldb.so` file. Wins over the derived LLDB default — use for non-standard library filenames (e.g. `liblldb.20.1.7-rust-dev.dylib`) or missing `liblldb.{ext}` symlinks. Does not affect Python/scripts paths; pair with `platformToolsDir` when the whole install is non-standard. |
 
 > **Which key do I need?** `platformToolsDir` alone covers most cases — it reroutes all three paths Gimlet depends on. Use `lldbLibraryPath` only when the LLDB library filename is non-standard or its symlink is missing. Leave both unset for the default `cargo build-sbf` layout at `~/.cache/solana/v{platformToolsVersion}/platform-tools/`.
 
 Gimlet also adjusts a few **VS Code workspace settings** (`.vscode/settings.json`) to ensure smooth integration:
 
-| Setting                          | Value                                   | Why                                                                        |
-| -------------------------------- | --------------------------------------- | -------------------------------------------------------------------------- |
-| `rust-analyzer.debug.engine`     | `"vadimcn.vscode-lldb"`                 | Tells rust-analyzer to use the CodeLLDB adapter for debugging              |
-| `editor.codeLens`                | `true`                                  | Enables the inline **Sbpf Debug** / **Sbpf Debug All** buttons above tests |
-| `lldb.library`                   | Path to Solana platform-tools `liblldb` | Points CodeLLDB at the Solana-patched LLDB that understands sBPF ELFs      |
-| `lldb.adapterEnv` → `PYTHONPATH` | Path to platform-tools Python packages  | Ensures LLDB can find its Python dependencies at startup                   |
+| Setting | Value | Why |
+|---------|-------|-----|
+| `rust-analyzer.debug.engine` | `"vadimcn.vscode-lldb"` | Tells rust-analyzer to use the CodeLLDB adapter for debugging |
+| `editor.codeLens` | `true` | Enables the inline **Sbpf Debug** / **Sbpf Debug All** buttons above tests |
+| `lldb.library` | Path to Solana platform-tools `liblldb` | Points CodeLLDB at the Solana-patched LLDB that understands sBPF ELFs |
+| `lldb.adapterEnv` → `PYTHONPATH` | Path to platform-tools Python packages | Ensures LLDB can find its Python dependencies at startup |
 
 ### 2. Setup Steps
 
-1. **Open VS Code** in your Solana project folder.
+1. **Open VS Code** in your Solana project folder.  
 2. **Install the Gimlet extension** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=limechain.gimlet).
 3. **Build your program** with debug symbols (at the time of writing, this uses dynamic stack frames):
-    ```sh
-    RUSTFLAGS="-Copt-level=0 -C strip=none -C debuginfo=2" cargo build-sbf --tools-version v1.54 --debug --arch v1
-    ```
+   ```sh
+   RUSTFLAGS="-Copt-level=0 -C strip=none -C debuginfo=2" cargo build-sbf --tools-version v1.54 --debug --arch v1
+   ```
 4. For example, with Mollusk, **run your test** with the debugger enabled (ensure your workspace's `Cargo.toml` includes the `sbpf-debugger` feature):
-    ```sh
-    SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/sbf/trace cargo test
-    ```
-    `SBF_TRACE_DIR` is required: it tells the framework where to emit `program_ids.map`, which maps each program ID to the SHA-256 of its ELF. Gimlet uses this mapping to locate the matching debug symbols.
+   ```sh
+   SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/sbf/trace cargo test
+   ```
+   `SBF_TRACE_DIR` is required: it tells the framework where to emit `program_ids.map`, which maps each program ID to the SHA-256 of its ELF. Gimlet uses this mapping to locate the matching debug symbols.
 5. **Open the test file in VS Code** - you'll see a **CodeLens button** above it labeled:
-    - `Sbpf Debug` → for individual Rust tests
-    - `Sbpf Debug All` → for TypeScript test suites
-6. **Click the button** to connect **Gimlet** and start step-by-step debugging.
+   - `Sbpf Debug` → for individual Rust tests  
+   - `Sbpf Debug All` → for TypeScript test suites  
+6. **Click the button** to connect **Gimlet** and start step-by-step debugging.  
 
 ---
 
