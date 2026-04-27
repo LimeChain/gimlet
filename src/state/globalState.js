@@ -21,6 +21,17 @@ const SCHEMA = {
 };
 
 function validateConfig(rawConfig) {
+    // Guard non-object roots: `null` would crash Object.keys, and primitives/arrays
+    // would silently produce an empty cleanConfig. Route everything through the
+    // normal validation-error path so callers see a clear schema error.
+    if (rawConfig === null || typeof rawConfig !== 'object' || Array.isArray(rawConfig)) {
+        return {
+            cleanConfig: {},
+            errors: ['config root must be a JSON object'],
+            unknownKeys: [],
+        };
+    }
+
     const errors = [];
     const unknownKeys = [];
     const cleanConfig = {};
