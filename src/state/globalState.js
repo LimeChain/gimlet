@@ -11,7 +11,7 @@ const LIB_EXT = process.platform === 'darwin' ? 'dylib' : 'so';
 // Validation schema for gimlet.json. Every key is optional; only type-checked when present.
 // Keep this in sync with setConfig() assignments below and the README options table.
 const SCHEMA = {
-    tcpPort:              { type: 'number',  range: [1, 65535] },
+    tcpPort:              { type: 'number',  integer: true, range: [1, 65535] },
     stopOnEntry:          { type: 'boolean' },
     platformToolsVersion: { type: 'string',  pattern: /^\d+\.\d+(\.\d+)?$/ },
     sbfTraceDir:          { type: 'string' },
@@ -39,7 +39,9 @@ function validateConfig(rawConfig) {
         if (typeof v !== rule.type) {
             keyErrors.push(`${key}: expected ${rule.type}, got ${typeof v}`);
         } else {
-            if (rule.range && (v < rule.range[0] || v > rule.range[1])) {
+            if (rule.integer && !Number.isInteger(v)) {
+                keyErrors.push(`${key}: must be an integer`);
+            } else if (rule.range && (v < rule.range[0] || v > rule.range[1])) {
                 keyErrors.push(`${key}: must be in [${rule.range[0]}, ${rule.range[1]}]`);
             }
             if (rule.pattern && !rule.pattern.test(v)) {
