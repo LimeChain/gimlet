@@ -27,96 +27,81 @@ Full rationale, code examples, and risks per change: `docs/user-context/config-h
 ## Acceptance Criteria
 
 ### AC-1: Null-destructure no longer masks config failures (Change 5)
-
 - **Given** `resolveGimletConfig()` returns `null` (e.g., no workspace folder, sbfTraceDir outside workspace, or future validation failure)
 - **When** `scanDeployDirectory` calls it
 - **Then** `scanDeployDirectory` returns `false` cleanly — no `TypeError: Cannot destructure property 'depsPath' of 'null'`.
 
 ### AC-2: `require('./state/globalState')` never throws (Change 2)
-
 - **Given** platform-tools is not installed (no `~/.cache/solana/v1.54/...`)
 - **When** the extension host loads the module
 - **Then** the module loads successfully, `activate()` runs, the litesvm/mollusk gate in `extension.js:123` decides whether to proceed — no red "extension activation failed" toast at load time.
 
 ### AC-3: `platformToolsDir` override is honoured (Change 1; amended A-1)
-
 - **Given** `.vscode/gimlet.json` contains `"platformToolsDir": "/path/to/platform-tools"` pointing at a real directory that contains `llvm/lib/liblldb.{ext}`, `llvm/bin/`, and Python site-packages
 - **When** a debug session starts
 - **Then** `globalState.getPlatformToolsDir()` returns the override; LLDB library, `PYTHONPATH`, and LLDB scripts dir (`lldb_lookup.py` etc.) all resolve under the override root. Prior workspace `lldb.library` is restored on session end.
 
 ### AC-3b: `lldbLibraryPath` override wins over derived default (Change 1; amended A-1)
-
 - **Given** `platformToolsDir` is set AND `lldbLibraryPath` points at a specific `.dylib`/`.so` file (e.g., `liblldb.20.1.7-rust-dev.dylib` with no `liblldb.{ext}` symlink)
 - **When** a debug session starts
 - **Then** `globalState.lldbLibrary` resolves to the `lldbLibraryPath` file, not the derived `{platformToolsDir}/llvm/lib/liblldb.{ext}` path. Python and scripts paths still derive from `platformToolsDir`.
 
 ### AC-4: Missing override produces one clean toast (Change 1 + 2a)
-
 - **Given** `"lldbLibraryPath"` points at a non-existent file
 - **When** a debug session starts
 - **Then** a single Gimlet toast names the missing file; `withLldbConfig` is never entered (nothing to restore); the polling loop exits with `return false`; no unhandled `TypeError` or stack trace escapes.
 
 ### AC-4b: Missing `platformToolsDir` root produces one clean toast (Change 1; amended A-1)
-
 - **Given** `"platformToolsDir"` points at a non-existent directory AND `lldbLibraryPath` is not set
 - **When** a debug session starts
 - **Then** the LLDB tier-2 default path is `{platformToolsDir}/llvm/lib/liblldb.{ext}` and `realpathSync` throws. A single diagnostic toast lists the attempted path plus both remediation keys (`platformToolsDir` root, `lldbLibraryPath` file).
 - **And** if the failure occurs in `debugConfigManager.getLldbPythonPath()` first (e.g., lib dir missing), the "Solana platform-tools not found" toast names `platformToolsDir` as the alternative remediation.
 
 ### AC-5: Missing default also produces one clean toast (Change 1)
-
 - **Given** no override set and platform-tools is missing
 - **When** a debug session starts
 - **Then** a single Gimlet toast names the attempted default path, the `cargo build-sbf` install command, and points at both `platformToolsDir` and `lldbLibraryPath` as alternatives.
 
 ### AC-6: Malformed `gimlet.json` values surface as config errors (Change 4)
-
 - **Given** `gimlet.json` contains `"tcpPort": "1212"` (string) and `"platformToolsVersion": "v1.54"` (bad format)
 - **When** `setConfig` runs
 - **Then** a single toast enumerates both violations; activation continues with defaults for the bad keys; unknown keys warn but don't reject.
 
 ### AC-7: `depsPath` override honoured (Change 3; inputPath removed per A-3)
-
 - **Given** `gimlet.json` sets `"depsPath": "custom/target/deploy/debug"` (workspace-relative)
 - **When** `resolveGimletConfig()` runs
 - **Then** the resolved path is used, and it is rejected via error toast if it resolves outside the workspace root (same containment rule as `sbfTraceDir` at `config.js:34`).
 
 ### AC-7b: Empty or `.so`-less `depsPath` produces a clear error (amendment A-4)
-
 - **Given** `depsPath` resolves to a directory that exists and is inside the workspace, but contains zero `.so` files (e.g. user wrote `"./target"` instead of `"./target/deploy/debug"`)
 - **When** `scanDeployDirectory` iterates the folder
 - **Then** a single error toast fires — `Gimlet: no .so files found in {depsPath}. depsPath must point at the directory that directly contains your compiled programs (with their .so.debug siblings). For standard Cargo builds this is "target/deploy/debug", not "target" itself.` — and the polling loop exits. The session does not proceed with an empty executable map (which would surface later as a cryptic "Unknown program ID" error).
 
 ### AC-8: `CARGO_TARGET_DIR` fallback for `depsPath` (Change 3)
-
 - **Given** no `depsPath` override in `gimlet.json` AND `CARGO_TARGET_DIR` is set in the environment
 - **When** `resolveGimletConfig()` runs
 - **Then** `depsPath` resolves to `$CARGO_TARGET_DIR/deploy/debug`; absent both, falls through to the current workspace default.
 
 ### AC-9: `gimlet.json` mtime unchanged when content unchanged (Change 6)
-
 - **Given** activation runs with a `gimlet.json` that already matches the merged config
 - **When** `ensureGimletConfig()` runs
 - **Then** `writeFileSync` is not called; `fs.statSync(configPath).mtime` is identical to before activation.
 
 ### AC-10: One config edit → one reload toast, no matter how many re-activations (Change 7)
-
 - **Given** `activateDebugger` has run N times (via repeated `Cargo.toml` saves)
 - **When** the user edits `gimlet.json` once
 - **Then** exactly one `Gimlet config updated and state refreshed.` toast fires — previous watchers were disposed.
 
 ### AC-10b: All three file events trigger reload (Change 7; user-reported during Task 2 testing)
-
 - **Given** a user edits `gimlet.json` via any of: in-place save (onDidChange), atomic save (onDidDelete + onDidCreate — some editors/formatters do this), or manual file delete/create
 - **When** the save completes
 - **Then** `setConfig` runs and reloads state. Specifically:
-    - `onDidChange`: read file → `setConfig(parsedConfig)` → toast
-    - `onDidCreate`: read file → `setConfig(parsedConfig)` → toast
-    - `onDidDelete`: `setConfig({})` → all overrides reset to null (as if the file held `{}`) → toast "Gimlet config removed; using defaults."
+  - `onDidChange`: read file → `setConfig(parsedConfig)` → toast
+  - `onDidCreate`: read file → `setConfig(parsedConfig)` → toast
+  - `onDidDelete`: `setConfig({})` → all overrides reset to null (as if the file held `{}`) → toast "Gimlet config removed; using defaults."
 - **And:** deleting the `platformToolsDir` or `lldbLibraryPath` key from an existing file must reliably reset those overrides without an IDE reload.
 
 ### AC-11: `withLldbConfig` inject/restore behaviour is preserved bit-for-bit
-
 - **Given** a user has `"lldb.library": "/usr/lib/liblldb.so"` set in `.vscode/settings.json`
 - **When** a Gimlet debug session starts, runs, and ends (or fails)
 - **Then** `.vscode/settings.json` on disk still contains `"lldb.library": "/usr/lib/liblldb.so"` — Gimlet's injected value was restored by the `finally` block of `withLldbConfig`. This is verified on disk, not only in the editor view.
@@ -137,65 +122,62 @@ Full rationale, code examples, and risks per change: `docs/user-context/config-h
 Six atomic commits in order. Each task = one commit.
 
 - [ ] **Task 1 — Change 5: null-guard `resolveGimletConfig()` return in `scanDeployDirectory`**
-    - AC: AC-1
-    - Files: `src/extension.js` (:51-53)
-    - Depends: none
+  - AC: AC-1
+  - Files: `src/extension.js` (:51-53)
+  - Depends: none
 
 - [ ] **Task 2 — Changes 1 + 2 + 2a: lazy LLDB getter + `platformToolsDir` + `lldbLibraryPath` overrides + relocate `updates` into existing try**
-    - AC: AC-2, AC-3, AC-3b, AC-4, AC-4b, AC-5, AC-11
-    - Files: `src/state/globalState.js` (constructor, platform-tools derivation methods, `getLldbLibraryPath`, `setConfig`, module export), `src/managers/debugConfigManager.js` (consume derivation methods + remediation toast copy — amended A-1), `src/managers/portManager.js` (one-line move only)
-    - Depends: Task 1
-    - Amendment: A-1 (scope widened — see `docs/amendments.md`)
+  - AC: AC-2, AC-3, AC-3b, AC-4, AC-4b, AC-5, AC-11
+  - Files: `src/state/globalState.js` (constructor, platform-tools derivation methods, `getLldbLibraryPath`, `setConfig`, module export), `src/managers/debugConfigManager.js` (consume derivation methods + remediation toast copy — amended A-1), `src/managers/portManager.js` (one-line move only)
+  - Depends: Task 1
+  - Amendment: A-1 (scope widened — see `docs/amendments.md`)
 
 - [ ] **Task 3 — Change 4: `SCHEMA` + `validateConfig` + aggregated toast in `setConfig`**
-    - AC: AC-6
-    - Files: `src/state/globalState.js`
-    - Depends: Task 2 (SCHEMA must include `lldbLibraryPath` from Task 2)
+  - AC: AC-6
+  - Files: `src/state/globalState.js`
+  - Depends: Task 2 (SCHEMA must include `lldbLibraryPath` from Task 2)
 
 - [ ] **Task 4 — Change 3 (amended A-3): `depsPath` 3-tier resolution with containment check; `inputPath` removed entirely**
-    - AC: AC-7, AC-8
-    - Files: `src/config.js` (resolveGimletConfig; drop inputPath plumbing), `src/state/globalState.js` (SCHEMA + setConfig — depsPath only)
-    - Depends: Task 3
-    - Amendment: A-3 — `inputPath` was dead code (computed, returned, never consumed); removed entirely rather than made configurable
+  - AC: AC-7, AC-8
+  - Files: `src/config.js` (resolveGimletConfig; drop inputPath plumbing), `src/state/globalState.js` (SCHEMA + setConfig — depsPath only)
+  - Depends: Task 3
+  - Amendment: A-3 — `inputPath` was dead code (computed, returned, never consumed); removed entirely rather than made configurable
 
 - [ ] **Task 5 — Change 6: diff-then-write `gimlet.json` in `ensureGimletConfig`**
-    - AC: AC-9
-    - Files: `src/config.js` (:82-83)
-    - Depends: none (could run in parallel with Task 3 or 4, but sequenced to keep config.js diffs reviewable)
+  - AC: AC-9
+  - Files: `src/config.js` (:82-83)
+  - Depends: none (could run in parallel with Task 3 or 4, but sequenced to keep config.js diffs reviewable)
 
 - [ ] **Task 6 — Change 7: dispose previous watcher in `watchGimletConfig`**
-    - AC: AC-10
-    - Files: `src/config.js` (:87-111)
-    - Depends: Task 5
+  - AC: AC-10
+  - Files: `src/config.js` (:87-111)
+  - Depends: Task 5
 
 ## must_haves
 
 truths:
-
-- "require('./state/globalState') never throws; first access to globalState.lldbLibrary throws only inside the existing try/catch in runDebugSessionIteration."
-- "gimlet.json.lldbLibraryPath, when set and pointing at a real file, is the value that withLldbConfig injects as lldb.library for a Gimlet session."
-- "After a Gimlet session ends (success or failure), .vscode/settings.json on disk contains the user's original lldb.library value (or is restored to absent if originally absent)."
-- "Malformed gimlet.json values produce exactly one aggregated error toast; activation continues with defaults where a field was invalid."
-- "Resolved depsPath is always inside the workspace root; attempts to escape produce an error toast and return null from resolveGimletConfig()."
-- "Activating N times in a row with no gimlet.json content change writes to gimlet.json zero times after the first (no mtime churn)."
-- "Editing gimlet.json once fires exactly one reload toast regardless of how many activateDebugger calls have occurred."
+  - "require('./state/globalState') never throws; first access to globalState.lldbLibrary throws only inside the existing try/catch in runDebugSessionIteration."
+  - "gimlet.json.lldbLibraryPath, when set and pointing at a real file, is the value that withLldbConfig injects as lldb.library for a Gimlet session."
+  - "After a Gimlet session ends (success or failure), .vscode/settings.json on disk contains the user's original lldb.library value (or is restored to absent if originally absent)."
+  - "Malformed gimlet.json values produce exactly one aggregated error toast; activation continues with defaults where a field was invalid."
+  - "Resolved depsPath is always inside the workspace root; attempts to escape produce an error toast and return null from resolveGimletConfig()."
+  - "Activating N times in a row with no gimlet.json content change writes to gimlet.json zero times after the first (no mtime churn)."
+  - "Editing gimlet.json once fires exactly one reload toast regardless of how many activateDebugger calls have occurred."
 
 artifacts:
-
-- "src/state/globalState.js"
-- "src/managers/portManager.js"
-- "src/config.js"
-- "src/extension.js"
+  - "src/state/globalState.js"
+  - "src/managers/portManager.js"
+  - "src/config.js"
+  - "src/extension.js"
 
 key_links:
-
-- "get lldbLibrary()"
-- "invalidateLldbLibrary"
-- "lldbLibraryPathOverride"
-- "validateConfig"
-- "const SCHEMA ="
-- "this.\_configWatcher"
-- "CARGO_TARGET_DIR"
+  - "get lldbLibrary()"
+  - "invalidateLldbLibrary"
+  - "lldbLibraryPathOverride"
+  - "validateConfig"
+  - "const SCHEMA ="
+  - "this._configWatcher"
+  - "CARGO_TARGET_DIR"
 
 ## Detected Conventions
 
@@ -213,6 +195,5 @@ key_links:
 ## Test Tooling Note
 
 `package.json` has no `test` script. Baseline test snapshot step will record `baselineTests: { noInfra: true }`. Gate 5 "no new failures" criterion will be skipped with that note. Verification rests on:
-
 - `npm run lint` and `npm run format` (detected).
 - The manual test matrix in `docs/user-context/config-hardening-plan.md` — 4 activation scenarios + re-activation test, plus 4 extra scenarios for the 1+2+2a commit.

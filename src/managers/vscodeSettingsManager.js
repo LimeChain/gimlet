@@ -8,11 +8,7 @@ class VSCodeSettingsManager {
     }
 
     async set(key, value) {
-        await this.config.update(
-            key,
-            value,
-            vscode.ConfigurationTarget.Workspace
-        );
+        await this.config.update(key, value, vscode.ConfigurationTarget.Workspace);
     }
 }
 

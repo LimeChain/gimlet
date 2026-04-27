@@ -5,9 +5,7 @@ async function safeReadDir(dirPath) {
     try {
         return await fs.promises.readdir(dirPath);
     } catch (err) {
-        vscode.window.showErrorMessage(
-            `Error reading directory after V1 build: ${err}`
-        );
+        vscode.window.showErrorMessage(`Error reading directory after V1 build: ${err}`);
         return null;
     }
 }

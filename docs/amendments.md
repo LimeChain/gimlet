@@ -14,7 +14,6 @@ Live log of in-flight deviations from the plan and quick-spec. Entries are immut
 Three hardcoded paths share the same `~/.cache/solana/v{version}/platform-tools/` root. A single-file `lldbLibraryPath` override covers only one of them.
 
 **Resolution:** Primary override is now `platformToolsDir` — the platform-tools root. All three subpaths derive from it:
-
 - LLDB library default: `{platformToolsDir}/llvm/lib/liblldb.{ext}`
 - Python site-packages search base: `{platformToolsDir}/llvm/lib/`
 - LLDB scripts dir: `{platformToolsDir}/llvm/bin/`
@@ -22,7 +21,6 @@ Three hardcoded paths share the same `~/.cache/solana/v{version}/platform-tools/
 `lldbLibraryPath` is retained as a finer-grained override that wins over the derived LLDB default when the library has a non-conventional filename (e.g., user's `liblldb.20.1.7-rust-dev.dylib`) or the `liblldb.{ext}` symlink is missing.
 
 **Scope impact on Task 2 commit:**
-
 - Added `src/managers/debugConfigManager.js` to the commit's file set.
 - Added `platformToolsDirOverride` field and three derivation methods (`getPlatformToolsDir`, `getPlatformToolsLibDir`, `getPlatformToolsBinDir`) to `GimletGeneralState`.
 - Updated the "platform-tools not found" toast in `debugConfigManager.js` to name `platformToolsDir` as an alternative remediation.
@@ -32,7 +30,6 @@ Three hardcoded paths share the same `~/.cache/solana/v{version}/platform-tools/
 **Deviation class:** Rule 3 (significant — surface-area change to the gimlet.json config API).
 
 **Follow-up items:**
-
 - Task 3 (validation SCHEMA) must include `platformToolsDir: { type: 'string', optional: true }`.
 - README section on config keys must document both `platformToolsDir` and `lldbLibraryPath` with guidance on when to use which.
 - Verification matrix in `config-hardening-plan.md` should add: "set `platformToolsDir` pointing at a renamed install; confirm Python path and scripts dir both resolve" scenario.
@@ -44,7 +41,6 @@ Three hardcoded paths share the same `~/.cache/solana/v{version}/platform-tools/
 **Trigger:** During Task 2 live-reload testing, user reported that deleting `lldbLibraryPath` / `platformToolsDir` keys from `gimlet.json` sometimes failed to revert to defaults without an IDE reload. Root-cause investigation identified a gap in the watcher: only `onDidChange` is handled, not `onDidCreate` or `onDidDelete`. Editors that save atomically (rename + replace — triggered by format-on-save, some extensions, or Windows behaviour) fire `onDidDelete + onDidCreate` instead of `onDidChange`, bypassing the reload.
 
 **Resolution:** Expand Task 6 (currently scoped to the watcher-leak dispose fix) to also register `onDidCreate` and `onDidDelete` handlers in `watchGimletConfig`:
-
 - `onDidChange`, `onDidCreate` — read file, parse JSON, call `globalState.setConfig(parsed)`, toast.
 - `onDidDelete` — call `globalState.setConfig({})` to reset all overrides to null (equivalent to a `{}` file), toast "Gimlet config removed; using defaults."
 
