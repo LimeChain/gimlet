@@ -4,6 +4,17 @@ const fs = require('fs');
 const { globalState } = require('./state/globalState');
 const { log } = require('./logger');
 
+function isInsideWorkspace(resolved, workspaceFolder) {
+    // path.relative handles case-insensitive comparison on Windows/macOS and
+    // mismatched separators. A contained path produces a relative result that
+    // is neither absolute (different drive on Windows) nor starts with '..'.
+    const rel = path.relative(workspaceFolder, resolved);
+    if (rel === '') return false; 
+    if (path.isAbsolute(rel)) return false;
+    const first = rel.split(path.sep)[0];
+    return first !== '..';
+}
+
 function surfaceConfigValidation({ errors, unknownKeys }) {
     if (errors.length > 0) {
         const body = errors.map((e) => `  - ${e}`).join('\n');
@@ -51,7 +62,7 @@ class GimletConfigManager {
                 workspaceFolder,
                 globalState.depsPathOverride
             );
-            if (!resolved.startsWith(workspaceFolder + path.sep)) {
+            if (!isInsideWorkspace(resolved, workspaceFolder)) {
                 vscode.window.showErrorMessage(
                     'Gimlet: depsPath must be within the workspace directory.'
                 );
@@ -78,7 +89,7 @@ class GimletConfigManager {
                 workspaceFolder,
                 globalState.sbfTraceDir
             );
-            if (!resolved.startsWith(workspaceFolder + path.sep)) {
+            if (!isInsideWorkspace(resolved, workspaceFolder)) {
                 vscode.window.showErrorMessage(
                     'Gimlet: sbfTraceDir must be within the workspace directory.'
                 );
