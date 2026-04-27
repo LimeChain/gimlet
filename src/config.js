@@ -32,7 +32,7 @@ function surfaceConfigValidation({ errors, unknownKeys }) {
 class GimletConfigManager {
     constructor() {
         this.workspaceFolder = null;
-        this.depsPath = null;
+        this.artifactPath = null;
         this.tracePath = null;
         this._configWatcher = null;
     }
@@ -54,29 +54,29 @@ class GimletConfigManager {
         const workspaceFolder = this.resolveWorkspaceFolder();
         if (!workspaceFolder) return null;
 
-        // depsPath: gimlet.json override (workspace-relative, containment-checked)
+        // artifactPath: gimlet.json override (workspace-relative, containment-checked)
         //        → CARGO_TARGET_DIR env var, if set (used as-is; may live outside workspace)
         //        → workspace/target/deploy/debug default
-        if (globalState.depsPathOverride) {
+        if (globalState.artifactPathOverride) {
             const resolved = path.resolve(
                 workspaceFolder,
-                globalState.depsPathOverride
+                globalState.artifactPathOverride
             );
             if (!isInsideWorkspace(resolved, workspaceFolder)) {
                 vscode.window.showErrorMessage(
-                    'Gimlet: depsPath must be within the workspace directory.'
+                    'Gimlet: artifactPath must be within the workspace directory.'
                 );
                 return null;
             }
-            this.depsPath = resolved;
+            this.artifactPath = resolved;
         } else if (process.env.CARGO_TARGET_DIR) {
-            this.depsPath = path.join(
+            this.artifactPath = path.join(
                 process.env.CARGO_TARGET_DIR,
                 'deploy',
                 'debug'
             );
         } else {
-            this.depsPath = path.join(
+            this.artifactPath = path.join(
                 workspaceFolder,
                 'target',
                 'deploy',
@@ -106,7 +106,7 @@ class GimletConfigManager {
         }
 
         return {
-            depsPath: this.depsPath,
+            artifactPath: this.artifactPath,
             tracePath: this.tracePath,
         };
     }

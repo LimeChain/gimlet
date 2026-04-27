@@ -17,7 +17,7 @@ const SCHEMA = {
     sbfTraceDir:          { type: 'string' },
     platformToolsDir:     { type: 'string' },
     lldbLibraryPath:      { type: 'string' },
-    depsPath:             { type: 'string' },
+    artifactPath:         { type: 'string' },
 };
 
 function validateConfig(rawConfig) {
@@ -68,7 +68,7 @@ class GimletGeneralState {
         this.tcpPort = DEFAULT_TCP_PORT;
         this.stopOnEntry = DEFAULT_STOP_ON_ENTRY;
         this.sbfTraceDir = null;
-        this.depsPathOverride = null;
+        this.artifactPathOverride = null;
     }
 
     get lldbLibrary() {
@@ -172,7 +172,7 @@ class GimletGeneralState {
             ? cleanConfig.stopOnEntry
             : DEFAULT_STOP_ON_ENTRY;
         this.sbfTraceDir = cleanConfig.sbfTraceDir || null;
-        this.depsPathOverride = cleanConfig.depsPath || null;
+        this.artifactPathOverride = cleanConfig.artifactPath || null;
 
         const nextDirOverride = cleanConfig.platformToolsDir || null;
         if (nextDirOverride !== this.platformToolsDirOverride) {

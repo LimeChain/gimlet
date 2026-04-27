@@ -50,11 +50,11 @@ function loadProgramIdMap(session, tracePath) {
 async function scanDeployDirectory(session) {
     const cfg = gimletConfigManager.resolveGimletConfig();
     if (!cfg) return false;
-    const { depsPath, tracePath } = cfg;
+    const { artifactPath, tracePath } = cfg;
 
-    const files = await safeReadDir(depsPath);
+    const files = await safeReadDir(artifactPath);
     if (!files) {
-        vscode.window.showErrorMessage(`No compiled programs found in ${depsPath}. Please build your program first with: cargo-build-sbf --tools-version v1.54 --debug --arch v1`);
+        vscode.window.showErrorMessage(`No compiled programs found in ${artifactPath}. Please build your program first with: cargo-build-sbf --tools-version v1.54 --debug --arch v1`);
         return false;
     }
 
@@ -63,20 +63,20 @@ async function scanDeployDirectory(session) {
         if (!file.endsWith('.so')) continue;
         soCount++;
 
-        const soPath = path.join(depsPath, file);
+        const soPath = path.join(artifactPath, file);
         const hash = crypto.createHash('sha256').update(fs.readFileSync(soPath)).digest('hex'); // TODO(lime): any chance of too big .so files?
         session.setProgramNameForHash(hash, file);
 
         session.executablesPaths[file] = {
-            debugBinary: path.join(depsPath, file + '.debug'),
+            debugBinary: path.join(artifactPath, file + '.debug'),
             bpfCompiledPath: soPath,
         };
     }
 
     if (soCount === 0) {
         vscode.window.showErrorMessage(
-            `Gimlet: no .so files found in ${depsPath}. ` +
-            `depsPath must point at the directory that directly contains your compiled programs (with their .so.debug siblings). ` +
+            `Gimlet: no .so files found in ${artifactPath}. ` +
+            `artifactPath must point at the directory that directly contains your compiled programs (with their .so.debug siblings). ` +
             `For standard Cargo builds this is "target/deploy/debug", not "target" itself.`
         );
         return false;
