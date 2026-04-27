@@ -4,6 +4,7 @@ const fs = require('fs');
 
 // Shared state container for the debugger session
 const DEFAULT_TCP_PORT = 1212;
+const DEFAULT_STOP_ON_ENTRY = true;
 const DEFAULT_PLATFORM_TOOLS_VERSION = '1.54';
 const LIB_EXT = process.platform === 'darwin' ? 'dylib' : 'so';
 
@@ -65,7 +66,7 @@ class GimletGeneralState {
         this.lldbLibraryPathOverride = null;
         this.platformToolsDirOverride = null;
         this.tcpPort = DEFAULT_TCP_PORT;
-        this.stopOnEntry = true;
+        this.stopOnEntry = DEFAULT_STOP_ON_ENTRY;
         this.sbfTraceDir = null;
         this.depsPathOverride = null;
     }
@@ -161,12 +162,15 @@ class GimletGeneralState {
     setConfig(rawConfig) {
         const { cleanConfig, errors, unknownKeys } = validateConfig(rawConfig);
 
-        if (cleanConfig.tcpPort !== undefined) {
-            this.tcpPort = cleanConfig.tcpPort;
-        }
-        if (cleanConfig.stopOnEntry !== undefined) {
-            this.stopOnEntry = cleanConfig.stopOnEntry;
-        }
+        // Missing keys reset to defaults — setConfig({}) means "no overrides".
+        // Without this, deleting gimlet.json would leave previously-set scalars
+        // stuck at their last value despite the "using defaults" toast.
+        this.tcpPort = cleanConfig.tcpPort !== undefined
+            ? cleanConfig.tcpPort
+            : DEFAULT_TCP_PORT;
+        this.stopOnEntry = cleanConfig.stopOnEntry !== undefined
+            ? cleanConfig.stopOnEntry
+            : DEFAULT_STOP_ON_ENTRY;
         this.sbfTraceDir = cleanConfig.sbfTraceDir || null;
         this.depsPathOverride = cleanConfig.depsPath || null;
 
@@ -182,11 +186,11 @@ class GimletGeneralState {
             this.invalidateLldbLibrary();
         }
 
-        if (
-            cleanConfig.platformToolsVersion !== undefined &&
-            cleanConfig.platformToolsVersion !== this.platformToolsVersion
-        ) {
-            this.platformToolsVersion = cleanConfig.platformToolsVersion;
+        const nextPlatformToolsVersion = cleanConfig.platformToolsVersion !== undefined
+            ? cleanConfig.platformToolsVersion
+            : DEFAULT_PLATFORM_TOOLS_VERSION;
+        if (nextPlatformToolsVersion !== this.platformToolsVersion) {
+            this.platformToolsVersion = nextPlatformToolsVersion;
             this.invalidateLldbLibrary();
         }
 
