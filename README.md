@@ -59,7 +59,7 @@ You can customize this file to:
 
 | Option                 | Default  | Description                                                                 |
 |------------------------|----------|-----------------------------------------------------------------------------|
-| `tcpPort`              | `1212`   | TCP port the gdbstub listens on                                             |
+| `tcpPort`              | `1212`   | TCP port the gdbstub listens on. Must be in the unprivileged range — strictly greater than `1023` and less than `65536`. |
 | `platformToolsVersion` | `"1.54"` | Solana platform-tools version. Major.minor only (e.g. `"1.54"`); minimum supported is `1.54`. |
 | `stopOnEntry`          | `true`   | Stop at program entry point; set to `false` to skip to the first breakpoint |
 | `sbfTracePath`         | `target/sbf/trace` | **Workspace-relative** path to the SBF trace directory.                  |
