@@ -91,7 +91,7 @@ class GimletConfigManager {
             );
             if (!isInsideWorkspace(resolved, workspaceFolder)) {
                 vscode.window.showErrorMessage(
-                    'Gimlet: sbfTracePath must be within the workspace directory.'
+                    'Gimlet: sbfTracePath must be a subdirectory of the workspace.'
                 );
                 return null;
             }
