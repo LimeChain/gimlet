@@ -111,7 +111,7 @@ class GimletConfigManager {
         };
     }
 
-    async ensureGimletConfig() {
+    ensureGimletConfig() {
         const workspaceFolder = this.resolveWorkspaceFolder();
         if (!workspaceFolder) return null;
 
