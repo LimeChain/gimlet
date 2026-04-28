@@ -62,12 +62,12 @@ You can customize this file to:
 | `tcpPort`              | `1212`   | TCP port the gdbstub listens on                                             |
 | `platformToolsVersion` | `"1.54"` | Solana platform-tools version. Major.minor only (e.g. `"1.54"`); minimum supported is `1.54`. |
 | `stopOnEntry`          | `true`   | Stop at program entry point; set to `false` to skip to the first breakpoint |
-| `sbfTraceDir`          | `$PWD/target/sbf/trace` | **Workspace-relative** path to the SBF trace directory.                  |
+| `sbfTracePath`         | `$PWD/target/sbf/trace` | **Workspace-relative** path to the SBF trace directory.                  |
 | `artifactPath`         | `$PWD/target/deploy/debug` | **Workspace-relative** path to the directory holding your compiled `.so` programs (plus `.debug` files). Falls back to `$CARGO_TARGET_DIR/deploy/debug` if that env var is set. Use when your Cargo artifacts land outside the default. Must stay inside the workspace. |
-| `platformToolsDir`     | `~/.cache/solana/v{platformToolsVersion}/platform-tools/` | Absolute path to your platform-tools root. Gimlet derives the LLDB library, Python site-packages, and scripts dir from `{platformToolsDir}/llvm/{lib,bin}/` — override when your toolchain lives outside the default `cargo build-sbf` cache location. |
-| `lldbLibraryPath`      | `{platformToolsDir}/llvm/lib/liblldb.{ext}` | Absolute path to a specific `liblldb.dylib` / `liblldb.so` file. Wins over the derived LLDB default — use for non-standard library filenames (e.g. `liblldb.20.1.7-rust-dev.dylib`) or missing `liblldb.{ext}` symlinks. Does not affect Python/scripts paths; pair with `platformToolsDir` when the whole install is non-standard. |
+| `platformToolsPath`    | `~/.cache/solana/v{platformToolsVersion}/platform-tools/` | Absolute path to your platform-tools root. Gimlet derives the LLDB library, Python site-packages, and scripts dir from `{platformToolsPath}/llvm/{lib,bin}/` — override when your toolchain lives outside the default `cargo build-sbf` cache location. |
+| `lldbLibraryPath`      | `{platformToolsPath}/llvm/lib/liblldb.{ext}` | Absolute path to a specific `liblldb.dylib` / `liblldb.so` file. Wins over the derived LLDB default — use for non-standard library filenames (e.g. `liblldb.20.1.7-rust-dev.dylib`) or missing `liblldb.{ext}` symlinks. Does not affect Python/scripts paths; pair with `platformToolsPath` when the whole install is non-standard. |
 
-> **Which key do I need?** `platformToolsDir` alone covers most cases — it reroutes all three paths Gimlet depends on. Use `lldbLibraryPath` only when the LLDB library filename is non-standard or its symlink is missing. Leave both unset for the default `cargo build-sbf` layout at `~/.cache/solana/v{platformToolsVersion}/platform-tools/`.
+> **Which key do I need?** `platformToolsPath` alone covers most cases — it reroutes all three paths Gimlet depends on. Use `lldbLibraryPath` only when the LLDB library filename is non-standard or its symlink is missing. Leave both unset for the default `cargo build-sbf` layout at `~/.cache/solana/v{platformToolsVersion}/platform-tools/`.
 
 Gimlet also adjusts a few **VS Code workspace settings** (`.vscode/settings.json`) to ensure smooth integration:
 
