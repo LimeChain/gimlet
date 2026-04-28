@@ -104,7 +104,12 @@ class DebugConfigManager {
 
     async loadProgramModules(vsDebugSession, metadataId) {
         const session = getDebuggerSession();
-        if (!session) return false;
+        if (!session) {
+            throw new Error(
+                'Gimlet debug session was cleared before program modules could load. ' +
+                    'This usually means the session was stopped concurrently — try debugging again.'
+            );
+        }
 
         const metadata = await this.readMetadata(metadataId);
         if (!metadata || !metadata.program_id) {
@@ -150,8 +155,6 @@ class DebugConfigManager {
         if (!globalState.stopOnEntry) {
             await this.runCommand(vsDebugSession, 'continue');
         }
-
-        return true;
     }
 }
 

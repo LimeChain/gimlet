@@ -130,20 +130,15 @@ class PortManager {
         }
 
         log('Loading program modules...');
-        let loaded;
         try {
-            loaded = await debugConfigManager.loadProgramModules(vsDebugSession, metadataId);
+            await debugConfigManager.loadProgramModules(vsDebugSession, metadataId);
         } catch (err) {
             log(`Failed to load program modules: ${err.message}`);
             vscode.window.showErrorMessage(`Gimlet: ${err.message}`);
             await vscode.debug.stopDebugging();
             return false;
         }
-        log('Program modules loaded:', loaded);
-        if (!loaded) {
-            await vscode.debug.stopDebugging();
-            return false;
-        }
+        log('Program modules loaded');
 
         log('Waiting for next program on port:', port);
         while (this.pollingToken === myToken) {
