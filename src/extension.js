@@ -5,10 +5,9 @@ const gimletConfigManager  = require('./config');
 const { globalState } = require('./state/globalState');
 const { createSessionState } = require('./state/sessionState');
 
-const { GimletCodeLensProvider } = require('./lens/gimletCodeLensProvider');
-
-const { rustAnalyzerSettingsManager, editorSettingsManager } = require('./managers/vscodeSettingsManager');
+const { rustAnalyzerSettingsManager } = require('./managers/vscodeSettingsManager');
 const portManager = require('./managers/portManager')
+const { StatusBarManager } = require('./managers/statusBarManager');
 
 
 const { setDebuggerSession, clearDebuggerSession } = require('./managers/sessionManager');
@@ -122,6 +121,11 @@ async function activateDebugger(context) {
         }
         debuggerDisposables = [];
 
+        // Hide the palette entries until we re-confirm activation. 
+        // If the user removes litesvm/mollusk from Cargo.toml and saves
+        // this re-activation will leave the key false.
+        await vscode.commands.executeCommand('setContext', 'gimlet.active', false);
+
         // TODO(lime): multi-root workspaces are silently ignored — grabs workspaceFolders[0]
         const workspaceUri = vscode.workspace.workspaceFolders?.[0]?.uri;
         if (!workspaceUri) {
@@ -138,6 +142,7 @@ async function activateDebugger(context) {
             return;
         }
         log('litesvm/mollusk found, proceeding');
+        await vscode.commands.executeCommand('setContext', 'gimlet.active', true);
 
         gimletConfigManager.ensureGimletConfig();
         gimletConfigManager.watchGimletConfig(context);
@@ -145,8 +150,6 @@ async function activateDebugger(context) {
         // Set necessary VS Code settings for optimal debugging experience
         // TODO(lime): rust-analyzer.debug.engine silently overwritten at workspace level, never restored. Hostile to users who prefer a different engine
         await rustAnalyzerSettingsManager.set('debug.engine', 'vadimcn.vscode-lldb');
-        // TODO(lime): editor.codeLens force-set at workspace level
-        await editorSettingsManager.set('codeLens', true);
         log('Settings configured');
     
         // This is automated script to check dependencies for Gimlet
@@ -162,12 +165,9 @@ async function activateDebugger(context) {
             }
         );
     
-        // Register provider for the Rust files
-        const codeLensDisposable = vscode.languages.registerCodeLensProvider(
-            [{ language: 'rust' }, { language: 'typescript' }],
-            new GimletCodeLensProvider()
-        );
-    
+        const statusBar = new StatusBarManager();
+        statusBar.activate();
+
         // Listener to handle when debug ends
         const debugListener = vscode.debug.onDidTerminateDebugSession(session => {
             log('Debug session terminated:', session.name);
@@ -185,7 +185,6 @@ async function activateDebugger(context) {
             vscode.debug.stopDebugging();
         });
             
-        // TODO(lime): CodeLens passes [document, line] as command args but this handler ignores them — "Debug at Line" doesn't actually know which line was clicked
         const sbpfDebugDisposable = vscode.commands.registerCommand('gimlet.debugAtLine', async () => {
             // Block launch when gimlet.json has any validation error. Falling back
             // to defaults would silently mask the user's bad value.
@@ -229,12 +228,12 @@ async function activateDebugger(context) {
         // Add all disposables to context subscriptions
         debuggerDisposables.push(
             setupDisposable,
-            codeLensDisposable,
+            statusBar,
             sbpfDebugDisposable,
             debugListener,
             stopDisposable
         )
-        log('Activation complete, CodeLens registered');
+        log('Activation complete');
 
     } catch (err) {
         error('Error during activateDebugger:', err);

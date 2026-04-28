@@ -40,9 +40,25 @@
             },
             {
                 "command": "gimlet.debugAtLine",
-                "title": "Gimlet: Debug at Line"
+                "title": "Gimlet: Attach Debugger"
             }
-        ]
+        ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "extension.runGimletSetup",
+                    "when": "gimlet.active"
+                },
+                {
+                    "command": "gimlet.stopSession",
+                    "when": "gimlet.active"
+                },
+                {
+                    "command": "gimlet.debugAtLine",
+                    "when": "gimlet.active"
+                }
+            ]
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
