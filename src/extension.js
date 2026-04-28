@@ -103,8 +103,14 @@ async function activate(context) {
     context.subscriptions.push(watcher);
 }
 
-function deactivate() {
+async function deactivate() {
+    for (const d of debuggerDisposables) {
+        try { d.dispose(); } catch (err) { error('Disposable threw during deactivate:', err); }
+    }
+    debuggerDisposables = [];
     cleanupDebuggerSession();
+    // Reset context so a re-enabled extension starts from a known state.
+    await vscode.commands.executeCommand('setContext', 'gimlet.active', false);
 }
 
 async function activateDebugger(context) {
@@ -119,7 +125,7 @@ async function activateDebugger(context) {
         log('Activating debugger...');
         // Dispose all old resources before reinitializing
         for (const d of debuggerDisposables) {
-            try { d.dispose(); } catch {}
+            try { d.dispose(); } catch (err) { error('Disposable threw during re-activation:', err); }
         }
         debuggerDisposables = [];
 
@@ -193,7 +199,7 @@ async function activateDebugger(context) {
             vscode.debug.stopDebugging();
         });
             
-        const sbpfDebugDisposable = vscode.commands.registerCommand('gimlet.debugAtLine', async () => {
+        const attachDisposable = vscode.commands.registerCommand('gimlet.attachDebugger', async () => {
             // Block launch when gimlet.json has any validation error. Falling back
             // to defaults would silently mask the user's bad value.
             if (globalState.lastConfigErrors.length > 0) {
@@ -239,7 +245,7 @@ async function activateDebugger(context) {
             stateMonitor,
             statusBar,
             treeView,
-            sbpfDebugDisposable,
+            attachDisposable,
             debugListener,
             stopDisposable
         )

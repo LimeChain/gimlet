@@ -25,7 +25,8 @@
     ],
     "activationEvents": [
         "onLanguage:rust",
-        "onLanguage:typescript"
+        "onLanguage:typescript",
+        "onView:gimlet.statusView"
     ],
     "main": "./src/extension.js",
     "contributes": {
@@ -39,7 +40,7 @@
                 "title": "Gimlet: Stop Debug Session"
             },
             {
-                "command": "gimlet.debugAtLine",
+                "command": "gimlet.attachDebugger",
                 "title": "Gimlet: Attach Debugger"
             }
         ],
@@ -54,7 +55,7 @@
                     "when": "gimlet.active"
                 },
                 {
-                    "command": "gimlet.debugAtLine",
+                    "command": "gimlet.attachDebugger",
                     "when": "gimlet.active"
                 }
             ]

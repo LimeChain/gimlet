@@ -66,7 +66,7 @@ function makeActionItem(state) {
     }
     const item = new vscode.TreeItem('Attach Debugger');
     item.iconPath = new vscode.ThemeIcon('play');
-    item.command = { command: 'gimlet.debugAtLine', title: 'Attach Debugger' };
+    item.command = { command: 'gimlet.attachDebugger', title: 'Attach Debugger' };
     return item;
 }
 
