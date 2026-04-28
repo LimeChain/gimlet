@@ -64,10 +64,10 @@ class GimletGeneralState {
         this.platformToolsVersion = DEFAULT_PLATFORM_TOOLS_VERSION;
         this._lldbLibrary = null;
         this.lldbLibraryPathOverride = null;
-        this.platformToolsDirOverride = null;
+        this.platformToolsPathOverride = null;
         this.tcpPort = DEFAULT_TCP_PORT;
         this.stopOnEntry = DEFAULT_STOP_ON_ENTRY;
-        this.sbfTraceDir = null;
+        this.sbfTracePath = null;
         this.artifactPathOverride = null;
         // Latest validation result. Populated by setConfig; checked by the debug
         // command to block launch when gimlet.json has any invalid value.
@@ -87,8 +87,8 @@ class GimletGeneralState {
 
     // Platform-tools root: override from gimlet.json, else ~/.cache/solana/v{version}/platform-tools
     getPlatformToolsDir() {
-        if (this.platformToolsDirOverride) {
-            return this.platformToolsDirOverride;
+        if (this.platformToolsPathOverride) {
+            return this.platformToolsPathOverride;
         }
         return path.join(
             os.homedir(),
@@ -123,7 +123,7 @@ class GimletGeneralState {
             }
         }
 
-        // 2. Derived default: {platformToolsDir}/llvm/lib/liblldb.{ext}
+        // 2. Derived default: {platformToolsPath}/llvm/lib/liblldb.{ext}
         const libPath = path.join(
             this.getPlatformToolsLibDir(),
             `liblldb.${LIB_EXT}`
@@ -145,7 +145,7 @@ class GimletGeneralState {
                     '  Install the matching Solana platform-tools:',
                     `    cargo build-sbf --tools-version v${this.platformToolsVersion} --debug --arch v1 --force-tools-install`,
                     '  Or point Gimlet at an existing install by setting one of:',
-                    '    "platformToolsDir" in .vscode/gimlet.json — root of your platform-tools (covers LLDB, Python and scripts paths)',
+                    '    "platformToolsPath" in .vscode/gimlet.json — root of your platform-tools (covers LLDB, Python and scripts paths)',
                     `    "lldbLibraryPath" in .vscode/gimlet.json — exact path to your liblldb.${LIB_EXT} (LLDB only; use when the lib has a non-standard filename)`,
                 ].join('\n')
             );
@@ -178,12 +178,12 @@ class GimletGeneralState {
 
         this.tcpPort = resolve('tcpPort', this.tcpPort, DEFAULT_TCP_PORT);
         this.stopOnEntry = resolve('stopOnEntry', this.stopOnEntry, DEFAULT_STOP_ON_ENTRY);
-        this.sbfTraceDir = resolve('sbfTraceDir', this.sbfTraceDir, null);
+        this.sbfTracePath = resolve('sbfTracePath', this.sbfTracePath, null);
         this.artifactPathOverride = resolve('artifactPath', this.artifactPathOverride, null);
 
-        const nextDirOverride = resolve('platformToolsDir', this.platformToolsDirOverride, null);
-        if (nextDirOverride !== this.platformToolsDirOverride) {
-            this.platformToolsDirOverride = nextDirOverride;
+        const nextPathOverride = resolve('platformToolsPath', this.platformToolsPathOverride, null);
+        if (nextPathOverride !== this.platformToolsPathOverride) {
+            this.platformToolsPathOverride = nextPathOverride;
             this.invalidateLldbLibrary();
         }
 

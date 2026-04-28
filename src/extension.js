@@ -31,7 +31,7 @@ let isActivationInProgress = false;
 function loadProgramIdMap(session, tracePath) {
     const mapFile = path.join(tracePath, 'program_ids.map');
     if (!fs.existsSync(mapFile)) {
-        vscode.window.showErrorMessage(`Gimlet: program_ids.map not found at ${mapFile}. Make sure SBF_TRACE_DIR is set correctly when running tests, or configure sbfTraceDir (relative to workspace root) in .vscode/gimlet.json.`);
+        vscode.window.showErrorMessage(`Gimlet: program_ids.map not found at ${mapFile}. Make sure SBF_TRACE_DIR is set correctly when running tests, or configure sbfTracePath (relative to workspace root) in .vscode/gimlet.json.`);
         return false;
     }
 
@@ -55,7 +55,7 @@ async function scanDeployDirectory(session) {
 
     const files = await safeReadDir(artifactPath);
     if (!files) {
-        vscode.window.showErrorMessage(`No compiled programs found in ${artifactPath}. Please build your program first with: cargo-build-sbf --tools-version v1.54 --debug --arch v1`);
+        vscode.window.showErrorMessage(`No compiled programs found in ${artifactPath}. Please build your program first with: cargo-build-sbf --tools-version v${globalState.platformToolsVersion} --debug --arch v1`);
         return false;
     }
 

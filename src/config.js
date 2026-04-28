@@ -19,7 +19,7 @@ function surfaceConfigValidation({ errors, unknownKeys }) {
     if (errors.length > 0) {
         const body = errors.map((e) => `  - ${e}`).join('\n');
         vscode.window.showErrorMessage(
-            `Gimlet config has ${errors.length} issue${errors.length === 1 ? '' : 's'}. Invalid keys were ignored and defaults kept:\n${body}`
+            `Gimlet config has ${errors.length} issue${errors.length === 1 ? '' : 's'}. Invalid keys were ignored and previous values kept:\n${body}`
         );
     }
     if (unknownKeys.length > 0) {
@@ -64,7 +64,7 @@ class GimletConfigManager {
             );
             if (!isInsideWorkspace(resolved, workspaceFolder)) {
                 vscode.window.showErrorMessage(
-                    'Gimlet: artifactPath must be within the workspace directory.'
+                    'Gimlet: artifactPath must be a subdirectory of the workspace.'
                 );
                 return null;
             }
@@ -84,14 +84,14 @@ class GimletConfigManager {
             );
         }
 
-        if (globalState.sbfTraceDir) {
+        if (globalState.sbfTracePath) {
             const resolved = path.resolve(
                 workspaceFolder,
-                globalState.sbfTraceDir
+                globalState.sbfTracePath
             );
             if (!isInsideWorkspace(resolved, workspaceFolder)) {
                 vscode.window.showErrorMessage(
-                    'Gimlet: sbfTraceDir must be within the workspace directory.'
+                    'Gimlet: sbfTracePath must be a subdirectory of the workspace.'
                 );
                 return null;
             }
@@ -111,7 +111,7 @@ class GimletConfigManager {
         };
     }
 
-    async ensureGimletConfig() {
+    ensureGimletConfig() {
         const workspaceFolder = this.resolveWorkspaceFolder();
         if (!workspaceFolder) return null;
 
