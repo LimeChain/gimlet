@@ -54,7 +54,7 @@ async function scanDeployDirectory(session) {
 
     const files = await safeReadDir(artifactPath);
     if (!files) {
-        vscode.window.showErrorMessage(`No compiled programs found in ${artifactPath}. Please build your program first with: cargo-build-sbf --tools-version v1.54 --debug --arch v1`);
+        vscode.window.showErrorMessage(`No compiled programs found in ${artifactPath}. Please build your program first with: cargo-build-sbf --tools-version v${globalState.platformToolsVersion} --debug --arch v1`);
         return false;
     }
 
