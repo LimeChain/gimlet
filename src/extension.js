@@ -8,7 +8,7 @@ const { createSessionState } = require('./state/sessionState');
 const { GimletCodeLensProvider } = require('./lens/gimletCodeLensProvider');
 
 const { rustAnalyzerSettingsManager, editorSettingsManager } = require('./managers/vscodeSettingsManager');
-const portManager = require('./managers/portManager')
+const portManager = require('./managers/portManager');
 
 
 const { setDebuggerSession, clearDebuggerSession } = require('./managers/sessionManager');

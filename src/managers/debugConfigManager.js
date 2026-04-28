@@ -1,5 +1,4 @@
 const fs = require('fs');
-const vscode = require('vscode');
 const { getDebuggerSession } = require('../managers/sessionManager');
 const { globalState } = require('../state/globalState');
 const os = require('os');
@@ -19,24 +18,27 @@ class DebugConfigManager {
         const libDir = globalState.getPlatformToolsLibDir();
 
         if (!fs.existsSync(libDir)) {
-            vscode.window.showErrorMessage(
-                `Gimlet: Solana platform-tools not found at ${libDir}. ` +
+            throw new Error(
+                `Solana platform-tools not found at ${libDir}. ` +
                     `Run 'cargo-build-sbf --tools-version v${globalState.platformToolsVersion}' to install them, ` +
                     `or set "platformToolsPath" in .vscode/gimlet.json to point at an existing platform-tools directory.`
             );
-            return null;
         }
 
         const pythonDir = fs
             .readdirSync(libDir)
             .find((entry) => entry.startsWith('python'));
-        if (!pythonDir) return null;
+        if (!pythonDir) {
+            throw new Error(`No python* directory found under ${libDir}`);
+        }
 
         const pythonLibDir = path.join(libDir, pythonDir);
         const packagesDir = fs
             .readdirSync(pythonLibDir)
             .find((entry) => entry.endsWith('-packages'));
-        if (!packagesDir) return null;
+        if (!packagesDir) {
+            throw new Error(`No *-packages directory found under ${pythonLibDir}`);
+        }
 
         return path.join(pythonLibDir, packagesDir);
     }
@@ -102,35 +104,25 @@ class DebugConfigManager {
 
         const metadata = await this.readMetadata(metadataId);
         if (!metadata || !metadata.program_id) {
-            vscode.window.showErrorMessage(
-                'Failed to read program metadata from debugger.'
-            );
-            return false;
+            throw new Error('Failed to read program metadata from debugger.');
         }
 
         const programId = metadata.program_id;
         const hash = session.programIdToHash[programId];
         if (!hash) {
-            vscode.window.showErrorMessage(
+            throw new Error(
                 `Unknown program ID: ${programId}. Not found in program_ids.map.`
             );
-            return false;
         }
 
         const programName = session.programHashToProgramName[hash];
         if (!programName) {
-            vscode.window.showErrorMessage(
-                `No program found for hash: ${hash}`
-            );
-            return false;
+            throw new Error(`No program found for hash: ${hash}`);
         }
 
         const execInfo = session.executablesPaths[programName];
         if (!execInfo || !execInfo.debugBinary) {
-            vscode.window.showErrorMessage(
-                `Debug binary not found for ${programName}`
-            );
-            return false;
+            throw new Error(`Debug binary not found for ${programName}`);
         }
 
         const debugPath = execInfo.debugBinary;

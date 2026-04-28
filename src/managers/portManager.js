@@ -102,15 +102,14 @@ class PortManager {
         this.cancelCleanupTimer();
         log('Starting debug session on port:', port);
 
-        const pythonPath = debugConfigManager.getLldbPythonPath();
-
         let vsDebugSession;
         try {
-            const updates = { library: globalState.lldbLibrary };
-            if (pythonPath) {
-                const currentPythonPath = process.env.PYTHONPATH || '';
-                updates.adapterEnv = { PYTHONPATH: currentPythonPath ? `${pythonPath}:${currentPythonPath}` : pythonPath };
-            }
+            const pythonPath = debugConfigManager.getLldbPythonPath();
+            const currentPythonPath = process.env.PYTHONPATH || '';
+            const updates = {
+                library: globalState.lldbLibrary,
+                adapterEnv: { PYTHONPATH: currentPythonPath ? `${pythonPath}:${currentPythonPath}` : pythonPath },
+            };
             vsDebugSession = await withLldbConfig(updates, async () => {
                 await vscode.debug.startDebugging(globalState.globalWorkspaceFolder, launchConfig);
                 log('Waiting for debug session to start...');
@@ -131,10 +130,17 @@ class PortManager {
         }
 
         log('Loading program modules...');
-        const loaded = await debugConfigManager.loadProgramModules(vsDebugSession, metadataId);
+        let loaded;
+        try {
+            loaded = await debugConfigManager.loadProgramModules(vsDebugSession, metadataId);
+        } catch (err) {
+            log(`Failed to load program modules: ${err.message}`);
+            vscode.window.showErrorMessage(`Gimlet: ${err.message}`);
+            await vscode.debug.stopDebugging();
+            return false;
+        }
         log('Program modules loaded:', loaded);
         if (!loaded) {
-            vscode.window.showErrorMessage('Failed to load program modules. Stopping debug session.');
             await vscode.debug.stopDebugging();
             return false;
         }
