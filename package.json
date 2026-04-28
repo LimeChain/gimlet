@@ -58,6 +58,24 @@
                     "when": "gimlet.active"
                 }
             ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "gimlet",
+                    "title": "Gimlet",
+                    "icon": "images/gimlet-rgb.svg"
+                }
+            ]
+        },
+        "views": {
+            "gimlet": [
+                {
+                    "id": "gimlet.statusView",
+                    "name": "Status",
+                    "when": "gimlet.active"
+                }
+            ]
         }
     },
     "scripts": {

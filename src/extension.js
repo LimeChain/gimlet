@@ -8,6 +8,8 @@ const { createSessionState } = require('./state/sessionState');
 const { rustAnalyzerSettingsManager } = require('./managers/vscodeSettingsManager');
 const portManager = require('./managers/portManager')
 const { StatusBarManager } = require('./managers/statusBarManager');
+const { TreeView } = require('./managers/treeView');
+const { StateMonitor } = require('./managers/stateMonitor');
 
 
 const { setDebuggerSession, clearDebuggerSession } = require('./managers/sessionManager');
@@ -165,8 +167,14 @@ async function activateDebugger(context) {
             }
         );
     
+        const stateMonitor = new StateMonitor();
+        stateMonitor.activate();
+
         const statusBar = new StatusBarManager();
-        statusBar.activate();
+        statusBar.activate(stateMonitor);
+
+        const treeView = new TreeView();
+        treeView.activate(stateMonitor);
 
         // Listener to handle when debug ends
         const debugListener = vscode.debug.onDidTerminateDebugSession(session => {
@@ -228,7 +236,9 @@ async function activateDebugger(context) {
         // Add all disposables to context subscriptions
         debuggerDisposables.push(
             setupDisposable,
+            stateMonitor,
             statusBar,
+            treeView,
             sbpfDebugDisposable,
             debugListener,
             stopDisposable
