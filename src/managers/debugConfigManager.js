@@ -29,7 +29,11 @@ class DebugConfigManager {
             .readdirSync(libDir)
             .find((entry) => entry.startsWith('python'));
         if (!pythonDir) {
-            throw new Error(`No python* directory found under ${libDir}`);
+            throw new Error(
+                `Platform-tools install at ${libDir} is missing its python* directory — LLDB scripts cannot load. ` +
+                    `Reinstall with 'cargo-build-sbf --tools-version v${globalState.platformToolsVersion} --force-tools-install', ` +
+                    `or point "platformToolsPath" in .vscode/gimlet.json at a complete install.`
+            );
         }
 
         const pythonLibDir = path.join(libDir, pythonDir);
