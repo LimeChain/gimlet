@@ -9,7 +9,7 @@ function isInsideWorkspace(resolved, workspaceFolder) {
     // mismatched separators. A contained path produces a relative result that
     // is neither absolute (different drive on Windows) nor starts with '..'.
     const rel = path.relative(workspaceFolder, resolved);
-    if (rel === '') return false; 
+    if (rel === '') return false;
     if (path.isAbsolute(rel)) return false;
     const first = rel.split(path.sep)[0];
     return first !== '..';
