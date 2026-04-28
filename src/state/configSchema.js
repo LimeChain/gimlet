@@ -6,8 +6,8 @@ const SCHEMA = {
     tcpPort:              { type: 'number'  },
     stopOnEntry:          { type: 'boolean' },
     platformToolsVersion: { type: 'string'  },
-    sbfTraceDir:          { type: 'string'  },
-    platformToolsDir:     { type: 'string'  },
+    sbfTracePath:         { type: 'string'  },
+    platformToolsPath:    { type: 'string'  },
     lldbLibraryPath:      { type: 'string'  },
     artifactPath:         { type: 'string'  },
 };

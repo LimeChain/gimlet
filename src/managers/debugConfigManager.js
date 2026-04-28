@@ -22,7 +22,7 @@ class DebugConfigManager {
             vscode.window.showErrorMessage(
                 `Gimlet: Solana platform-tools not found at ${libDir}. ` +
                     `Run 'cargo-build-sbf --tools-version v${globalState.platformToolsVersion}' to install them, ` +
-                    `or set "platformToolsDir" in .vscode/gimlet.json to point at an existing platform-tools directory.`
+                    `or set "platformToolsPath" in .vscode/gimlet.json to point at an existing platform-tools directory.`
             );
             return null;
         }

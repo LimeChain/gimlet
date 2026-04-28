@@ -30,7 +30,7 @@ let isActivationInProgress = false;
 function loadProgramIdMap(session, tracePath) {
     const mapFile = path.join(tracePath, 'program_ids.map');
     if (!fs.existsSync(mapFile)) {
-        vscode.window.showErrorMessage(`Gimlet: program_ids.map not found at ${mapFile}. Make sure SBF_TRACE_DIR is set correctly when running tests, or configure sbfTraceDir (relative to workspace root) in .vscode/gimlet.json.`);
+        vscode.window.showErrorMessage(`Gimlet: program_ids.map not found at ${mapFile}. Make sure SBF_TRACE_DIR is set correctly when running tests, or configure sbfTracePath (relative to workspace root) in .vscode/gimlet.json.`);
         return false;
     }
 

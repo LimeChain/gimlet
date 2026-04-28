@@ -84,14 +84,14 @@ class GimletConfigManager {
             );
         }
 
-        if (globalState.sbfTraceDir) {
+        if (globalState.sbfTracePath) {
             const resolved = path.resolve(
                 workspaceFolder,
-                globalState.sbfTraceDir
+                globalState.sbfTracePath
             );
             if (!isInsideWorkspace(resolved, workspaceFolder)) {
                 vscode.window.showErrorMessage(
-                    'Gimlet: sbfTraceDir must be within the workspace directory.'
+                    'Gimlet: sbfTracePath must be within the workspace directory.'
                 );
                 return null;
             }
