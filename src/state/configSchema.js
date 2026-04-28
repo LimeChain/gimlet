@@ -16,7 +16,7 @@ const SCHEMA = {
 const CHECKS = {
     tcpPort: [
         { test: (v) => Number.isInteger(v),    error: () => 'must be an integer' },
-        { test: (v) => v > 1024 && v <= 65535, error: () => 'must be in (1024, 65535] (avoid privileged ports)' },
+        { test: (v) => v >= 1024 && v <= 65535, error: () => 'must be in [1024, 65535] (avoid privileged ports)' },
     ],
     platformToolsVersion: [
         { test: (v) => /^\d+\.\d+$/.test(v),
