@@ -64,15 +64,42 @@ class TreeView {
 
 function makeStatusItem(state, port) {
     const labels = {
-        idle: 'Idle — no gdbstub bound',
-        ready: 'Ready — gdbstub is listening',
-        attached: 'Attached — debug session live',
+        idle: 'Idle - No test detected',
+        ready: 'Ready - Attach below',
+        attached: 'Attached - Debug session live',
     };
     const icons = { idle: 'debug-disconnect', ready: 'debug-alt', attached: 'debug-start' };
     const item = new vscode.TreeItem(labels[state]);
     item.iconPath = new vscode.ThemeIcon(icons[state]);
-    item.description = `port ${port}`;
+    item.description = state === 'idle' ? `port ${port} · hover for help` : `port ${port}`;
+    if (state === 'idle') {
+        item.tooltip = makeIdleTooltip(port);
+    }
     return item;
+}
+
+function makeIdleTooltip(port) {
+    const version = globalState.platformToolsVersion;
+    const tracePath = globalState.sbfTracePath || 'target/sbf/trace';
+    const env = `SBF_DEBUG_PORT=${port} SBF_TRACE_DIR=$PWD/${tracePath}`;
+    const md = new vscode.MarkdownString();
+    md.appendMarkdown(`Gimlet attaches once a test process binds to port **${port}** with the sbpf-debugger.\n\n`);
+    md.appendMarkdown(`For Mollusk / LiteSVM, enable the \`sbpf-debugger\` feature on the \`litesvm\` / \`mollusk-svm\` dependency in your Cargo.toml, then build your programs:`);
+    md.appendCodeblock(
+        [
+            `RUSTFLAGS="-Copt-level=0 -C strip=none -C debuginfo=2" cargo-build-sbf --tools-version v${version} --debug --arch v1`,
+        ].join('\n'),
+        'bash'
+    );
+    md.appendMarkdown('And finally, run your test:');
+    md.appendCodeblock(
+        [
+            `${env} cargo test`,
+        ].join('\n'),
+        'bash'
+    );
+    md.appendMarkdown(`\nThis view flips to **Ready** once the port is bound.`);
+    return md;
 }
 
 function makeActionItem(state) {

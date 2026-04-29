@@ -20,17 +20,17 @@
 Compile your program with debug symbols:
 
 ```sh
-cargo-build-sbf --tools-version v1.54 --debug --arch v1
+RUSTFLAGS="-Copt-level=0 -C strip=none -C debuginfo=2" cargo-build-sbf --tools-version v1.54 --debug --arch v1
 ```
 
 > **Note:** Re-run this command whenever you change your program code.
 
 ### 2. Run Your Test
 
-Run your test with the debugger enabled:
+For Mollusk / LiteSVM, enable the `sbpf-debugger` feature on the `mollusk-svm` / `litesvm` dependency in your `Cargo.toml`. Then run your test:
 
 ```sh
-SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/sbf/trace cargo test --features sbpf-debugger
+SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/sbf/trace cargo test
 ```
 
 This starts the test with a gdbstub listening on the specified TCP port, which Gimlet will connect to.
