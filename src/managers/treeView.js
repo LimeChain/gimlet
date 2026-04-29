@@ -13,12 +13,12 @@ class TreeView {
     }
 
     activate(monitor) {
-        this.registration = vscode.window.registerTreeDataProvider(VIEW_ID, this);
-        this.state = monitor.state;
         this.subscription = monitor.onDidChangeState((state) => {
             this.state = state;
             this._onDidChangeTreeData.fire();
         });
+        this.state = monitor.state;
+        this.registration = vscode.window.registerTreeDataProvider(VIEW_ID, this);
     }
 
     getTreeItem(element) {
@@ -27,7 +27,11 @@ class TreeView {
 
     getChildren() {
         const port = globalState.tcpPort;
-        return [makeStatusItem(this.state, port), makeActionItem(this.state), makeDocsItem()];
+        const items = [makeStatusItem(this.state, port)];
+        const action = makeActionItem(this.state);
+        if (action) items.push(action);
+        items.push(makeDocsItem());
+        return items;
     }
 
     dispose() {
@@ -53,7 +57,6 @@ function makeStatusItem(state, port) {
     const item = new vscode.TreeItem(labels[state]);
     item.iconPath = new vscode.ThemeIcon(icons[state]);
     item.description = `port ${port}`;
-    item.tooltip = item.label;
     return item;
 }
 
@@ -64,10 +67,13 @@ function makeActionItem(state) {
         item.command = { command: 'gimlet.stopSession', title: 'Stop Session' };
         return item;
     }
-    const item = new vscode.TreeItem('Attach Debugger');
-    item.iconPath = new vscode.ThemeIcon('play');
-    item.command = { command: 'gimlet.attachDebugger', title: 'Attach Debugger' };
-    return item;
+    if (state === 'ready') {
+        const item = new vscode.TreeItem('Attach Debugger');
+        item.iconPath = new vscode.ThemeIcon('play');
+        item.command = { command: 'gimlet.attachDebugger', title: 'Attach Debugger' };
+        return item;
+    }
+    return null;
 }
 
 function makeDocsItem() {

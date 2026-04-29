@@ -29,7 +29,7 @@ class StatusBarManager {
         if (state === 'ready') {
             this.item.text = `$(debug-alt) Gimlet: Ready`;
             this.item.tooltip = `gdbstub is listening on port ${port}. Open the Gimlet pane to attach.`;
-            this.item.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+            this.item.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
             return;
         }
 
