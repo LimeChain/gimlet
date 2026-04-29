@@ -40,6 +40,7 @@ class StateMonitor {
             const open = await portManager.isPortOpen(port);
             next = open ? 'ready' : 'idle';
         }
+        if (this.disposed) return;
         if (next !== this.state || port !== this.lastPort) {
             this.state = next;
             this.lastPort = port;
