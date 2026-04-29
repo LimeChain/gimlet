@@ -152,13 +152,6 @@ class GimletGeneralState {
         }
     }
 
-    setPlatformToolsVersion(version) {
-        if (version && version !== this.platformToolsVersion) {
-            this.platformToolsVersion = version;
-            this.invalidateLldbLibrary();
-        }
-    }
-
     // Validates gimlet.json input against SCHEMA, applies only valid keys, and returns
     // { errors, unknownKeys } so the caller (config.js) can surface one aggregated toast
     // and log ignored keys to the Gimlet Output channel.

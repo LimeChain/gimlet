@@ -16,6 +16,4 @@ class VSCodeSettingsManager {
 
 const rustAnalyzerSettingsManager = new VSCodeSettingsManager('rust-analyzer');
 
-const editorSettingsManager = new VSCodeSettingsManager('editor');
-
-module.exports = { rustAnalyzerSettingsManager, editorSettingsManager };
+module.exports = { rustAnalyzerSettingsManager };
