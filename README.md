@@ -52,15 +52,22 @@ Gimlet makes debugging Solana programs inside VS Code effortless. Follow these s
 When you open your Solana project, **Gimlet** automatically creates a `.vscode/gimlet.json` configuration file.  
 You can customize this file to:
 - Specify a different **platform-tools version**
+- Point Gimlet at a **custom platform-tools install** (Nix, renamed dirs, custom toolchains, CI containers)
+- Override the **LLDB library file** directly (non-standard `liblldb` names or missing symlinks)
 - Change the default **TCP port** used for debugging
 - Control whether the debugger **stops on entry** or runs straight to your first breakpoint  
 
 | Option                 | Default  | Description                                                                 |
 |------------------------|----------|-----------------------------------------------------------------------------|
-| `tcpPort`              | `1212`   | TCP port the gdbstub listens on                                             |
-| `platformToolsVersion` | `"1.54"` | Solana platform-tools version                                               |
+| `tcpPort`              | `1212`   | TCP port the gdbstub listens on. Must be in the unprivileged range — strictly greater than `1023` and less than `65536`. |
+| `platformToolsVersion` | `"1.54"` | Solana platform-tools version. Major.minor only (e.g. `"1.54"`); minimum supported is `1.54`. |
 | `stopOnEntry`          | `true`   | Stop at program entry point; set to `false` to skip to the first breakpoint |
-| `sbfTraceDir`          | `null`   | **Relative** path from the workspace root to the SBF trace directory; defaults to `target/sbf/trace` |
+| `sbfTracePath`         | `target/sbf/trace` | **Workspace-relative** path to the SBF trace directory.                  |
+| `artifactPath`         | `target/deploy/debug` | **Workspace-relative** path to the directory holding your compiled `.so` programs (plus `.debug` files); must stay inside the workspace. Resolved in order: (1) this key when set; (2) `$CARGO_TARGET_DIR/deploy/debug` if that env var is exported; (3) `target/deploy/debug`. |
+| `platformToolsPath`    | `~/.cache/solana/v{platformToolsVersion}/platform-tools/` | Absolute path to your platform-tools root. Gimlet derives the LLDB library, Python site-packages, and scripts dir from `{platformToolsPath}/llvm/{lib,bin}/` — override when your toolchain lives outside the default `cargo build-sbf` cache location. |
+| `lldbLibraryPath`      | `{platformToolsPath}/llvm/lib/liblldb.{ext}` | Absolute path to a specific `liblldb.dylib` / `liblldb.so` file. Wins over the derived LLDB default — use for non-standard library filenames (e.g. `liblldb.20.1.7-rust-dev.dylib`) or missing `liblldb.{ext}` symlinks. Does not affect Python/scripts paths; pair with `platformToolsPath` when the whole install is non-standard. |
+
+> **Which key do I need?** `platformToolsPath` alone covers most cases — it reroutes all three paths Gimlet depends on. Use `lldbLibraryPath` only when the LLDB library filename is non-standard or its symlink is missing. Leave both unset for the default `cargo build-sbf` layout at `~/.cache/solana/v{platformToolsVersion}/platform-tools/`.
 
 Gimlet also adjusts a few **VS Code workspace settings** (`.vscode/settings.json`) to ensure smooth integration:
 

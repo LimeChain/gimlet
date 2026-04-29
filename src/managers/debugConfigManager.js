@@ -1,5 +1,4 @@
 const fs = require('fs');
-const vscode = require('vscode');
 const { getDebuggerSession } = require('../managers/sessionManager');
 const { globalState } = require('../state/globalState');
 const os = require('os');
@@ -12,43 +11,42 @@ function metadataFilePath(id) {
 
 class DebugConfigManager {
     getSolanaScriptsDir() {
-        return path.join(
-            os.homedir(),
-            '.cache',
-            'solana',
-            `v${globalState.platformToolsVersion}`,
-            'platform-tools',
-            'llvm',
-            'bin'
-        );
+        return globalState.getPlatformToolsBinDir();
     }
 
     getLldbPythonPath() {
-        const libDir = path.join(
-            os.homedir(),
-            '.cache',
-            'solana',
-            `v${globalState.platformToolsVersion}`,
-            'platform-tools',
-            'llvm',
-            'lib'
-        );
+        const libDir = globalState.getPlatformToolsLibDir();
 
         if (!fs.existsSync(libDir)) {
-            vscode.window.showErrorMessage(`Gimlet: Solana platform-tools v${globalState.platformToolsVersion} not found at ${libDir}. Run 'cargo-build-sbf --tools-version v${globalState.platformToolsVersion}' to install them.`);
-            return null;
+            throw new Error(
+                `Solana platform-tools not found at ${libDir}. ` +
+                    `Run 'cargo-build-sbf --tools-version v${globalState.platformToolsVersion}' to install them, ` +
+                    `or set "platformToolsPath" in .vscode/gimlet.json to point at an existing platform-tools directory.`
+            );
         }
 
         const pythonDir = fs
             .readdirSync(libDir)
             .find((entry) => entry.startsWith('python'));
-        if (!pythonDir) return null;
+        if (!pythonDir) {
+            throw new Error(
+                `Platform-tools install at ${libDir} is missing its python* directory — LLDB scripts cannot load. ` +
+                    `Reinstall with 'cargo-build-sbf --tools-version v${globalState.platformToolsVersion} --force-tools-install', ` +
+                    `or point "platformToolsPath" in .vscode/gimlet.json at a complete install.`
+            );
+        }
 
         const pythonLibDir = path.join(libDir, pythonDir);
         const packagesDir = fs
             .readdirSync(pythonLibDir)
             .find((entry) => entry.endsWith('-packages'));
-        if (!packagesDir) return null;
+        if (!packagesDir) {
+            throw new Error(
+                `Platform-tools install at ${pythonLibDir} is missing its *-packages directory — LLDB scripts cannot load. ` +
+                    `Reinstall with 'cargo-build-sbf --tools-version v${globalState.platformToolsVersion} --force-tools-install', ` +
+                    `or point "platformToolsPath" in .vscode/gimlet.json at a complete install.`
+            );
+        }
 
         return path.join(pythonLibDir, packagesDir);
     }
@@ -110,39 +108,34 @@ class DebugConfigManager {
 
     async loadProgramModules(vsDebugSession, metadataId) {
         const session = getDebuggerSession();
-        if (!session) return false;
+        if (!session) {
+            throw new Error(
+                'Gimlet debug session was cleared before program modules could load. ' +
+                    'This usually means the session was stopped concurrently — try debugging again.'
+            );
+        }
 
         const metadata = await this.readMetadata(metadataId);
         if (!metadata || !metadata.program_id) {
-            vscode.window.showErrorMessage(
-                'Failed to read program metadata from debugger.'
-            );
-            return false;
+            throw new Error('Failed to read program metadata from debugger.');
         }
 
         const programId = metadata.program_id;
         const hash = session.programIdToHash[programId];
         if (!hash) {
-            vscode.window.showErrorMessage(
+            throw new Error(
                 `Unknown program ID: ${programId}. Not found in program_ids.map.`
             );
-            return false;
         }
 
         const programName = session.programHashToProgramName[hash];
         if (!programName) {
-            vscode.window.showErrorMessage(
-                `No program found for hash: ${hash}`
-            );
-            return false;
+            throw new Error(`No program found for hash: ${hash}`);
         }
 
         const execInfo = session.executablesPaths[programName];
         if (!execInfo || !execInfo.debugBinary) {
-            vscode.window.showErrorMessage(
-                `Debug binary not found for ${programName}`
-            );
-            return false;
+            throw new Error(`Debug binary not found for ${programName}`);
         }
 
         const debugPath = execInfo.debugBinary;
@@ -166,8 +159,6 @@ class DebugConfigManager {
         if (!globalState.stopOnEntry) {
             await this.runCommand(vsDebugSession, 'continue');
         }
-
-        return true;
     }
 }
 

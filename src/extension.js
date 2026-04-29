@@ -8,7 +8,7 @@ const { createSessionState } = require('./state/sessionState');
 const { GimletCodeLensProvider } = require('./lens/gimletCodeLensProvider');
 
 const { rustAnalyzerSettingsManager, editorSettingsManager } = require('./managers/vscodeSettingsManager');
-const portManager = require('./managers/portManager')
+const portManager = require('./managers/portManager');
 
 
 const { setDebuggerSession, clearDebuggerSession } = require('./managers/sessionManager');
@@ -30,7 +30,7 @@ let isActivationInProgress = false;
 function loadProgramIdMap(session, tracePath) {
     const mapFile = path.join(tracePath, 'program_ids.map');
     if (!fs.existsSync(mapFile)) {
-        vscode.window.showErrorMessage(`Gimlet: program_ids.map not found at ${mapFile}. Make sure SBF_TRACE_DIR is set correctly when running tests, or configure sbfTraceDir (relative to workspace root) in .vscode/gimlet.json.`);
+        vscode.window.showErrorMessage(`Gimlet: program_ids.map not found at ${mapFile}. Make sure SBF_TRACE_DIR is set correctly when running tests, or configure sbfTracePath (relative to workspace root) in .vscode/gimlet.json.`);
         return false;
     }
 
@@ -48,27 +48,38 @@ function loadProgramIdMap(session, tracePath) {
 }
 
 async function scanDeployDirectory(session) {
-    // TODO(lime): resolveGimletConfig returns null on validation failure — destructuring null throws TypeError before the `if (!depsPath)` check runs
-    const { depsPath, tracePath } = gimletConfigManager.resolveGimletConfig();
-    if (!depsPath) return false;
+    const cfg = gimletConfigManager.resolveGimletConfig();
+    if (!cfg) return false;
+    const { artifactPath, tracePath } = cfg;
 
-    const files = await safeReadDir(depsPath);
+    const files = await safeReadDir(artifactPath);
     if (!files) {
-        vscode.window.showErrorMessage(`No compiled programs found in ${depsPath}. Please build your program first with: cargo-build-sbf --tools-version v1.54 --debug --arch v1`);
+        vscode.window.showErrorMessage(`No compiled programs found in ${artifactPath}. Please build your program first with: cargo-build-sbf --tools-version v${globalState.platformToolsVersion} --debug --arch v1`);
         return false;
     }
 
+    let soCount = 0;
     for (const file of files) {
         if (!file.endsWith('.so')) continue;
+        soCount++;
 
-        const soPath = path.join(depsPath, file);
+        const soPath = path.join(artifactPath, file);
         const hash = crypto.createHash('sha256').update(fs.readFileSync(soPath)).digest('hex'); // TODO(lime): any chance of too big .so files?
         session.setProgramNameForHash(hash, file);
 
         session.executablesPaths[file] = {
-            debugBinary: path.join(depsPath, file + '.debug'),
+            debugBinary: path.join(artifactPath, file + '.debug'),
             bpfCompiledPath: soPath,
         };
+    }
+
+    if (soCount === 0) {
+        vscode.window.showErrorMessage(
+            `Gimlet: no .so files found in ${artifactPath}. ` +
+            `artifactPath must point at the directory that directly contains your compiled programs (with their .so.debug siblings). ` +
+            `For standard Cargo builds this is "target/deploy/debug", not "target" itself.`
+        );
+        return false;
     }
 
     if (!loadProgramIdMap(session, tracePath)) return false;
@@ -176,6 +187,16 @@ async function activateDebugger(context) {
             
         // TODO(lime): CodeLens passes [document, line] as command args but this handler ignores them — "Debug at Line" doesn't actually know which line was clicked
         const sbpfDebugDisposable = vscode.commands.registerCommand('gimlet.debugAtLine', async () => {
+            // Block launch when gimlet.json has any validation error. Falling back
+            // to defaults would silently mask the user's bad value.
+            if (globalState.lastConfigErrors.length > 0) {
+                const body = globalState.lastConfigErrors.map((e) => `  - ${e}`).join('\n');
+                vscode.window.showErrorMessage(
+                    `Gimlet: cannot start debug — fix gimlet.json first:\n${body}`
+                );
+                return;
+            }
+
             // Prevent starting a new session if one is already running
             if (isSessionRunning()) {
                 vscode.window.showInformationMessage('A Gimlet debug session is already running. Please stop the current session before starting a new one.');
