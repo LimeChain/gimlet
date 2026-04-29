@@ -10,7 +10,7 @@ const SCHEMA = {
     sbfTracePath:         { type: 'string'  },
     platformToolsPath:    { type: 'string'  },
     lldbLibraryPath:      { type: 'string'  },
-    artifactPath:         { type: 'string'  },
+    artifactsPath:        { type: 'string'  },
 };
 
 const CHECKS = {

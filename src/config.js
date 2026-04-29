@@ -32,7 +32,7 @@ function surfaceConfigValidation({ errors, unknownKeys }) {
 class GimletConfigManager {
     constructor() {
         this.workspaceFolder = null;
-        this.artifactPath = null;
+        this.artifactsPath = null;
         this.tracePath = null;
         this._configWatcher = null;
     }
@@ -54,29 +54,29 @@ class GimletConfigManager {
         const workspaceFolder = this.resolveWorkspaceFolder();
         if (!workspaceFolder) return null;
 
-        // artifactPath: gimlet.json override (workspace-relative, containment-checked)
+        // artifactsPath: gimlet.json override (workspace-relative, containment-checked)
         //        → CARGO_TARGET_DIR env var, if set (used as-is; may live outside workspace)
         //        → workspace/target/deploy/debug default
-        if (globalState.artifactPathOverride) {
+        if (globalState.artifactsPathOverride) {
             const resolved = path.resolve(
                 workspaceFolder,
-                globalState.artifactPathOverride
+                globalState.artifactsPathOverride
             );
             if (!isInsideWorkspace(resolved, workspaceFolder)) {
                 vscode.window.showErrorMessage(
-                    'Gimlet: artifactPath must be a subdirectory of the workspace.'
+                    'Gimlet: artifactsPath must be a subdirectory of the workspace.'
                 );
                 return null;
             }
-            this.artifactPath = resolved;
+            this.artifactsPath = resolved;
         } else if (process.env.CARGO_TARGET_DIR) {
-            this.artifactPath = path.join(
+            this.artifactsPath = path.join(
                 process.env.CARGO_TARGET_DIR,
                 'deploy',
                 'debug'
             );
         } else {
-            this.artifactPath = path.join(
+            this.artifactsPath = path.join(
                 workspaceFolder,
                 'target',
                 'deploy',
@@ -106,7 +106,7 @@ class GimletConfigManager {
         }
 
         return {
-            artifactPath: this.artifactPath,
+            artifactsPath: this.artifactsPath,
             tracePath: this.tracePath,
         };
     }

@@ -51,11 +51,11 @@ function loadProgramIdMap(session, tracePath) {
 async function scanDeployDirectory(session) {
     const cfg = gimletConfigManager.resolveGimletConfig();
     if (!cfg) return false;
-    const { artifactPath, tracePath } = cfg;
+    const { artifactsPath, tracePath } = cfg;
 
-    const files = await safeReadDir(artifactPath);
+    const files = await safeReadDir(artifactsPath);
     if (!files) {
-        vscode.window.showErrorMessage(`No compiled programs found in ${artifactPath}. Please build your program first with: cargo-build-sbf --tools-version v${globalState.platformToolsVersion} --debug --arch v1`);
+        vscode.window.showErrorMessage(`No compiled programs found in ${artifactsPath}. Please build your program first with: cargo-build-sbf --tools-version v${globalState.platformToolsVersion} --debug --arch v1`);
         return false;
     }
 
@@ -64,20 +64,20 @@ async function scanDeployDirectory(session) {
         if (!file.endsWith('.so')) continue;
         soCount++;
 
-        const soPath = path.join(artifactPath, file);
+        const soPath = path.join(artifactsPath, file);
         const hash = crypto.createHash('sha256').update(fs.readFileSync(soPath)).digest('hex'); // TODO(lime): any chance of too big .so files?
         session.setProgramNameForHash(hash, file);
 
         session.executablesPaths[file] = {
-            debugBinary: path.join(artifactPath, file + '.debug'),
+            debugBinary: path.join(artifactsPath, file + '.debug'),
             bpfCompiledPath: soPath,
         };
     }
 
     if (soCount === 0) {
         vscode.window.showErrorMessage(
-            `Gimlet: no .so files found in ${artifactPath}. ` +
-            `artifactPath must point at the directory that directly contains your compiled programs (with their .so.debug siblings). ` +
+            `Gimlet: no .so files found in ${artifactsPath}. ` +
+            `artifactsPath must point at the directory that directly contains your compiled programs (with their .so.debug siblings). ` +
             `For standard Cargo builds this is "target/deploy/debug", not "target" itself.`
         );
         return false;

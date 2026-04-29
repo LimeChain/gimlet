@@ -68,7 +68,7 @@ class GimletGeneralState {
         this.tcpPort = DEFAULT_TCP_PORT;
         this.stopOnEntry = DEFAULT_STOP_ON_ENTRY;
         this.sbfTracePath = null;
-        this.artifactPathOverride = null;
+        this.artifactsPathOverride = null;
         // Latest validation result. Populated by setConfig; checked by the debug
         // command to block launch when gimlet.json has any invalid value.
         this.lastConfigErrors = [];
@@ -172,7 +172,7 @@ class GimletGeneralState {
         this.tcpPort = resolve('tcpPort', this.tcpPort, DEFAULT_TCP_PORT);
         this.stopOnEntry = resolve('stopOnEntry', this.stopOnEntry, DEFAULT_STOP_ON_ENTRY);
         this.sbfTracePath = resolve('sbfTracePath', this.sbfTracePath, null);
-        this.artifactPathOverride = resolve('artifactPath', this.artifactPathOverride, null);
+        this.artifactsPathOverride = resolve('artifactsPath', this.artifactsPathOverride, null);
 
         const nextPathOverride = resolve('platformToolsPath', this.platformToolsPathOverride, null);
         if (nextPathOverride !== this.platformToolsPathOverride) {
