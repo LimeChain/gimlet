@@ -37,10 +37,11 @@ This starts the test with a gdbstub listening on the specified TCP port, which G
 
 ### 3. Connect Gimlet
 
-1. **Open the test file** in VS Code — you'll see **CodeLens buttons** above test functions:
-   - `Sbpf Debug` → for individual Rust tests
-   - `Sbpf Debug All` → for TypeScript test suites
-2. **Click the button** to connect Gimlet and start step-by-step debugging.
+1. **Watch the Gimlet status-bar item** (bottom-left of VS Code) for the gdbstub state:
+   - `Gimlet: Idle` → no gdbstub on the configured `tcpPort`
+   - `Gimlet: Ready` → gdbstub is listening; ready to attach
+   - `Gimlet: Attached` → debug session is live
+2. Once **Ready**, **attach** via the **Gimlet pane** in the activity bar → **Attach Debugger**, or run **`Gimlet: Attach Debugger`** from the Command Palette.
 
 #### What Happens During Launch
 

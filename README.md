@@ -74,7 +74,6 @@ Gimlet also adjusts a few **VS Code workspace settings** (`.vscode/settings.json
 | Setting | Value | Why |
 |---------|-------|-----|
 | `rust-analyzer.debug.engine` | `"vadimcn.vscode-lldb"` | Tells rust-analyzer to use the CodeLLDB adapter for debugging |
-| `editor.codeLens` | `true` | Enables the inline **Sbpf Debug** / **Sbpf Debug All** buttons above tests |
 | `lldb.library` | Path to Solana platform-tools `liblldb` | Points CodeLLDB at the Solana-patched LLDB that understands sBPF ELFs |
 | `lldb.adapterEnv` → `PYTHONPATH` | Path to platform-tools Python packages | Ensures LLDB can find its Python dependencies at startup |
 
@@ -91,10 +90,14 @@ Gimlet also adjusts a few **VS Code workspace settings** (`.vscode/settings.json
    SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/sbf/trace cargo test
    ```
    `SBF_TRACE_DIR` is required: it tells the framework where to emit `program_ids.map`, which maps each program ID to the SHA-256 of its ELF. Gimlet uses this mapping to locate the matching debug symbols.
-5. **Open the test file in VS Code** - you'll see a **CodeLens button** above it labeled:
-   - `Sbpf Debug` → for individual Rust tests  
-   - `Sbpf Debug All` → for TypeScript test suites  
-6. **Click the button** to connect **Gimlet** and start step-by-step debugging.  
+5. **Watch the Gimlet status-bar item** (bottom-left of VS Code) for the gdbstub state:
+   - `Gimlet: Idle` → no gdbstub on the configured `tcpPort`
+   - `Gimlet: Ready` → gdbstub is listening; ready to attach
+   - `Gimlet: Attached` → debug session is live
+6. Once it shows **Ready**, **attach** by either:
+   - Opening the **Gimlet pane** in the activity bar (Gimlet icon on the left sidebar) and clicking **Attach Debugger**, or
+   - Running **`Gimlet: Attach Debugger`** from the Command Palette.
+7. Set breakpoints and step through your code using the standard VS Code debug controls. To disconnect, click **Stop Session** in the Gimlet pane or run **`Gimlet: Stop Debug Session`**.
 
 ---
 

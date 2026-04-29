@@ -4,6 +4,20 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- feat(ui): activity-bar pane and status-bar item showing debug session state (Idle / Ready / Attached) ([#58](https://github.com/LimeChain/gimlet/pull/58))
+- feat: `Gimlet: Attach Debugger` command — attach via the Gimlet pane or the Command Palette
+
+### Changed
+
+- Replace per-test CodeLens with a status-bar item and a dedicated activity-bar pane
+
+### Removed
+
+- CodeLens "Sbpf Debug" / "Sbpf Debug All" buttons above test functions
+- Force-set of the `editor.codeLens` workspace setting
+
 ## [0.1.21] - 2026-04-16
 
 ### Changed

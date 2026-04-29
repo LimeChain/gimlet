@@ -25,7 +25,8 @@
     ],
     "activationEvents": [
         "onLanguage:rust",
-        "onLanguage:typescript"
+        "onLanguage:typescript",
+        "onView:gimlet.statusView"
     ],
     "main": "./src/extension.js",
     "contributes": {
@@ -39,10 +40,43 @@
                 "title": "Gimlet: Stop Debug Session"
             },
             {
-                "command": "gimlet.debugAtLine",
-                "title": "Gimlet: Debug at Line"
+                "command": "gimlet.attachDebugger",
+                "title": "Gimlet: Attach Debugger"
             }
-        ]
+        ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "extension.runGimletSetup",
+                    "when": "gimlet.active"
+                },
+                {
+                    "command": "gimlet.stopSession",
+                    "when": "gimlet.active"
+                },
+                {
+                    "command": "gimlet.attachDebugger",
+                    "when": "gimlet.active"
+                }
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "gimlet",
+                    "title": "Gimlet",
+                    "icon": "images/gimlet-rgb.svg"
+                }
+            ]
+        },
+        "views": {
+            "gimlet": [
+                {
+                    "id": "gimlet.statusView",
+                    "name": "Status"
+                }
+            ]
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
