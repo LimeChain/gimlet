@@ -4,6 +4,8 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.23] - 2026-04-29
+
 ### Changed
 
 - refactor(activation): activate on any Rust/TS workspace; drop the litesvm/mollusk gate
