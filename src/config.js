@@ -158,9 +158,6 @@ class GimletConfigManager {
     }
 
     watchGimletConfig(context) {
-        // Dispose any previous watcher — activateDebugger can run multiple times
-        // (Cargo.toml saves, manual triggers). Without this, each call registered
-        // a new watcher and a single config edit would fire N reload toasts.
         if (this._configWatcher) {
             this._configWatcher.dispose();
             this._configWatcher = null;

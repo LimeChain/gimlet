@@ -8,17 +8,24 @@ class TreeView {
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
         this.state = 'idle';
-        this.registration = null;
+        this.view = null;
         this.subscription = null;
+        this.visibilitySubscription = null;
+        this.monitor = null;
     }
 
     activate(monitor) {
+        this.monitor = monitor;
         this.subscription = monitor.onDidChangeState((state) => {
             this.state = state;
             this._onDidChangeTreeData.fire();
         });
         this.state = monitor.state;
-        this.registration = vscode.window.registerTreeDataProvider(VIEW_ID, this);
+        this.view = vscode.window.createTreeView(VIEW_ID, { treeDataProvider: this });
+        monitor.setObserved(this.view.visible);
+        this.visibilitySubscription = this.view.onDidChangeVisibility((e) => {
+            monitor.setObserved(e.visible);
+        });
     }
 
     getTreeItem(element) {
@@ -39,9 +46,17 @@ class TreeView {
             this.subscription.dispose();
             this.subscription = null;
         }
-        if (this.registration) {
-            this.registration.dispose();
-            this.registration = null;
+        if (this.visibilitySubscription) {
+            this.visibilitySubscription.dispose();
+            this.visibilitySubscription = null;
+        }
+        if (this.monitor) {
+            this.monitor.setObserved(false);
+            this.monitor = null;
+        }
+        if (this.view) {
+            this.view.dispose();
+            this.view = null;
         }
         this._onDidChangeTreeData.dispose();
     }

@@ -25,8 +25,7 @@
     ],
     "activationEvents": [
         "onLanguage:rust",
-        "onLanguage:typescript",
-        "onView:gimlet.statusView"
+        "onLanguage:typescript"
     ],
     "main": "./src/extension.js",
     "contributes": {
@@ -99,7 +98,6 @@
         "url": "https://github.com/LimeChain/gimlet.git"
     },
     "dependencies": {
-        "systeminformation": "^5.31.5",
-        "toml": "^4.1.1"
+        "systeminformation": "^5.31.5"
     }
 }

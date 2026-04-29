@@ -12,18 +12,31 @@ class StateMonitor {
         this.lastPort = null;
         this.timer = null;
         this.disposed = false;
+        this.observed = false;
+        this.epoch = 0;
         this._emitter = new vscode.EventEmitter();
         this.onDidChangeState = this._emitter.event;
     }
 
-    activate() {
-        this.runTick();
+    setObserved(observed) {
+        if (this.disposed) return;
+        if (this.observed === observed) return;
+        this.observed = observed;
+        // Bump epoch so any tick already in flight bails out instead of
+        // double-scheduling against the new lifecycle state.
+        this.epoch++;
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
+        if (observed) this.runTick();
     }
 
     async runTick() {
-        if (this.disposed) return;
+        if (this.disposed || !this.observed) return;
+        const myEpoch = this.epoch;
         await this.tick();
-        if (this.disposed) return;
+        if (this.disposed || this.epoch !== myEpoch || !this.observed) return;
         const delay = this.state === 'idle' ? IDLE_POLL_MS : ACTIVE_POLL_MS;
         this.timer = setTimeout(() => this.runTick(), delay);
     }

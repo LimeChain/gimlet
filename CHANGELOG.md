@@ -4,6 +4,21 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- refactor(activation): activate on any Rust/TS workspace; drop the litesvm/mollusk gate
+- refactor(activation): defer settings writes and `gimlet.json` creation to first Attach/Setup; auto-engage if `gimlet.json` exists
+- perf(monitor): pause port polling while the Gimlet pane is hidden
+
+### Fixed
+
+- fix(monitor): refresh state on session cleanup so status bar/pane don't stick on "Attached"
+
+### Removed
+
+- Cargo.toml file watcher
+- `toml` dependency
+
 ## [0.1.22] - 2026-04-29
 
 ### Added

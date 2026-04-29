@@ -14,7 +14,6 @@ const { StateMonitor } = require('./managers/stateMonitor');
 
 const { setDebuggerSession, clearDebuggerSession } = require('./managers/sessionManager');
 
-const { workspaceHasLitesvmOrMollusk } = require('./utils');
 const { isSessionRunning } = require('./debug');
 const { safeReadDir } = require('./projectStructure');
 
@@ -24,9 +23,9 @@ const { log, error } = require('./logger');
 
 // TODO(lime): duplicate debuggerSession state — also tracked in sessionManager.js. Collapse to one source of truth
 let debuggerSession = null;
-// Global array ofr disposables that belong to activateDebugger
 let debuggerDisposables = [];
-let isActivationInProgress = false;
+let stateMonitor = null;
+let engaged = false;
 
 function loadProgramIdMap(session, tracePath) {
     const mapFile = path.join(tracePath, 'program_ids.map');
@@ -87,20 +86,139 @@ async function scanDeployDirectory(session) {
     return true;
 }
 
+// Run the side effects that turn an opened workspace into a Gimlet workspace:
+// write .vscode/gimlet.json, attach the config watcher, override
+// rust-analyzer's debug engine, and surface the status bar item. Idempotent —
+// safe to call from every entry point that needs an engaged extension.
+async function engage(context) {
+    if (engaged) return;
+    engaged = true;
+
+    // TODO(lime): rust-analyzer.debug.engine silently overwritten at workspace level, never restored. Hostile to users who prefer a different engine
+    await rustAnalyzerSettingsManager.set('debug.engine', 'vadimcn.vscode-lldb');
+
+    gimletConfigManager.ensureGimletConfig();
+    gimletConfigManager.watchGimletConfig(context);
+
+    const bar = new StatusBarManager();
+    bar.activate(stateMonitor);
+    debuggerDisposables.push(bar);
+
+    await vscode.commands.executeCommand('setContext', 'gimlet.active', true);
+    log('Engagement complete');
+}
+
+function gimletConfigExists() {
+    const folder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!folder) return false;
+    return fs.existsSync(path.join(folder, '.vscode', 'gimlet.json'));
+}
+
 // ============== VSCODE COMMANDS ==============
 /**
  * @param {vscode.ExtensionContext} context
  */
 async function activate(context) {
-    await activateDebugger(context);
+    log('Activating Gimlet...');
 
-    // TODO(lime): file-watcher - every Cargo.toml save triggers full re-activation
-    const watcher = vscode.workspace.createFileSystemWatcher('**/Cargo.toml');
-    watcher.onDidChange(() => activateDebugger(context));
-    watcher.onDidCreate(() => activateDebugger(context));
-    watcher.onDidDelete(() => activateDebugger(context));
+    // TODO(lime): multi-root workspaces are silently ignored — grabs workspaceFolders[0]
+    const workspaceUri = vscode.workspace.workspaceFolders?.[0]?.uri;
+    if (!workspaceUri) {
+        log('No workspace folder found');
+        return;
+    }
 
-    context.subscriptions.push(watcher);
+    await vscode.commands.executeCommand('setContext', 'gimlet.active', false);
+
+    stateMonitor = new StateMonitor();
+
+    const treeView = new TreeView();
+    treeView.activate(stateMonitor);
+
+    const setupDisposable = vscode.commands.registerCommand(
+        'extension.runGimletSetup',
+        async () => {
+            await engage(context);
+            const scriptPath = path.join(context.extensionPath, 'scripts/gimlet-setup.sh');
+            const terminal = vscode.window.createTerminal('Gimlet Setup');
+            terminal.show();
+            terminal.sendText(`bash "${scriptPath}"`);
+        }
+    );
+
+    const debugListener = vscode.debug.onDidTerminateDebugSession(session => {
+        log('Debug session terminated:', session.name);
+        if (portManager.isPolling()) {
+            portManager.scheduleCleanup(() => cleanupDebuggerSession());
+        } else {
+            cleanupDebuggerSession();
+        }
+    });
+
+    const stopDisposable = vscode.commands.registerCommand('gimlet.stopSession', () => {
+        log('Stopping Gimlet session');
+        portManager.cleanup();
+        cleanupDebuggerSession();
+        vscode.debug.stopDebugging();
+    });
+
+    const attachDisposable = vscode.commands.registerCommand('gimlet.attachDebugger', async () => {
+        await engage(context);
+
+        // Block launch when gimlet.json has any validation error. Falling back
+        // to defaults would silently mask the user's bad value.
+        if (globalState.lastConfigErrors.length > 0) {
+            const body = globalState.lastConfigErrors.map((e) => `  - ${e}`).join('\n');
+            vscode.window.showErrorMessage(
+                `Gimlet: cannot start debug — fix gimlet.json first:\n${body}`
+            );
+            return;
+        }
+
+        if (isSessionRunning()) {
+            vscode.window.showInformationMessage('A Gimlet debug session is already running. Please stop the current session before starting a new one.');
+            return;
+        }
+
+        const sessionStateInstance = createSessionState();
+        setDebuggerSession(sessionStateInstance);
+        debuggerSession = sessionStateInstance;
+
+        debuggerSession.tcpPort = globalState.tcpPort;
+
+        try {
+            log('Starting debug session...');
+            const scanned = await scanDeployDirectory(debuggerSession);
+            if (!scanned) return;
+            log('Scanned deploy directory:', JSON.stringify(debuggerSession.executablesPaths));
+            log('Program ID map:', JSON.stringify(debuggerSession.programIdToHash));
+            log('Hash to name map:', JSON.stringify(debuggerSession.programHashToProgramName));
+
+            log('Starting port listener on port:', debuggerSession.tcpPort);
+            await startPortDebugListener();
+        } catch (err) {
+            error('Error:', err);
+            vscode.window.showErrorMessage(`Failed to debug with Gimlet: ${err.message}`);
+        }
+    });
+
+    debuggerDisposables.push(
+        setupDisposable,
+        stateMonitor,
+        treeView,
+        attachDisposable,
+        debugListener,
+        stopDisposable
+    );
+
+    // A workspace that already has .vscode/gimlet.json has engaged before — keep
+    // the status bar and palette commands available without forcing the user to
+    // click Attach again.
+    if (gimletConfigExists()) {
+        await engage(context);
+    }
+
+    log('Activation complete');
 }
 
 async function deactivate() {
@@ -108,155 +226,10 @@ async function deactivate() {
         try { d.dispose(); } catch (err) { error('Disposable threw during deactivate:', err); }
     }
     debuggerDisposables = [];
+    stateMonitor = null;
+    engaged = false;
     cleanupDebuggerSession();
-    // Reset context so a re-enabled extension starts from a known state.
     await vscode.commands.executeCommand('setContext', 'gimlet.active', false);
-}
-
-async function activateDebugger(context) {
-    // TODO(lime): re-activation drops pending debug sessions — if called mid-session (via Cargo.toml watcher), disposes the termination listener so cleanup never fires and debuggerSession stays stale. Check isSessionRunning() before disposing
-    if (isActivationInProgress) {
-        return;
-    }
-
-    isActivationInProgress = true;
-
-    try {
-        log('Activating debugger...');
-        // Dispose all old resources before reinitializing
-        for (const d of debuggerDisposables) {
-            try { d.dispose(); } catch (err) { error('Disposable threw during re-activation:', err); }
-        }
-        debuggerDisposables = [];
-
-        // Hide the palette entries until we re-confirm activation. 
-        // If the user removes litesvm/mollusk from Cargo.toml and saves
-        // this re-activation will leave the key false.
-        await vscode.commands.executeCommand('setContext', 'gimlet.active', false);
-
-        // TODO(lime): multi-root workspaces are silently ignored — grabs workspaceFolders[0]
-        const workspaceUri = vscode.workspace.workspaceFolders?.[0]?.uri;
-        if (!workspaceUri) {
-            log('No workspace folder found');
-            return;
-        }
-
-        const rootPath = workspaceUri.fsPath;
-        log('Checking for litesvm/mollusk in:', rootPath);
-        const hasLitesvmOrMollusk = await workspaceHasLitesvmOrMollusk(rootPath);
-
-        if (!hasLitesvmOrMollusk) {
-            log('litesvm/mollusk not found, skipping activation');
-            return;
-        }
-        log('litesvm/mollusk found, proceeding');
-
-        gimletConfigManager.ensureGimletConfig();
-        gimletConfigManager.watchGimletConfig(context);
-
-        // Set necessary VS Code settings for optimal debugging experience
-        // TODO(lime): rust-analyzer.debug.engine silently overwritten at workspace level, never restored. Hostile to users who prefer a different engine
-        await rustAnalyzerSettingsManager.set('debug.engine', 'vadimcn.vscode-lldb');
-        log('Settings configured');
-    
-        // This is automated script to check dependencies for Gimlet
-        const setupDisposable = vscode.commands.registerCommand(
-            'extension.runGimletSetup',
-            () => {
-                const scriptPath = path.join(context.extensionPath, 'scripts/gimlet-setup.sh');
-    
-                // Create a terminal to show the output
-                const terminal = vscode.window.createTerminal('Gimlet Setup');
-                terminal.show();
-                terminal.sendText(`bash "${scriptPath}"`);
-            }
-        );
-    
-        const stateMonitor = new StateMonitor();
-        stateMonitor.activate();
-
-        const statusBar = new StatusBarManager();
-        statusBar.activate(stateMonitor);
-
-        const treeView = new TreeView();
-        treeView.activate(stateMonitor);
-
-        // Listener to handle when debug ends
-        const debugListener = vscode.debug.onDidTerminateDebugSession(session => {
-            log('Debug session terminated:', session.name);
-            if (portManager.isPolling()) {
-                portManager.scheduleCleanup(() => cleanupDebuggerSession());
-            } else {
-                cleanupDebuggerSession();
-            }
-        });
-
-        const stopDisposable = vscode.commands.registerCommand('gimlet.stopSession', () => {
-            log('Stopping Gimlet session');
-            portManager.cleanup();
-            cleanupDebuggerSession();
-            vscode.debug.stopDebugging();
-        });
-            
-        const attachDisposable = vscode.commands.registerCommand('gimlet.attachDebugger', async () => {
-            // Block launch when gimlet.json has any validation error. Falling back
-            // to defaults would silently mask the user's bad value.
-            if (globalState.lastConfigErrors.length > 0) {
-                const body = globalState.lastConfigErrors.map((e) => `  - ${e}`).join('\n');
-                vscode.window.showErrorMessage(
-                    `Gimlet: cannot start debug — fix gimlet.json first:\n${body}`
-                );
-                return;
-            }
-
-            // Prevent starting a new session if one is already running
-            if (isSessionRunning()) {
-                vscode.window.showInformationMessage('A Gimlet debug session is already running. Please stop the current session before starting a new one.');
-                return;
-            }
-
-            // Always create a new session state for a new debug session
-            const sessionStateInstance = createSessionState();
-            setDebuggerSession(sessionStateInstance);
-            debuggerSession = sessionStateInstance;
-            
-            debuggerSession.tcpPort = globalState.tcpPort;
-
-            try {
-                log('Starting debug session...');
-                const scanned = await scanDeployDirectory(debuggerSession);
-                if (!scanned) return;
-                log('Scanned deploy directory:', JSON.stringify(debuggerSession.executablesPaths));
-                log('Program ID map:', JSON.stringify(debuggerSession.programIdToHash));
-                log('Hash to name map:', JSON.stringify(debuggerSession.programHashToProgramName));
-
-                log('Starting port listener on port:', debuggerSession.tcpPort);
-                await startPortDebugListener();
-            } catch (err) {
-                error('Error:', err);
-                vscode.window.showErrorMessage(`Failed to debug with Gimlet: ${err.message}`);
-            }
-        });
-            
-        // Add all disposables to context subscriptions
-        debuggerDisposables.push(
-            setupDisposable,
-            stateMonitor,
-            statusBar,
-            treeView,
-            attachDisposable,
-            debugListener,
-            stopDisposable
-        )
-
-        await vscode.commands.executeCommand('setContext', 'gimlet.active', true);
-        log('Activation complete');
-
-    } catch (err) {
-        error('Error during activateDebugger:', err);
-    } finally {
-        isActivationInProgress = false;
-    }
 }
 
 async function startPortDebugListener() {
@@ -266,10 +239,10 @@ async function startPortDebugListener() {
 function cleanupDebuggerSession() {
     debuggerSession = null;
     clearDebuggerSession();
+    stateMonitor?.tick();
 }
 
 module.exports = {
     activate,
     deactivate,
 };
-
