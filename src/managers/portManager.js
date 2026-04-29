@@ -6,6 +6,8 @@ const { getDebuggerSession } = require('./sessionManager');
 const { globalState } = require('../state/globalState');
 const { log } = require('../logger');
 
+const CLEANUP_GRACE_MS = 2000;
+
 async function withLldbConfig(updates, fn) {
     const lldbConfig = vscode.workspace.getConfiguration('lldb');
     const originals = {};
@@ -162,7 +164,7 @@ class PortManager {
             log('No new program detected after session ended, cleaning up.');
             this.cleanup();
             if (onCleanup) onCleanup();
-        }, 3000);
+        }, CLEANUP_GRACE_MS);
     }
 
     cancelCleanupTimer() {
