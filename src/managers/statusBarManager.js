@@ -1,7 +1,6 @@
 const vscode = require('vscode');
 const { globalState } = require('../state/globalState');
 
-// Read-only status bar surface.
 class StatusBarManager {
     constructor() {
         this.item = null;

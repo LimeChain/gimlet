@@ -6,7 +6,7 @@ const { globalState } = require('./state/globalState');
 const { createSessionState } = require('./state/sessionState');
 
 const { rustAnalyzerSettingsManager } = require('./managers/vscodeSettingsManager');
-const portManager = require('./managers/portManager')
+const portManager = require('./managers/portManager');
 const { StatusBarManager } = require('./managers/statusBarManager');
 const { TreeView } = require('./managers/treeView');
 const { StateMonitor } = require('./managers/stateMonitor');
@@ -150,7 +150,6 @@ async function activateDebugger(context) {
             return;
         }
         log('litesvm/mollusk found, proceeding');
-        await vscode.commands.executeCommand('setContext', 'gimlet.active', true);
 
         gimletConfigManager.ensureGimletConfig();
         gimletConfigManager.watchGimletConfig(context);
@@ -249,6 +248,8 @@ async function activateDebugger(context) {
             debugListener,
             stopDisposable
         )
+
+        await vscode.commands.executeCommand('setContext', 'gimlet.active', true);
         log('Activation complete');
 
     } catch (err) {

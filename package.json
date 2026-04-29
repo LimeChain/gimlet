@@ -73,8 +73,7 @@
             "gimlet": [
                 {
                     "id": "gimlet.statusView",
-                    "name": "Status",
-                    "when": "gimlet.active"
+                    "name": "Status"
                 }
             ]
         }
