@@ -4,14 +4,34 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.22] - 2026-04-29
+
 ### Added
 
 - feat(ui): activity-bar pane and status-bar item showing debug session state (Idle / Ready / Attached) ([#58](https://github.com/LimeChain/gimlet/pull/58))
 - feat: `Gimlet: Attach Debugger` command — attach via the Gimlet pane or the Command Palette
+- feat(config): `platformToolsDir`, `lldbLibraryPath`, and `artifactsPath` overrides in `gimlet.json` for non-standard platform-tools installs ([#57](https://github.com/LimeChain/gimlet/pull/57))
+- feat(config): schema-based validation of `gimlet.json`; debug launch is gated while errors exist
+- feat(config): tri-state apply — valid keys apply, absent keys reset to defaults, invalid keys keep prior value
+- feat(config): enforce `platformToolsVersion` >= 1.54 and integer `tcpPort` >= 1024
 
 ### Changed
 
 - Replace per-test CodeLens with a status-bar item and a dedicated activity-bar pane
+- perf(config): write `gimlet.json` only when content changes (stops mtime churn)
+- refactor(config): lazy LLDB library resolution so missing platform-tools no longer throws on activation
+- Rename `depsPath` to `artifactsPath`; remove vestigial `inputPath`
+
+### Fixed
+
+- fix: handle `startDebugging` errors and restore lldb config on failure
+- fix: check llvm lib directory exists before use
+- fix: validate `sbfTraceDir` stays within workspace — reject `..` traversal
+- fix: quote `metadataFile` and `debugPath` in lldb commands to handle paths with spaces
+- fix: use `os.tmpdir()` instead of hardcoded `/tmp/` for cross-platform temp dir
+- fix: missing `await` on `listenAndStartDebugForPort()`
+- fix(config): use `path.relative` for workspace containment (case-insensitive, cross-drive safe)
+- fix(config): watch `gimlet.json` via `RelativePattern`; dispose prior watcher; handle create/delete events
 
 ### Removed
 
