@@ -73,7 +73,6 @@ Gimlet also adjusts a few **VS Code workspace settings** (`.vscode/settings.json
 
 | Setting | Value | Why |
 |---------|-------|-----|
-| `rust-analyzer.debug.engine` | `"vadimcn.vscode-lldb"` | Tells rust-analyzer to use the CodeLLDB adapter for debugging |
 | `lldb.library` | Path to Solana platform-tools `liblldb` | Points CodeLLDB at the Solana-patched LLDB that understands sBPF ELFs |
 | `lldb.adapterEnv` → `PYTHONPATH` | Path to platform-tools Python packages | Ensures LLDB can find its Python dependencies at startup |
 
