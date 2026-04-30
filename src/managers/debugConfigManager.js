@@ -30,7 +30,7 @@ class DebugConfigManager {
             .find((entry) => entry.startsWith('python'));
         if (!pythonDir) {
             throw new Error(
-                `Platform-tools install at ${libDir} is missing its python* directory — LLDB scripts cannot load. ` +
+                `Platform-tools install at ${libDir} is missing its python* directory - LLDB scripts cannot load. ` +
                     `Reinstall with 'cargo-build-sbf --tools-version v${globalState.platformToolsVersion} --force-tools-install', ` +
                     `or point "platformToolsPath" in .vscode/gimlet.json at a complete install.`
             );
@@ -42,7 +42,7 @@ class DebugConfigManager {
             .find((entry) => entry.endsWith('-packages'));
         if (!packagesDir) {
             throw new Error(
-                `Platform-tools install at ${pythonLibDir} is missing its *-packages directory — LLDB scripts cannot load. ` +
+                `Platform-tools install at ${pythonLibDir} is missing its *-packages directory - LLDB scripts cannot load. ` +
                     `Reinstall with 'cargo-build-sbf --tools-version v${globalState.platformToolsVersion} --force-tools-install', ` +
                     `or point "platformToolsPath" in .vscode/gimlet.json at a complete install.`
             );
@@ -111,7 +111,7 @@ class DebugConfigManager {
         if (!session) {
             throw new Error(
                 'Gimlet debug session was cleared before program modules could load. ' +
-                    'This usually means the session was stopped concurrently — try debugging again.'
+                    'This usually means the session was stopped concurrently - try debugging again.'
             );
         }
 

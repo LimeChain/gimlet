@@ -194,7 +194,7 @@ class GimletConfigManager {
         };
 
         const resetToDefaults = () => {
-            // File removed — treat as an empty config so every override clears back to null.
+            // File removed - treat as an empty config so every override clears back to null.
             globalState.setConfig({});
             this.resolveGimletConfig();
             vscode.window.showInformationMessage(
@@ -204,7 +204,7 @@ class GimletConfigManager {
 
         // All three events route through the same handlers. Atomic-save editors
         // (rename+replace on save, common with format-on-save or on Windows) fire
-        // onDidDelete + onDidCreate instead of onDidChange — without the Create
+        // onDidDelete + onDidCreate instead of onDidChange - without the Create
         // handler, Gimlet would miss the save entirely.
         watcher.onDidChange(reloadFromDisk);
         watcher.onDidCreate(reloadFromDisk);

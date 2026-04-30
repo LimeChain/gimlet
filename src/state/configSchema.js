@@ -34,7 +34,7 @@ const CHECKS = {
     ],
 };
 
-// Compares Solana platform-tools versions ("1.54", "2.0") — major.minor only.
+// Compares Solana platform-tools versions ("1.54", "2.0") - major.minor only.
 // Returns negative if a<b, zero if equal, positive if a>b.
 function compareVersions(a, b) {
     const [aMajor, aMinor] = a.split('.').map(Number);
