@@ -4,6 +4,18 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.24] - 2026-04-30
+
+### Added
+
+- feat(ui): idle status tooltip with Mollusk / LiteSVM setup instructions (build flags + `cargo test` invocation)
+
+### Changed
+
+- perf(port): lower `scheduleCleanup` grace from 3s to 2s for snappier session-end transitions
+- docs: clarify that the `sbpf-debugger` feature lives on the `mollusk-svm` / `litesvm` dependency
+- chore: move debugger screenshot into `images/` and drop the empty `assets/` folder
+
 ## [0.1.23] - 2026-04-29
 
 ### Changed
