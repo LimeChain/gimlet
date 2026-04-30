@@ -145,8 +145,8 @@ class GimletGeneralState {
                     '  Install the matching Solana platform-tools:',
                     `    cargo build-sbf --tools-version v${this.platformToolsVersion} --debug --arch v1 --force-tools-install`,
                     '  Or point Gimlet at an existing install by setting one of:',
-                    '    "platformToolsPath" in .vscode/gimlet.json — root of your platform-tools (covers LLDB, Python and scripts paths)',
-                    `    "lldbLibraryPath" in .vscode/gimlet.json — exact path to your liblldb.${LIB_EXT} (LLDB only; use when the lib has a non-standard filename)`,
+                    '    "platformToolsPath" in .vscode/gimlet.json - root of your platform-tools (covers LLDB, Python and scripts paths)',
+                    `    "lldbLibraryPath" in .vscode/gimlet.json - exact path to your liblldb.${LIB_EXT} (LLDB only; use when the lib has a non-standard filename)`,
                 ].join('\n')
             );
         }
