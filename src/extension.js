@@ -12,7 +12,7 @@ const { TreeView } = require('./managers/treeView');
 const { StateMonitor } = require('./managers/stateMonitor');
 
 
-const { setDebuggerSession, clearDebuggerSession } = require('./managers/sessionManager');
+const { getDebuggerSession, setDebuggerSession, clearDebuggerSession } = require('./managers/sessionManager');
 
 const { isSessionRunning } = require('./debug');
 const { safeReadDir } = require('./projectStructure');
@@ -21,8 +21,6 @@ const crypto = require('crypto');
 const fs = require('fs');
 const { log, error } = require('./logger');
 
-// TODO(lime): duplicate debuggerSession state — also tracked in sessionManager.js. Collapse to one source of truth
-let debuggerSession = null;
 let debuggerDisposables = [];
 let stateMonitor = null;
 let engaged = false;
@@ -180,21 +178,19 @@ async function activate(context) {
             return;
         }
 
-        const sessionStateInstance = createSessionState();
-        setDebuggerSession(sessionStateInstance);
-        debuggerSession = sessionStateInstance;
-
-        debuggerSession.tcpPort = globalState.tcpPort;
+        const session = createSessionState();
+        session.tcpPort = globalState.tcpPort;
+        setDebuggerSession(session);
 
         try {
             log('Starting debug session...');
-            const scanned = await scanDeployDirectory(debuggerSession);
+            const scanned = await scanDeployDirectory(session);
             if (!scanned) return;
-            log('Scanned deploy directory:', JSON.stringify(debuggerSession.executablesPaths));
-            log('Program ID map:', JSON.stringify(debuggerSession.programIdToHash));
-            log('Hash to name map:', JSON.stringify(debuggerSession.programHashToProgramName));
+            log('Scanned deploy directory:', JSON.stringify(session.executablesPaths));
+            log('Program ID map:', JSON.stringify(session.programIdToHash));
+            log('Hash to name map:', JSON.stringify(session.programHashToProgramName));
 
-            log('Starting port listener on port:', debuggerSession.tcpPort);
+            log('Starting port listener on port:', session.tcpPort);
             await startPortDebugListener();
         } catch (err) {
             error('Error:', err);
@@ -233,11 +229,10 @@ async function deactivate() {
 }
 
 async function startPortDebugListener() {
-    await portManager.listenAndStartDebugForPort(debuggerSession.tcpPort);
+    await portManager.listenAndStartDebugForPort(getDebuggerSession().tcpPort);
 }
 
 function cleanupDebuggerSession() {
-    debuggerSession = null;
     clearDebuggerSession();
     stateMonitor?.tick();
 }
