@@ -4,6 +4,13 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.25] - 2026-04-30
+
+### Fixed
+
+- fix(session): collapse duplicate `debuggerSession` state to a single source of truth in `sessionManager` ([#59](https://github.com/LimeChain/gimlet/pull/59))
+- fix(activation): drop redundant `rust-analyzer.debug.engine` workspace override; Gimlet launches CodeLLDB directly and no longer needs to overwrite the user's preference ([#60](https://github.com/LimeChain/gimlet/pull/60))
+
 ## [0.1.24] - 2026-04-30
 
 ### Added
