@@ -5,7 +5,6 @@ const gimletConfigManager  = require('./config');
 const { globalState } = require('./state/globalState');
 const { createSessionState } = require('./state/sessionState');
 
-const { rustAnalyzerSettingsManager } = require('./managers/vscodeSettingsManager');
 const portManager = require('./managers/portManager');
 const { StatusBarManager } = require('./managers/statusBarManager');
 const { TreeView } = require('./managers/treeView');
@@ -85,15 +84,12 @@ async function scanDeployDirectory(session) {
 }
 
 // Run the side effects that turn an opened workspace into a Gimlet workspace:
-// write .vscode/gimlet.json, attach the config watcher, override
-// rust-analyzer's debug engine, and surface the status bar item. Idempotent —
-// safe to call from every entry point that needs an engaged extension.
+// write .vscode/gimlet.json, attach the config watcher, and surface the status
+// bar item. Idempotent — safe to call from every entry point that needs an
+// engaged extension.
 async function engage(context) {
     if (engaged) return;
     engaged = true;
-
-    // TODO(lime): rust-analyzer.debug.engine silently overwritten at workspace level, never restored. Hostile to users who prefer a different engine
-    await rustAnalyzerSettingsManager.set('debug.engine', 'vadimcn.vscode-lldb');
 
     gimletConfigManager.ensureGimletConfig();
     gimletConfigManager.watchGimletConfig(context);
