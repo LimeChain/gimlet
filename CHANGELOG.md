@@ -4,6 +4,54 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-01
+
+Stable release - consolidates all changes since v0.1.20.
+
+### Added
+
+- feat(ui): activity-bar pane and status-bar item showing debug session state (Idle / Ready / Attached) ([#58](https://github.com/LimeChain/gimlet/pull/58))
+- feat: `Gimlet: Attach Debugger` command - attach via the Gimlet pane or the Command Palette
+- feat(ui): idle status tooltip with Mollusk / LiteSVM setup instructions (build flags + `cargo test` invocation)
+- feat(config): `platformToolsPath`, `lldbLibraryPath`, and `artifactsPath` overrides in `gimlet.json` for non-standard platform-tools installs ([#57](https://github.com/LimeChain/gimlet/pull/57))
+- feat(config): schema-based validation of `gimlet.json`; debug launch is gated while errors exist
+- feat(config): tri-state apply - valid keys apply, absent keys reset to defaults, invalid keys keep prior value
+- feat(config): enforce `platformToolsVersion` >= 1.54 and integer `tcpPort` >= 1024
+
+### Changed
+
+- refactor(activation): activate on any Rust/TS workspace; drop the litesvm/mollusk Cargo.toml gate
+- refactor(activation): defer settings writes and `gimlet.json` creation to first Attach/Setup; auto-engage if `gimlet.json` already exists
+- replace per-test CodeLens with a status-bar item and a dedicated activity-bar pane
+- rename `depsPath` to `artifactsPath`; remove vestigial `inputPath`
+- refactor(config): lazy LLDB library resolution so missing platform-tools no longer throws on activation
+- refactor(session): single source of truth for `debuggerSession` state in `sessionManager` ([#59](https://github.com/LimeChain/gimlet/pull/59))
+- perf(port): replace `netstat` shell-out with `systeminformation` for cross-platform port detection
+- perf(monitor): pause port polling while the Gimlet pane is hidden
+- perf(config): write `gimlet.json` only when content changes (stops mtime churn)
+- perf(port): lower `scheduleCleanup` grace from 3s to 2s for snappier session-end transitions
+- docs: clarify that the `sbpf-debugger` feature lives on the `mollusk-svm` / `litesvm` dependency
+
+### Fixed
+
+- fix: handle `startDebugging` errors and restore lldb config on failure
+- fix: check llvm lib directory exists before use
+- fix: validate `sbfTraceDir` stays within workspace - reject `..` traversal
+- fix: quote `metadataFile` and `debugPath` in lldb commands to handle paths with spaces
+- fix: use `os.tmpdir()` instead of hardcoded `/tmp/` for cross-platform temp dir
+- fix: missing `await` on `listenAndStartDebugForPort()`
+- fix(config): use `path.relative` for workspace containment (case-insensitive, cross-drive safe)
+- fix(config): watch `gimlet.json` via `RelativePattern`; dispose prior watcher; handle create/delete events
+- fix(monitor): refresh state on session cleanup so status bar/pane don't stick on "Attached"
+- fix(activation): drop redundant `rust-analyzer.debug.engine` workspace override; Gimlet launches CodeLLDB directly ([#60](https://github.com/LimeChain/gimlet/pull/60))
+
+### Removed
+
+- CodeLens "Sbpf Debug" / "Sbpf Debug All" buttons above test functions
+- force-set of the `editor.codeLens` workspace setting
+- Cargo.toml file watcher
+- `toml` dependency
+
 ## [0.1.25] - 2026-04-30
 
 ### Fixed
