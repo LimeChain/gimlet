@@ -4,6 +4,13 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-23
+
+### Changed
+
+- chore(deps): bump `systeminformation` from 5.31.5 to 5.31.6 ([#61](https://github.com/LimeChain/gimlet/pull/61))
+- docs: update referenced `mollusk-svm` version to v0.13.0 (stable)
+
 ## [0.2.0] - 2026-05-01
 
 Stable release - consolidates all changes since v0.1.20.
