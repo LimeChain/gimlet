@@ -27,7 +27,7 @@ RUSTFLAGS="-Copt-level=0 -C strip=none -C debuginfo=2" cargo-build-sbf --tools-v
 
 ### 2. Run Your Test
 
-For Mollusk / LiteSVM, enable the `sbpf-debugger` feature on the `mollusk-svm` / `litesvm` dependency in your `Cargo.toml`. Then run your test:
+For Mollusk / LiteSVM, enable the `sbpf-debugger` feature on the `mollusk-svm` / `litesvm` dependency (v0.13.0 or higher) in your `Cargo.toml`. Then run your test:
 
 ```sh
 SBF_DEBUG_PORT=1212 SBF_TRACE_DIR=$PWD/target/sbf/trace cargo test
