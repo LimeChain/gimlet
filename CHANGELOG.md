@@ -4,6 +4,13 @@ All notable changes to the "Gimlet" extension will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-06-21
+
+### Changed
+
+- chore(deps): bump `eslint` (10.2.0 → 10.5.0), `globals` (17.4.0 → 17.6.0), `prettier` (3.8.1 → 3.8.4), and `systeminformation` (5.31.6 → 5.31.8) to latest
+- docs: document LiteSVM `sbpf-debugger` support (litesvm v0.13.0 or higher) alongside Mollusk
+
 ## [0.2.1] - 2026-05-23
 
 ### Changed
