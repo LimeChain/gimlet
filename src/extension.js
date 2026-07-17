@@ -61,7 +61,10 @@ async function scanDeployDirectory(session) {
         soCount++;
 
         const soPath = path.join(artifactsPath, file);
-        const hash = crypto.createHash('sha256').update(fs.readFileSync(soPath)).digest('hex'); // TODO(lime): any chance of too big .so files?
+        // Sync read+hash is fine here: deployed programs are bounded by the
+        // 10 MiB account data cap (MAX_PERMITTED_DATA_LENGTH), so worst case
+        // stays in the single-digit ms range.
+        const hash = crypto.createHash('sha256').update(fs.readFileSync(soPath)).digest('hex');
         session.setProgramNameForHash(hash, file);
 
         session.executablesPaths[file] = {
