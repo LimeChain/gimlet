@@ -97,7 +97,5 @@
         "type": "git",
         "url": "https://github.com/LimeChain/gimlet.git"
     },
-    "dependencies": {
-        "systeminformation": "^5.31.6"
-    }
+    "dependencies": {}
 }

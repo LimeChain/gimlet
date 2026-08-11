@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const si = require('systeminformation');
+const net = require('net');
 const vscode = require('vscode');
 const { debugConfigManager } = require('./debugConfigManager');
 const { getDebuggerSession } = require('./sessionManager');
@@ -65,13 +65,12 @@ class PortManager {
     }
 
     async isPortOpen(port) {
-        try {
-            const connections = await si.networkConnections();
-            return connections.some(c => c.localPort === String(port) && (c.protocol === 'tcp4' || c.protocol === 'tcp') && c.state === 'LISTEN');
-        } catch (err) {
-            log(`Port check failed: ${err.message}`);
-            return false;
-        }
+        return new Promise((resolve) => {
+            const server = net.createServer();
+            server.once('error', (err) => resolve(err.code === 'EADDRINUSE'));
+            server.once('listening', () => server.close(() => resolve(false)));
+            server.listen(port, '127.0.0.1');
+        });
     }
 
     async listenAndStartDebugForPort(port) {
